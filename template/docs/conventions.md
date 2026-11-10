@@ -155,7 +155,8 @@ Notes:
 
 `mise run template:update` runs `copier update` from the latest cubert tag. It needs a
 clean tree, keeps your earlier answers, and stops with a list of files that have
-conflict markers. Resolve them, then commit the result as one commit.
+conflict markers. Resolve them, run `mise run setup` (the update can change tools and
+hooks) and `mise run check`, then commit the result as one commit.
 
 Run Copier only through this task. Copier commits in temporary repos, and global hk
 hooks there drop `mise.lock` from the update. The task runs Copier with `HK=0`.

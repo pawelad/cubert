@@ -61,7 +61,8 @@ $ mise run template:update   # updates to the latest tag
 ```
 
 `template:update` needs a clean tree. It keeps your answers and lists every file with a
-conflict. Resolve them, run `mise run check`, then commit the update as one commit.
+conflict. Resolve them, run `mise run setup` and `mise run check`, then commit the
+update as one commit.
 
 ## Adopt cubert in an existing repository
 

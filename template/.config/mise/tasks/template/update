@@ -3,8 +3,8 @@
 #USAGE flag "--vcs-ref <ref>" help="Template Git ref (default: the latest tag)"
 set -euo pipefail
 
-# Copier rewrites this file while it runs. Bash reads a script as it goes, so the
-# whole body sits in a function that bash parses before the update starts.
+# Copier rewrites this file while it runs, and bash reads a script as it goes. Bash
+# parses a `{ }` group to its end before it runs it, so the old text runs on to `exit`.
 main() {
   if [ -n "$(git status --porcelain)" ]; then
     echo "template:update: commit or stash your changes first, so the update diff stays separate." >&2
@@ -29,7 +29,11 @@ main() {
     exit 1
   fi
   git status --short
+  # The update can change the tools, the hk config and the post-checkout hook.
+  echo "template:update: done. Run mise run setup and mise run check, then commit the update."
 }
 
-main "$@"
-exit
+{
+  main "$@"
+  exit
+}

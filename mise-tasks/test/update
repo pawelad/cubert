@@ -53,7 +53,8 @@ for edit in "AGENTS.md:rotate the demo API key" ".gitignore:demo-cache/" "README
 done
 [ "$status" -eq 0 ] || exit 1
 
-step "run check"
+step "run setup and check"
+mise run setup >>"$out/setup.log" 2>&1
 git add --all
 mise run check
 step "pass (project: $dest)"
