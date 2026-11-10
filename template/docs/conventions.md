@@ -25,6 +25,14 @@ project change goes there:
 Copier deletes nothing. If you delete a project-owned file, the next update
 creates it again.
 
+## Tools
+
+- mise is the source of truth for tool versions, on every machine and in CI. CI
+  installs tools with `mise install`, not with setup actions.
+- A Python CLI is a mise `pypi:` tool, which mise installs with uv. Do not run
+  `uvx` or `pipx` directly.
+- A project with `npm:` tools pins `node` in `mise.toml` too.
+
 ## Tasks
 
 `mise tasks` lists every task. Names follow `<area>:<verb>`, where the area is

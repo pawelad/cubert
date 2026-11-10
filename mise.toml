@@ -1,4 +1,4 @@
-# cubert's own tools and tasks. Copier comes from mise here; projects run it with uvx.
+# cubert's own tools and tasks. mise installs every tool; pypi: tools install through uv.
 # A short task goes here. A task with logic goes in mise-tasks/ as a file task.
 
 [settings]
@@ -15,6 +15,8 @@ actionlint = "1.7.12"
 dprint = "0.64.3"
 hk = "2.11.1"
 jq = "1.8.2"
+# npm: tools run on this Node, so CI and every machine use the same one.
+node = "24.22.2"
 pkl = "0.32.2"
 shellcheck = "0.11.0"
 shfmt = "3.14.1"
@@ -22,7 +24,7 @@ uv = "0.13.7"
 worktrunk = "0.81.0"
 yamllint = "1.38.0"
 "npm:@fission-ai/openspec" = "1.16.0"
-"pipx:copier" = "9.19.1"
+"pypi:copier" = "9.19.1"
 
 [tasks.setup]
 description = "Set up a checkout: tools and git hooks"

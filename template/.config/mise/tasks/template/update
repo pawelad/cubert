@@ -3,8 +3,6 @@
 #USAGE flag "--vcs-ref <ref>" help="Template Git ref (default: the latest tag)"
 set -euo pipefail
 
-copier=(uvx --quiet copier@9.19.1)
-
 if [ -n "$(git status --porcelain)" ]; then
   echo "template:update: commit or stash your changes first, so the update diff stays separate." >&2
   exit 1
@@ -14,7 +12,7 @@ args=(update --defaults --conflict inline)
 if [ -n "${usage_vcs_ref:-}" ]; then
   args+=(--vcs-ref "$usage_vcs_ref")
 fi
-"${copier[@]}" "${args[@]}"
+copier "${args[@]}"
 
 # Copier documents no exit code for conflicts, so look for the markers it writes.
 conflicts="$(git grep --untracked -lE '^(<<<<<<<|>>>>>>>)( |$)' || true)"
