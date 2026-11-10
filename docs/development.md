@@ -60,16 +60,16 @@ breaking change, and say what projects must do in the release notes.
 
 `AGENTS.md` here has the same shared block as a project's, between the
 `cubert:shared:start` and `cubert:shared:end` markers. Edit it in
-`template/AGENTS.md.jinja`. `check:agents` renders the template with
+`template/AGENTS.md.jinja`. The `shared-agents` hk step renders the template with
 `tests/cubert-answers.yml` and fails if the blocks differ. Its diff shows what to copy.
 
 ## Tests
 
-| Task                   | Covers                                                                    |
-| ---------------------- | ------------------------------------------------------------------------- |
-| `mise run check`       | hk on every file, `check:agents` and the unit tests (`check:scripts`)     |
-| `mise run test:render` | Renders every feature combination, then runs `setup` and `check` in each  |
-| `mise run test:update` | Renders `HEAD~1`, adds project edits, updates to the working tree, checks |
+| Task                   | Covers                                                                           |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| `mise run check`       | hk on every file (`shared-agents` included) and the unit tests (`check:scripts`) |
+| `mise run test:render` | Renders every feature combination, then runs `setup` and `check` in each         |
+| `mise run test:update` | Renders `HEAD~1`, adds project edits, updates to the working tree, checks        |
 
 - Renders read the working tree, including uncommitted changes.
 - `test:render` runs 96 combinations, about 10 minutes with `--jobs 6`. Use

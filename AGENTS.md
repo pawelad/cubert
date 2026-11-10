@@ -116,7 +116,7 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 ### Change
 
 - Edit the shared block above in `template/AGENTS.md.jinja`, then copy the render here.
-  `check:agents` fails until both match.
+  The `shared-agents` hk step fails until both match.
 - A template file uses `[[ ]]` and `[% %]`, not `{{ }}`. See
   [docs/development.md](./docs/development.md).
 

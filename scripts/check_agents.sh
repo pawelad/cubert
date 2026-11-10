@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#MISE description="Fail if the shared block in AGENTS.md differs from a fresh render of the template"
 set -euo pipefail
 
+# Fail if the shared block in AGENTS.md differs from a fresh render of the template.
 # cubert follows its own template, so its shared rules must be the ones a project gets.
 # A plain copy, not the git repo, so the check sees uncommitted template edits.
 work="$(mktemp -d)"
@@ -13,6 +13,6 @@ copier copy --quiet --defaults --data-file tests/cubert-answers.yml "$work/src" 
 shared() { sed -n '/^<!-- cubert:shared:start/,/^<!-- cubert:shared:end -->/p' "$1"; }
 if ! diff -u --label "render: AGENTS.md" --label "cubert: AGENTS.md" \
   <(shared "$work/out/AGENTS.md") <(shared AGENTS.md); then
-  echo "check:agents: copy the rendered shared block into AGENTS.md (or change template/AGENTS.md.jinja)." >&2
+  echo "shared-agents: copy the rendered shared block into AGENTS.md (or change template/AGENTS.md.jinja)." >&2
   exit 1
 fi

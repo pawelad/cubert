@@ -6,6 +6,11 @@ steps {
   ["pins"] {
     glob = List("mise.toml", ".github/**/*.yml", "template/.github/**/*.yml")
   }
+  // The template's shared rules must be the ones cubert's own agents follow.
+  ["shared-agents"] = new Step {
+    glob = List("AGENTS.md", "copier.yml", "template/AGENTS.md.jinja", "tests/cubert-answers.yml")
+    check = "scripts/check_agents.sh"
+  }
   ["template-versions"] = new Step {
     glob = List("mise.toml", ".github/**", "template/**", "scripts/check_versions.py")
     check = "scripts/check_versions.py"
