@@ -4,7 +4,7 @@
 # ///
 """Fail on unpinned tool versions in `mise.toml` and unpinned GitHub Actions.
 
-A mise tool must name a version, not `latest`. A remote action must use a full
+A mise tool must name a version, not `latest` or `lts`. A remote action must use a full
 version tag (`@v1.2.3`) or a commit SHA. Hadolint and dclint check Docker images.
 """
 
@@ -26,7 +26,7 @@ def _mise_failures(path: Path) -> list[str]:
         versions = spec if isinstance(spec, list) else [spec]
         for version in versions:
             value = version.get("version") if isinstance(version, dict) else version
-            if not isinstance(value, str) or value in {"latest", ""}:
+            if not isinstance(value, str) or value in {"latest", "lts", ""}:
                 failures.append(f"{path}: tool {name!r} has no pinned version")
     return failures
 

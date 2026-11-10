@@ -24,6 +24,9 @@ class CheckPinsTest(unittest.TestCase):
     def test_mise_latest_fails(self) -> None:
         self.assertEqual(self.run_on("mise.toml", '[tools]\nhk = "latest"\n'), 1)
 
+    def test_mise_lts_fails(self) -> None:
+        self.assertEqual(self.run_on("mise.toml", '[tools]\nnode = "lts"\n'), 1)
+
     def test_action_full_tag_and_sha_pass(self) -> None:
         sha = "a" * 40
         text = f'steps:\n  - uses: "actions/checkout@v7.0.1"\n  - uses: "x/y@{sha}"\n  - uses: "./local"\n'
