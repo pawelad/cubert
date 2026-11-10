@@ -39,5 +39,7 @@ if (run) >"$log" 2>&1; then
   echo "pass $name"
 else
   echo "FAIL $name (log: $log)"
+  # CI keeps no files from the run, so show the end of the log there.
+  if [ -n "${CI:-}" ]; then tail -n 40 "$log" | sed "s/^/  $name: /"; fi
   exit 1
 fi

@@ -1,0 +1,23 @@
+---
+# Policy: monthly, with a cooldown that matches mise's minimum_release_age.
+# mise.toml has no Dependabot ecosystem: `mise run upgrade` bumps cubert's tools.
+version: 2
+
+updates:
+  # cubert's workflows, the template's workflows, and the composite actions they share.
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+      - "/template"
+      - "/template/.github/actions/*"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      actions:
+        update-types: ["minor", "patch"]

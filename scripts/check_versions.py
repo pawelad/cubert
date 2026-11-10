@@ -5,7 +5,8 @@
 """Fail when the template ships a tool version that cubert would have to keep current.
 
 The template seeds `latest` (or `lts`), and the project's `mise run setup` pins it.
-The one version left is the hk package, which must match cubert's own hk tool.
+The hk package must match cubert's own hk tool. Dependabot skips `.jinja` workflows, so
+their actions must match the versions in the workflows that it bumps.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ HK_CONFIGS = (Path("template/.config/hk/base.pkl"), Path("template/.config/hk/cu
 UNPINNED = {"latest", "lts"}
 
 TOOL_LINE = re.compile(r'^"?(?P<name>[^"=\s]+)"? = "(?P<version>[^"]+)"$')
+USES = re.compile(r'uses:\s*"?(?P<action>[^"@\s.][^"@\s]*)@(?P<ref>[^"\s#]+)')
 HK_PACKAGE = re.compile(r"hk/releases/download/v(?P<tag>[^/]+)/hk@(?P<version>[^#]+)#")
 
 
@@ -37,6 +39,11 @@ def template_tools(text: str) -> dict[str, str]:
     return tools
 
 
+def action_refs(text: str) -> dict[str, str]:
+    """Return the version of each remote action that a workflow uses."""
+    return {match["action"]: match["ref"] for match in USES.finditer(text)}
+
+
 def failures(root: Path) -> list[str]:
     own = tomllib.loads((root / "mise.toml").read_text())["tools"]
     found: list[str] = []
@@ -49,6 +56,15 @@ def failures(root: Path) -> list[str]:
         for match in HK_PACKAGE.finditer((root / path).read_text()):
             if not match["tag"] == match["version"] == own["hk"]:
                 found.append(f"{path}: hk package {match['version']!r}, mise.toml has {own['hk']!r}")
+
+    plain = [*root.glob(".github/**/*.yml"), *root.glob("template/.github/**/*.yml")]
+    bumped: dict[str, str] = {}
+    for path in sorted(plain):
+        bumped |= action_refs(path.read_text())
+    for path in sorted(root.glob("template/.github/**/*.yml.jinja")):
+        for action, ref in action_refs(path.read_text()).items():
+            if action in bumped and bumped[action] != ref:
+                found.append(f"{path.relative_to(root)}: {action}@{ref}, other workflows use @{bumped[action]}")
 
     return found
 

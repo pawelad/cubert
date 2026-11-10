@@ -7,7 +7,7 @@ steps {
     glob = List("mise.toml", ".github/**/*.yml", "template/.github/**/*.yml")
   }
   ["template-versions"] = new Step {
-    glob = List("mise.toml", "template/**", "scripts/check_versions.py")
+    glob = List("mise.toml", ".github/**", "template/**", "scripts/check_versions.py")
     check = "scripts/check_versions.py"
   }
 }

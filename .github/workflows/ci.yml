@@ -1,0 +1,82 @@
+---
+name: "CI"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: "read"
+
+# Each render resolves `latest` for every tool. Unauthenticated GitHub API calls hit the rate limit.
+env:
+  MISE_GITHUB_TOKEN: "${{ github.token }}"
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: "Check"
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 20
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@v7.0.1"
+        with:
+          persist-credentials: false
+
+      # cubert uses the action that it ships to projects.
+      - name: "Set up mise"
+        uses: "./template/.github/actions/setup-mise"
+
+      - name: "Run the checks"
+        run: "mise run check"
+
+  update:
+    name: "Update from the previous commit"
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 20
+    steps:
+      # test:update renders HEAD~1, so it needs history.
+      - name: "Check out the repository"
+        uses: "actions/checkout@v7.0.1"
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: "Set up mise"
+        uses: "./template/.github/actions/setup-mise"
+
+      - name: "Configure Git for the test commits"
+        run: |
+          git config --global user.name "cubert CI"
+          git config --global user.email "ci@users.noreply.github.com"
+
+      - name: "Test the update"
+        run: "mise run test:update"
+
+  render:
+    name: "Render ${{ matrix.openspec }}"
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        openspec: ["none", "changes-only", "spec-driven"]
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@v7.0.1"
+        with:
+          persist-credentials: false
+
+      - name: "Set up mise"
+        uses: "./template/.github/actions/setup-mise"
+
+      - name: "Render every feature combination"
+        env:
+          OPENSPEC: "${{ matrix.openspec }}"
+        run: "mise run test:render --jobs 4 --out \"${RUNNER_TEMP}/renders\" --filter \"_${OPENSPEC}\\$\""
