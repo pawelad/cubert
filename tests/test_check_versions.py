@@ -16,30 +16,40 @@ class CheckVersionsTest(unittest.TestCase):
         text = '[tools]\nhk = "1"\n[% if python %]\nruff = "2"\n[% endif %]\n\n[tasks.x]\nrun = "y"\n'
         self.assertEqual(check_versions.template_tools(text), {"hk": "1", "ruff": "2"})
 
-    def test_exact_seed_fails(self) -> None:
+    def failures_in(self, files: dict[str, str]) -> list[str]:
+        """Run the check on a minimal repository, with `files` added or replaced."""
+        base = {
+            "mise.toml": '[tools]\nhk = "2.11.1"\n',
+            "template/mise.toml.jinja": '[tools]\nhk = "latest"\n',
+            "template/.config/hk/base.pkl": "",
+            "template/.config/hk/cubert.pkl.jinja": "",
+        }
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "template/.config/hk").mkdir(parents=True)
-            (root / "mise.toml").write_text('[tools]\nhk = "2.11.1"\n')
-            (root / "template/mise.toml.jinja").write_text('[tools]\njq = "1.8.2"\nhk = "latest"\n')
-            (root / "template/.config/hk/base.pkl").write_text("")
-            (root / "template/.config/hk/cubert.pkl.jinja").write_text("")
-            self.assertEqual(len(check_versions.failures(root)), 1)
+            for name, text in (base | files).items():
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).write_text(text)
+            return check_versions.failures(root)
+
+    def test_minimal_repository_passes(self) -> None:
+        self.assertEqual(self.failures_in({}), [])
+
+    def test_exact_seed_fails(self) -> None:
+        files = {"template/mise.toml.jinja": '[tools]\njq = "1.8.2"\nnode = "lts"\n'}
+        self.assertEqual(len(self.failures_in(files)), 1)
+
+    def test_hk_package_must_match_hk(self) -> None:
+        url = "package://github.com/jdx/hk/releases/download/v2.10.0/hk@2.10.0#/Config.pkl"
+        self.assertEqual(len(self.failures_in({"template/.config/hk/base.pkl": url})), 1)
 
     def test_jinja_workflow_must_match_bumped_action(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            (root / "template/.config/hk").mkdir(parents=True)
-            (root / "template/.github/workflows").mkdir(parents=True)
-            (root / ".github/workflows").mkdir(parents=True)
-            (root / "mise.toml").write_text('[tools]\nhk = "2.11.1"\n')
-            (root / "template/mise.toml.jinja").write_text("[tools]\n")
-            (root / "template/.config/hk/base.pkl").write_text("")
-            (root / "template/.config/hk/cubert.pkl.jinja").write_text("")
-            (root / ".github/workflows/ci.yml").write_text('- uses: "actions/checkout@v7.0.2"\n')
-            jinja = root / "template/.github/workflows/ci.yml.jinja"
-            jinja.write_text('- uses: "actions/checkout@v7.0.1"\n- uses: "./.github/actions/setup-mise"\n')
-            self.assertEqual(len(check_versions.failures(root)), 1)
+        files = {
+            ".github/workflows/ci.yml": '- uses: "actions/checkout@v7.0.2"\n',
+            "template/.github/workflows/ci.yml.jinja": (
+                '- uses: "actions/checkout@v7.0.1"\n- uses: "./.github/actions/setup-mise"\n'
+            ),
+        }
+        self.assertEqual(len(self.failures_in(files)), 1)
 
     def test_repository_passes(self) -> None:
         self.assertEqual(check_versions.failures(Path()), [])
