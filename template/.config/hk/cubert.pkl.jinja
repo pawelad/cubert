@@ -1,0 +1,73 @@
+// Template-owned: edit in cubert, not in a project. Shared steps are in `base.pkl`.
+// This file adds the steps for the features that the project enabled in Copier.
+amends "base.pkl"
+[% if python or docker or opentofu %]
+import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtins.pkl" as builtins
+[% endif %]
+[% if python or docker or opentofu or ansible or openspec != 'none' %]
+steps {
+[% if python %]
+  // The check scripts in .config/ are tested in cubert, so project lint rules skip them.
+  ["python-debug-statements"] = builtins.python_debug_statements
+  ["ruff"] = (builtins.ruff) {
+    exclude = List(".config/**")
+  }
+  ["ruff-format"] = (builtins.ruff_format) {
+    exclude = List(".config/**")
+    depends = "ruff"
+  }
+  ["mypy"] = new Step {
+    glob = List("**/*.py", "**/*.pyi")
+    exclude = List(".config/**")
+    check = "uv run mypy {{files}}"
+  }
+[% endif %]
+[% if docker %]
+  ["hadolint"] = (builtins.hadolint) {
+    check = "hadolint --ignore DL3008 {{files}}"
+  }
+  // Its fixer drops leading comments in compose files, so fix by hand.
+  ["dclint"] = (builtins.dclint) {
+    fix = null
+  }
+  ["compose-file-name"] = new Step {
+    glob = List("**/docker-compose.yml", "**/docker-compose.yaml")
+    check = "echo 'Rename to compose.yaml, the name that Docker Compose prefers:' {{files}} >&2; exit 1"
+  }
+  // Some images resolve `localhost` to IPv6 first, where the service does not listen.
+  ["healthcheck-host"] = new Step {
+    glob = List("**/compose*.yaml", "**/compose*.yml")
+    check = """
+      if grep -nHE '^ *test:.*localhost' {{files}}; then
+        echo 'Use 127.0.0.1, not localhost, in healthchecks.' >&2
+        exit 1
+      fi
+      """
+  }
+[% endif %]
+[% if opentofu %]
+  ["tofu-fmt"] = (builtins.tofu) {
+    dir = "[[ tofu_dir ]]"
+  }
+[% endif %]
+[% if ansible %]
+  ["ansible-lint"] = new Step {
+    dir = "[[ ansible_dir ]]"
+    glob = List("playbooks/*.yml", "roles/**/*.yml")
+    check = "ansible-lint {{files}}"
+  }
+  ["ansible-syntax-check"] = new Step {
+    dir = "[[ ansible_dir ]]"
+    glob = List("playbooks/*.yml")
+    check = "ansible-playbook --syntax-check {{files}}"
+  }
+[% endif %]
+[% if openspec != 'none' %]
+  // Only the exit code counts: changes-only changes always print an [INFO] line.
+  ["openspec"] = new Step {
+    glob = List("openspec/**")
+    check = "openspec validate --all --strict"
+  }
+[% endif %]
+}
+[% endif %]

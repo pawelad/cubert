@@ -1,0 +1,23 @@
+[project]
+name = "[[ project_name ]]"
+version = "0.1.0"
+description = "[[ description ]]"
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = ["mypy==2.4.1"]
+
+[tool.uv]
+# Matches the Dependabot cooldown. Installs from uv.lock are not filtered.
+exclude-newer = "7 days"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["COM812", "D203", "D213"]
+
+[tool.mypy]
+strict = true

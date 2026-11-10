@@ -1,0 +1,8 @@
+---
+rules:
+  no-build-and-image: 0
+  no-quotes-in-volumes: 0
+  require-quotes-in-ports:
+    - 2
+    - quoteType: "double"
+  service-keys-order: 2

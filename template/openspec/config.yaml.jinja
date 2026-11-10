@@ -1,0 +1,23 @@
+---
+# A change can pick the other schema: `openspec new change <name> --schema <name>`.
+schema: "[[ openspec ]]"
+
+context: |
+  `[[ project_name ]]`: [[ description ]]
+
+  Read the root `AGENTS.md` for the rules and `docs/README.md` for the docs index.
+
+# OpenSpec adds each list to the instructions only while an agent writes that artifact.
+rules:
+  proposal:
+    - "Write the proposal for a behavior change or a design decision, not for a refactor or a bump."
+  design:
+    - "For each decision, state why it beats the alternatives that you considered."
+    - "Rationale goes here, not in code comments. Code never cites change names."
+  specs:
+    - "A spec's H1 is its capability name in Title Case with abbreviations expanded."
+    - "Requirement text states the rule. Rationale goes in design.md."
+    - "To retire a scenario, list its requirement under REMOVED, then under ADDED with a new name."
+  tasks:
+    - "End with a task that runs `mise run format` and `mise run check`, plus the tests for the touched files."
+    - "Update existing tasks for review fixes. Add tasks only for new scope."

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Run the hk fixers on changed and untracked files (--all for every file)"
+#USAGE flag "--all" help="Fix every file in the repository"
+set -euo pipefail
+
+if [ "${usage_all:-false}" = "true" ]; then
+  hk fix --all
+else
+  hk fix
+fi

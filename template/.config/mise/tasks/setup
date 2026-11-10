@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Set up a checkout: tools, git hooks, blame config, then the project install task"
+set -euo pipefail
+
+mise install
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+if [ -z "${CI:-}" ]; then
+  mise run hooks:install
+fi
+mise run install

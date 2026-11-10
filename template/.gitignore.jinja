@@ -1,0 +1,34 @@
+.env
+tmp
+
+.mise/*
+!.mise/locks/
+
+# Agent dirs. worktree:setup links them to the primary checkout.
+.agent
+.agents
+.claude
+.codex
+.gemini
+.impeccable
+.opencode
+.idea/
+
+*.rej
+__pycache__/
+[% if python %]
+.venv/
+.mypy_cache/
+.ruff_cache/
+[% endif %]
+[% if opentofu %]
+[[ tofu_dir ]]/.terraform/
+[[ tofu_dir ]]/*.tfstate
+[[ tofu_dir ]]/*.tfstate.*
+[% endif %]
+[% if ansible %]
+[[ ansible_dir ]]/.vault_pass
+[[ ansible_dir ]]/collections/
+[% endif %]
+
+# Project

@@ -1,0 +1,68 @@
+# Project-owned. Shared settings and tasks: .config/mise/ (template-owned).
+# A short task goes here. A task with logic goes in mise-tasks/ as a file task.
+
+[tools]
+actionlint = "1.7.12"
+dprint = "0.64.3"
+hk = "2.11.1"
+jq = "1.8.2"
+pkl = "0.32.2"
+shellcheck = "0.11.0"
+shfmt = "3.14.1"
+uv = "0.13.7"
+worktrunk = "0.81.0"
+yamllint = "1.38.0"
+[% if python %]
+ruff = "0.17.3"
+[% endif %]
+[% if docker %]
+hadolint = "2.15.1"
+"npm:dclint" = "3.1.0"
+[% endif %]
+[% if opentofu %]
+opentofu = "1.13.2"
+[% endif %]
+[% if ansible %]
+"pipx:ansible-core" = "2.22.0"
+"pipx:ansible-lint" = "26.10.1"
+[% endif %]
+[% if changelog %]
+git-cliff = "2.14.2"
+[% endif %]
+[% if openspec != 'none' %]
+"npm:@fission-ai/openspec" = "1.16.0"
+[% endif %]
+[% if python or opentofu or ansible %]
+
+[tasks.install]
+description = "Install project dependencies"
+[% if python and not (opentofu or ansible) %]
+run = "uv sync"
+[% else %]
+run = [
+[% if python %]
+  "uv sync",
+[% endif %]
+[% if opentofu %]
+  "mise run tofu:init",
+[% endif %]
+[% if ansible %]
+  "mise run ansible:install",
+[% endif %]
+]
+[% endif %]
+[% endif %]
+[% if opentofu %]
+
+[tasks."tofu:init"]
+description = "Initialize the OpenTofu providers and state backend"
+dir = "[[ tofu_dir ]]"
+run = "tofu init -input=false"
+[% endif %]
+[% if ansible %]
+
+[tasks."ansible:install"]
+description = "Install the Ansible collections from requirements.yml"
+dir = "[[ ansible_dir ]]"
+run = "if [ -f requirements.yml ]; then ansible-galaxy collection install -r requirements.yml; fi"
+[% endif %]

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Install the hk git hooks and the post-checkout worktree hook"
+set -euo pipefail
+
+# hk skips this when ~/.gitconfig already has global hk hooks.
+hk install --mise
+hooks_dir="$(git rev-parse --git-common-dir)/hooks"
+mkdir -p "$hooks_dir"
+cp .config/git/post-checkout "$hooks_dir/post-checkout"
+chmod +x "$hooks_dir/post-checkout"

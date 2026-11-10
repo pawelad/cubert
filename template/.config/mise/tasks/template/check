@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Fail if a newer cubert template version exists"
+set -euo pipefail
+
+# Exit status 2 means that a newer version exists.
+if ! uvx --quiet copier@9.19.1 check-update --quiet; then
+  echo "template:check: a newer cubert version exists. Run: mise run template:update" >&2
+  exit 1
+fi

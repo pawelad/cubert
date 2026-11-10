@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Update the installed agent skills (openspec)"
+set -euo pipefail
+
+openspec update

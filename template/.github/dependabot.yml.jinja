@@ -1,0 +1,85 @@
+---
+# Policy: monthly, with a cooldown that matches mise's minimum_release_age.
+# mise.toml has no Dependabot ecosystem: `mise run upgrade` bumps those tools.
+version: 2
+
+updates:
+  # A plain "/" scans only .github/workflows, so list the composite actions too.
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      actions:
+        update-types: ["minor", "patch"]
+[% if python %]
+
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "build(deps)"
+      prefix-development: "build(deps-dev)"
+    groups:
+      python:
+        update-types: ["minor", "patch"]
+[% endif %]
+[% if docker %]
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      images:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      compose-images:
+        update-types: ["minor", "patch"]
+[% endif %]
+[% if opentofu %]
+
+  - package-ecosystem: "opentofu"
+    directory: "/[[ tofu_dir ]]"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      providers:
+        update-types: ["minor", "patch"]
+[% endif %]

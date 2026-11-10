@@ -1,0 +1,133 @@
+---
+_min_copier_version: "9.19"
+_subdirectory: "template"
+_preserve_symlinks: true
+_answers_file: ".copier-answers.yml"
+
+# Template files use [[ ]] and [% %]: hk, mise, worktrunk and Actions all use {{ }}.
+_envops:
+  block_start_string: "[%"
+  block_end_string: "%]"
+  variable_start_string: "[["
+  variable_end_string: "]]"
+  comment_start_string: "[#"
+  comment_end_string: "#]"
+  keep_trailing_newline: true
+  trim_blocks: true
+  lstrip_blocks: true
+
+# Conditions here, not in path names: dprint cannot exclude a path that holds [ ].
+_exclude:
+  - "copier.yml"
+  - ".git"
+  - "[% if openspec == 'none' %]openspec[% endif %]"
+  - "[% if openspec != 'spec-driven' %]openspec/specs[% endif %]"
+
+# Created once, then owned by the project. Copier creates a deleted one again on update.
+_skip_if_exists:
+  - "mise.toml"
+  - "hk.pkl"
+  - "dprint.json"
+  - ".worktreeinclude"
+  - ".worktreelinks"
+  - "docs/setup.md"
+  - "LICENSE"
+  - "CONTRIBUTING.md"
+  - "pyproject.toml"
+  - ".python-version"
+  - "cliff.toml"
+  - "CHANGELOG.md"
+  - "[[ tofu_dir ]]/versions.tf"
+
+_message_after_copy: |
+  Next steps in [[ _copier_conf.dst_path ]]:
+
+    git init     (if it is not a repository yet)
+    mise trust
+    mise run setup
+    mise run check
+
+project_name:
+  type: "str"
+  help: "Project name, as the repository is named"
+  validator: "[% if not project_name %]Required[% endif %]"
+
+description:
+  type: "str"
+  help: "One-line description, a full sentence"
+  validator: "[% if not description %]Required[% endif %]"
+
+github_owner:
+  type: "str"
+  help: "GitHub user or organization that owns the repository"
+  default: "pawelad"
+
+license:
+  type: "str"
+  help: "License"
+  choices:
+    Mozilla Public License 2.0: "MPL-2.0"
+    All rights reserved: "ARR"
+  default: "MPL-2.0"
+
+python:
+  type: "bool"
+  help: "Python project (pyproject.toml, ruff, mypy, Dependabot uv)?"
+  default: false
+
+docker:
+  type: "bool"
+  help: "Docker images or Compose files (hadolint, dclint, Dependabot docker)?"
+  default: false
+
+opentofu:
+  type: "bool"
+  help: "OpenTofu infrastructure (tofu fmt and validate, Dependabot opentofu)?"
+  default: false
+
+tofu_dir:
+  type: "str"
+  help: "OpenTofu directory"
+  default: "opentofu"
+  when: "[[ opentofu ]]"
+
+ansible:
+  type: "bool"
+  help: "Ansible playbooks (ansible-lint, syntax check)?"
+  default: false
+
+ansible_dir:
+  type: "str"
+  help: "Ansible directory"
+  default: "ansible"
+  when: "[[ ansible ]]"
+
+openspec:
+  type: "str"
+  help: "OpenSpec change proposals"
+  choices:
+    None: "none"
+    Changes only (proposal, design, tasks): "changes-only"
+    Spec-driven (proposal, specs, design, tasks): "spec-driven"
+  default: "changes-only"
+
+changelog:
+  type: "bool"
+  help: "Changelog from commits (git-cliff, CHANGELOG.md, release:preview)?"
+  default: false
+
+# Constants. Not asked, and not stored in the answers file.
+author_name:
+  type: "str"
+  default: "Paweł Adamczak"
+  when: false
+
+author_url:
+  type: "str"
+  default: "https://pawelad.me/"
+  when: false
+
+copyright_year:
+  type: "str"
+  default: "2026"
+  when: false
