@@ -1,0 +1,15 @@
+tmp
+
+.mise/*
+!.mise/locks/
+
+.agent
+.agents
+.claude
+.codex
+.gemini
+.impeccable
+.opencode
+.idea/
+
+__pycache__/

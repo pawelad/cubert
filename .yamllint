@@ -1,0 +1,7 @@
+---
+extends: "template/.yamllint"
+
+ignore: |
+  .mise/
+  tmp/
+  template/openspec/schemas/

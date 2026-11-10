@@ -1,0 +1,57 @@
+# cubert's own tools and tasks. Copier comes from mise here; projects run it with uvx.
+# A short task goes here. A task with logic goes in mise-tasks/ as a file task.
+
+[settings]
+lockfile = true
+# Matches the Dependabot cooldown. Exact pins and mise.lock entries are not filtered.
+minimum_release_age = "7d"
+
+[env]
+HK_MISE = 1
+DO_NOT_TRACK = "1"
+
+[tools]
+actionlint = "1.7.12"
+dprint = "0.64.3"
+hk = "2.11.1"
+jq = "1.8.2"
+pkl = "0.32.2"
+shellcheck = "0.11.0"
+shfmt = "3.14.1"
+uv = "0.13.7"
+worktrunk = "0.81.0"
+yamllint = "1.38.0"
+"npm:@fission-ai/openspec" = "1.16.0"
+"pipx:copier" = "9.19.1"
+
+[tasks.setup]
+description = "Set up a checkout: tools and git hooks"
+run = ["mise install", "hk install --mise"]
+
+[tasks.check]
+description = "Run every check (check:*)"
+depends = ["check:*"]
+
+[tasks."check:repo"]
+description = "Run hk on every file"
+run = "hk check --all"
+
+[tasks."check:scripts"]
+description = "Run the unit tests for the check scripts"
+run = "uv run --no-project --python 3.14 python -m unittest discover --start-directory tests --top-level-directory ."
+
+[tasks.format]
+description = "Run the hk fixers on changed and untracked files (--all for every file)"
+usage = 'flag "--all" help="Fix every file in the repository"'
+run = 'if [ "${usage_all:-false}" = "true" ]; then hk fix --all; else hk fix; fi'
+
+[tasks.upgrade]
+description = "Upgrade cubert's tools and the template's dprint plugins"
+usage = 'arg "[tools]..." help="Tools to upgrade"'
+# mise passes usage args only as usage_* variables, and the list must split into words.
+run = '''
+# shellcheck disable=SC2086
+mise upgrade --bump ${usage_tools:-}
+dprint config update --config template/.config/dprint.json --yes
+dprint config update --config "template/.config/[% if docker %]dprint-docker.json[% endif %]" --yes
+'''

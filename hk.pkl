@@ -1,0 +1,13 @@
+// cubert follows its own template: `.config/hk` links to `template/.config/hk`.
+amends ".config/hk/base.pkl"
+
+steps {
+  // The template's own workflows and actions are pinned too.
+  ["pins"] {
+    glob = List("mise.toml", ".github/**/*.yml", "template/.github/**/*.yml")
+  }
+  ["template-versions"] = new Step {
+    glob = List("mise.toml", "template/**", "scripts/check_versions.py")
+    check = "scripts/check_versions.py"
+  }
+}
