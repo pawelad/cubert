@@ -3,23 +3,33 @@
 #USAGE flag "--vcs-ref <ref>" help="Template Git ref (default: the latest tag)"
 set -euo pipefail
 
-if [ -n "$(git status --porcelain)" ]; then
-  echo "template:update: commit or stash your changes first, so the update diff stays separate." >&2
-  exit 1
-fi
+# Copier rewrites this file while it runs. Bash reads a script as it goes, so the
+# whole body sits in a function that bash parses before the update starts.
+main() {
+  if [ -n "$(git status --porcelain)" ]; then
+    echo "template:update: commit or stash your changes first, so the update diff stays separate." >&2
+    exit 1
+  fi
 
-args=(update --defaults --conflict inline)
-if [ -n "${usage_vcs_ref:-}" ]; then
-  args+=(--vcs-ref "$usage_vcs_ref")
-fi
-copier "${args[@]}"
+  local args=(update --defaults --conflict inline)
+  if [ -n "${usage_vcs_ref:-}" ]; then
+    args+=(--vcs-ref "$usage_vcs_ref")
+  fi
+  # Copier commits in temporary repos. Global hk hooks would run there and drop mise.lock.
+  HK=0 copier "${args[@]}"
 
-# Copier documents no exit code for conflicts, so look for the markers it writes.
-conflicts="$(git grep --untracked -lE '^(<<<<<<<|>>>>>>>)( |$)' || true)"
-rejects="$(git ls-files --others --exclude-standard -- '*.rej')"
-if [ -n "$conflicts$rejects" ]; then
-  echo "template:update: resolve these conflicts, then commit:" >&2
-  printf '%s\n%s\n' "$conflicts" "$rejects" | sed '/^$/d; s/^/  /' >&2
-  exit 1
-fi
-git status --short
+  # Copier documents no exit code for conflicts, so look for the markers it writes.
+  local conflicts rejects
+  conflicts="$(git grep --untracked -lE '^(<<<<<<<|>>>>>>>)( |$)' || true)"
+  # Without --exclude-standard: .gitignore ignores *.rej.
+  rejects="$(git ls-files --others -- '*.rej')"
+  if [ -n "$conflicts$rejects" ]; then
+    echo "template:update: resolve these conflicts, then commit:" >&2
+    printf '%s\n%s\n' "$conflicts" "$rejects" | sed '/^$/d; s/^/  /' >&2
+    exit 1
+  fi
+  git status --short
+}
+
+main "$@"
+exit
