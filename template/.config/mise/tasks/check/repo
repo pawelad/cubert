@@ -36,5 +36,6 @@ while IFS= read -r nested; do
   fi
 done < <(grep -E '/AGENTS\.md$' <<<"$files" || true)
 
-hk check --all || status=1
+# Report every failing step. The git hooks keep fail_fast for quick feedback.
+hk check --all --no-fail-fast || status=1
 exit "$status"
