@@ -1,0 +1,5 @@
+---
+# The answers that cubert would give its own template. check:agents renders with them.
+project_name: "cubert"
+description: "A Copier template for my projects: shared tooling, checks and agent rules."
+openspec: "none"
