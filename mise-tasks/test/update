@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#MISE description="Render an older cubert, edit the project, update to the working tree, then check"
+#USAGE flag "--from <ref>" default="HEAD~1" help="cubert ref to render first"
+#USAGE flag "--out <dir>" help="Write the project here (default: a new temp dir)"
+set -euo pipefail
+
+root="$PWD"
+from="$(git rev-parse --verify "${usage_from:-HEAD~1}^{commit}")"
+out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-update.XXXXXX")}"
+dest="$out/demo"
+rm -rf "$dest"
+
+# The nested mise runs must resolve the rendered project, not cubert.
+unset MISE_PROJECT_ROOT MISE_CONFIG_ROOT MISE_ORIGINAL_CWD MISE_TASK_NAME MISE_TASK_DIR MISE_TASK_FILE
+
+step() { echo "test:update: $*"; }
+
+step "render $(git rev-parse --short "$from") into $dest"
+copier copy --quiet --defaults --vcs-ref "$from" \
+  -d project_name="demo" -d description="A demo project." \
+  -d python=true -d changelog=true -d openspec="changes-only" \
+  "$root" "$dest" >/dev/null
+cd "$dest"
+git -c init.defaultBranch=main init --quiet
+mise trust --quiet --all
+if ! mise run setup >"$out/setup.log" 2>&1; then
+  echo "test:update: setup failed, see $out/setup.log" >&2
+  exit 1
+fi
+git add --all
+git commit --quiet --no-verify -m "chore: render cubert"
+
+# One edit per merged or project-owned file kind. Each line must survive the update.
+step "add project edits"
+printf -- '- Ask before you rotate the demo API key.\n' >>AGENTS.md
+printf 'demo-cache/\n' >>.gitignore
+printf '\n## Demo\n\nA project section.\n' >>README.md
+printf '\n[tasks."demo:hello"]\ndescription = "Say hello"\nrun = "echo hello"\n' >>mise.toml
+git commit --quiet --no-verify -am "docs: add project edits"
+
+step "run template:update --vcs-ref HEAD"
+if ! mise run template:update --vcs-ref HEAD; then
+  echo "test:update: the update stopped. The project is in $dest." >&2
+  exit 1
+fi
+
+status=0
+for edit in "AGENTS.md:rotate the demo API key" ".gitignore:demo-cache/" "README.md:A project section." 'mise.toml:demo:hello'; do
+  if ! grep -qF -- "${edit#*:}" "${edit%%:*}"; then
+    echo "test:update: the update dropped the edit in ${edit%%:*}: ${edit#*:}" >&2
+    status=1
+  fi
+done
+[ "$status" -eq 0 ] || exit 1
+
+step "run check"
+git add --all
+mise run check
+step "pass (project: $dest)"
