@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
 
-SCRIPT = Path("template/.config/hk/checks/check_pins.py")
-spec = importlib.util.spec_from_file_location("check_pins", SCRIPT)
-assert spec and spec.loader
-check_pins = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(check_pins)
+from tests.support import load_script
+
+check_pins = load_script("template/.config/hk/checks/check_pins.py")
 
 
 class CheckPinsTest(unittest.TestCase):
