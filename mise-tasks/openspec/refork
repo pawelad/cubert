@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#MISE description="Rebuild the changes-only schema from the pinned OpenSpec (run after an OpenSpec bump)"
+set -euo pipefail
+
+# changes-only is a copy of the built-in spec-driven schema with the specs parts cut out.
+# A copy does not improve with OpenSpec upgrades, so rebuild it and review the diff.
+target="template/openspec/schemas/changes-only"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+
+(
+  cd "$work"
+  git init --quiet
+  openspec init --tools none >/dev/null
+  openspec schema fork spec-driven changes-only >/dev/null
+)
+scripts/refork_openspec.py "$work/openspec/schemas/changes-only"
+(cd "$work" && openspec schema validate changes-only)
+
+rm -rf "$target"
+cp -R "$work/openspec/schemas/changes-only" "$target"
+git status --short -- "$target"
+echo "openspec:refork: review the diff, run the render tests, then commit."
