@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+#MISE description="Render every feature combination, then run setup and check in each"
+#USAGE flag "-j --jobs <n>" default="4" help="Renders to run in parallel"
+#USAGE flag "--filter <regex>" help="Only render the combinations whose name matches"
+#USAGE flag "--out <dir>" help="Write the renders here (default: a new temp dir)"
+set -euo pipefail
+# macOS runs bash 3.2: no mapfile, no associative arrays.
+
+out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-render.XXXXXX")}"
+mkdir -p "$out"
+
+names=()
+for p in 0 1; do for d in 0 1; do for t in 0 1; do for a in 0 1; do for c in 0 1; do
+  for openspec in none changes-only spec-driven; do
+    name="p${p}d${d}t${t}a${a}c${c}_${openspec}"
+    if [ -z "${usage_filter:-}" ] || grep -qE "$usage_filter" <<<"$name"; then
+      names+=("$name")
+    fi
+  done
+done; done; done; done; done
+
+echo "Rendering ${#names[@]} combinations into $out"
+status=0
+printf '%s\n' "${names[@]}" | xargs -P "${usage_jobs:-4}" -I{} scripts/render.sh "$PWD" "$out" {} || status=1
+if [ "$status" -ne 0 ]; then
+  echo "test:render: some combinations failed. Each log is next to its render in $out." >&2
+fi
+exit "$status"
