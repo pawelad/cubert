@@ -2,10 +2,10 @@
 # /// script
 # requires-python = ">=3.14"
 # ///
-"""Fail when a version that cubert pins in several places differs between them.
+"""Fail when the template ships a tool version that cubert would have to keep current.
 
-cubert's own `mise.toml` is the reference. The template seeds the same tool
-versions and pins the hk package to the hk tool.
+The template seeds `latest` (or `lts`), and the project's `mise run setup` pins it.
+The one version left is the hk package, which must match cubert's own hk tool.
 """
 
 from __future__ import annotations
@@ -17,13 +17,14 @@ from pathlib import Path
 
 TEMPLATE_TOOLS = Path("template/mise.toml.jinja")
 HK_CONFIGS = (Path("template/.config/hk/base.pkl"), Path("template/.config/hk/cubert.pkl.jinja"))
+UNPINNED = {"latest", "lts"}
 
 TOOL_LINE = re.compile(r'^"?(?P<name>[^"=\s]+)"? = "(?P<version>[^"]+)"$')
 HK_PACKAGE = re.compile(r"hk/releases/download/v(?P<tag>[^/]+)/hk@(?P<version>[^#]+)#")
 
 
 def template_tools(text: str) -> dict[str, str]:
-    """Return the tool pins that the template seeds, across every feature block."""
+    """Return the tool versions that the template seeds, across every feature block."""
     tools: dict[str, str] = {}
     in_tools = False
     for line in text.splitlines():
@@ -41,8 +42,8 @@ def failures(root: Path) -> list[str]:
     found: list[str] = []
 
     for name, version in template_tools((root / TEMPLATE_TOOLS).read_text()).items():
-        if name in own and own[name] != version:
-            found.append(f"{TEMPLATE_TOOLS}: {name} = {version!r}, mise.toml has {own[name]!r}")
+        if version not in UNPINNED:
+            found.append(f"{TEMPLATE_TOOLS}: seed {name} = \"latest\", not {version!r}")
 
     for path in HK_CONFIGS:
         for match in HK_PACKAGE.finditer((root / path).read_text()):

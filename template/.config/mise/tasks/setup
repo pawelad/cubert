@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
-#MISE description="Set up a checkout: tools, git hooks, blame config, then the project install task"
+#MISE description="Set up a checkout: pin and install tools, git hooks, blame config, then install"
 set -euo pipefail
+
+# A new project's mise.toml seeds `latest`. `mise use --pin` respects minimum_release_age.
+unpinned="$(awk '
+  /^\[/ { in_tools = ($0 == "[tools]"); next }
+  in_tools && match($0, /^"?[^"= ]+"? = "(latest|lts)"$/) {
+    split($0, part, " = ")
+    gsub(/"/, "", part[1]); gsub(/"/, "", part[2])
+    print part[1] "@" part[2]
+  }
+' mise.toml)"
+if [ -n "$unpinned" ]; then
+  echo "setup: pinning $(echo "$unpinned" | tr '\n' ' ')"
+  # shellcheck disable=SC2086
+  mise use --path mise.toml --pin $unpinned
+fi
 
 mise install
 git config blame.ignoreRevsFile .git-blame-ignore-revs

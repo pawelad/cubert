@@ -1,41 +1,43 @@
 # Project-owned. Shared settings and tasks: .config/mise/ (template-owned).
 # A short task goes here. A task with logic goes in mise-tasks/ as a file task.
 
+# `mise run setup` pins each `latest` or `lts` entry to the newest release that
+# `minimum_release_age` allows. Add a tool that way, or with `mise use --pin <tool>`.
 [tools]
-actionlint = "1.7.12"
-dprint = "0.64.3"
-hk = "2.11.1"
-jq = "1.8.2"
+actionlint = "latest"
+dprint = "latest"
+hk = "latest"
+jq = "latest"
 [% if docker or openspec != 'none' %]
 # npm: tools run on this Node, so CI and every machine use the same one.
-node = "24.22.2"
+node = "lts"
 [% endif %]
-pkl = "0.32.2"
-shellcheck = "0.11.0"
-shfmt = "3.14.1"
-uv = "0.13.7"
-worktrunk = "0.81.0"
-yamllint = "1.38.0"
-"pypi:copier" = "9.19.1"
+pkl = "latest"
+shellcheck = "latest"
+shfmt = "latest"
+uv = "latest"
+worktrunk = "latest"
+yamllint = "latest"
+"pypi:copier" = "latest"
 [% if python %]
-ruff = "0.17.3"
+ruff = "latest"
 [% endif %]
 [% if docker %]
-hadolint = "2.15.1"
-"npm:dclint" = "3.1.0"
+hadolint = "latest"
+"npm:dclint" = "latest"
 [% endif %]
 [% if opentofu %]
-opentofu = "1.13.2"
+opentofu = "latest"
 [% endif %]
 [% if ansible %]
-"pypi:ansible-core" = "2.22.0"
-"pypi:ansible-lint" = "26.10.1"
+"pypi:ansible-core" = "latest"
+"pypi:ansible-lint" = "latest"
 [% endif %]
 [% if changelog %]
-git-cliff = "2.14.2"
+git-cliff = "latest"
 [% endif %]
 [% if openspec != 'none' %]
-"npm:@fission-ai/openspec" = "1.16.0"
+"npm:@fission-ai/openspec" = "latest"
 [% endif %]
 [% if python or opentofu or ansible %]
 

@@ -32,6 +32,9 @@ again.
 - A Python CLI is a mise `pypi:` tool, which mise installs with uv. Do not run `uvx` or
   `pipx` directly.
 - A project with `npm:` tools pins `node` in `mise.toml` too.
+- A new project's `mise.toml` seeds `latest` (`lts` for Node). The first
+  `mise run setup` pins each one to the newest release that `minimum_release_age`
+  allows, so cubert holds no tool versions. Add a tool with `mise use --pin <tool>`.
 
 ## Tasks
 
