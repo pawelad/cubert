@@ -28,3 +28,15 @@ def test_mise_latest_fails(tmp_path: Path) -> None:
 
 def test_mise_lts_fails(tmp_path: Path) -> None:
     assert run_on(tmp_path, "mise.toml", '[tools]\nnode = "lts"\n') == 1
+
+
+def test_mise_floating_versions_fail(tmp_path: Path) -> None:
+    for version in ("stable", "lts-iron", "sub-1", "20", "ref:main", ""):
+        text = f'[tools]\nnode = "{version}"\n'
+        assert run_on(tmp_path, "mise.toml", text) == 1, version
+
+
+def test_mise_exact_version_forms_pass(tmp_path: Path) -> None:
+    for version in ("1.7", "v1.2.3", "2026.11.0", "1.2.3-rc.1", "9.19.1+build5"):
+        text = f'[tools]\nnode = "{version}"\n'
+        assert run_on(tmp_path, "mise.toml", text) == 0, version

@@ -4,15 +4,20 @@
 # ///
 """Fail on unpinned tool versions in `mise.toml`.
 
-A mise tool must name a version, not `latest` or `lts`. zizmor checks the GitHub
+A mise tool must name a version like `1.8.2`. An alias (`latest`, `lts`, `stable`), a
+prefix (`sub-1`, `20`) or a `ref:` floats. zizmor checks the GitHub
 Actions pins, and hadolint and dclint check the Docker images.
 """
 
 from __future__ import annotations
 
+import re
 import sys
 import tomllib
 from pathlib import Path
+
+# A dotted number. A bare `20` or `v20` matches the newest 20.x, so it floats.
+PINNED = re.compile(r"v?\d+(\.\d+)+([-+.][0-9A-Za-z.+-]*)?")
 
 
 def _mise_failures(path: Path) -> list[str]:
@@ -22,7 +27,7 @@ def _mise_failures(path: Path) -> list[str]:
         versions = spec if isinstance(spec, list) else [spec]
         for version in versions:
             value = version.get("version") if isinstance(version, dict) else version
-            if not isinstance(value, str) or value in {"latest", "lts", ""}:
+            if not isinstance(value, str) or not PINNED.fullmatch(value):
                 failures.append(f"{path}: tool {name!r} has no pinned version")
     return failures
 
