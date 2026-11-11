@@ -1,6 +1,9 @@
 // cubert follows its own template: `.config/hk` links to `template/.config/hk`.
 amends ".config/hk/base.pkl"
 
+// cubert's mise.toml holds its own tools, not a project's.
+skip_steps = List("required-tools")
+
 steps {
   // The template's own workflows and actions are pinned too.
   ["pins"] {

@@ -99,6 +99,10 @@ steps {
     check = ".config/hk/checks/check_pins.py {{files}}"
   }
   ["pkl"] = Builtins.pkl
+  ["required-tools"] = new Step {
+    glob = List("mise.toml", ".config/mise/required-tools")
+    check = ".config/hk/checks/check_required_tools.py"
+  }
   // Both match by shebang too, so extensionless file tasks and git hooks are covered.
   ["shellcheck"] = Builtins.shellcheck
   ["shfmt"] = Builtins.shfmt

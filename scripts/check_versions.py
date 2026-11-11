@@ -5,8 +5,9 @@
 """Fail when the template ships a tool version that cubert would have to keep current.
 
 The template seeds `latest` (or `lts`), and the project's `mise run setup` pins it.
-The hk package must match cubert's own hk tool. Dependabot skips `.jinja` workflows, so
-their actions must match the versions in the workflows that it bumps.
+`check:repo` requires each seeded tool. The hk package must match cubert's own hk tool.
+Dependabot skips `.jinja` workflows, so their actions must match the versions in the
+workflows that it bumps.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ import tomllib
 from pathlib import Path
 
 TEMPLATE_TOOLS = Path("template/mise.toml.jinja")
+REQUIRED_TOOLS = Path("template/.config/mise/required-tools.jinja")
 HK_CONFIGS = (Path("template/.config/hk/base.pkl"), Path("template/.config/hk/cubert.pkl.jinja"))
 UNPINNED = {"latest", "lts"}
 
@@ -39,6 +41,11 @@ def template_tools(text: str) -> dict[str, str]:
     return tools
 
 
+def required_tools(text: str) -> set[str]:
+    """Return the tools that `check:repo` requires, across every feature block."""
+    return {line for line in text.splitlines() if line and not line.startswith(("[%", "#"))}
+
+
 def action_refs(text: str) -> dict[str, str]:
     """Return the version of each remote action that a workflow uses."""
     return {match["action"]: match["ref"] for match in USES.finditer(text)}
@@ -48,9 +55,17 @@ def failures(root: Path) -> list[str]:
     own = tomllib.loads((root / "mise.toml").read_text())["tools"]
     found: list[str] = []
 
-    for name, version in template_tools((root / TEMPLATE_TOOLS).read_text()).items():
+    seeded = template_tools((root / TEMPLATE_TOOLS).read_text())
+    for name, version in seeded.items():
         if version not in UNPINNED:
             found.append(f"{TEMPLATE_TOOLS}: seed {name} = \"latest\", not {version!r}")
+
+    required = required_tools((root / REQUIRED_TOOLS).read_text())
+    if required != set(seeded):
+        found.append(
+            f"{REQUIRED_TOOLS}: required tools differ from {TEMPLATE_TOOLS}:"
+            f" {sorted(required ^ set(seeded))}"
+        )
 
     for path in HK_CONFIGS:
         for match in HK_PACKAGE.finditer((root / path).read_text()):

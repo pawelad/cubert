@@ -1,0 +1,35 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.14"
+# ///
+"""Fail when `mise.toml` lacks a tool that the shared hk steps and tasks call.
+
+A template update can add a tool to `.config/mise/required-tools`, but it cannot add
+the tool to the project-owned `mise.toml`.
+"""
+
+from __future__ import annotations
+
+import sys
+import tomllib
+from pathlib import Path
+
+REQUIRED = Path(".config/mise/required-tools")
+CONFIG = Path("mise.toml")
+
+
+def missing(required: str, config: str) -> list[str]:
+    tools = tomllib.loads(config).get("tools", {})
+    names = [line.strip() for line in required.splitlines()]
+    return [name for name in names if name and not name.startswith("#") and name not in tools]
+
+
+def main() -> int:
+    tools = missing(REQUIRED.read_text(), CONFIG.read_text())
+    for tool in tools:
+        print(f"{CONFIG}: {tool} is missing, and the shared steps need it. Fix: mise use --pin {tool}")
+    return 1 if tools else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

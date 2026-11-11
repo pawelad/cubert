@@ -23,6 +23,7 @@ class CheckVersionsTest(unittest.TestCase):
             "template/mise.toml.jinja": '[tools]\nhk = "latest"\n',
             "template/.config/hk/base.pkl": "",
             "template/.config/hk/cubert.pkl.jinja": "",
+            "template/.config/mise/required-tools.jinja": "hk\n",
         }
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -35,7 +36,18 @@ class CheckVersionsTest(unittest.TestCase):
         self.assertEqual(self.failures_in({}), [])
 
     def test_exact_seed_fails(self) -> None:
-        files = {"template/mise.toml.jinja": '[tools]\njq = "1.8.2"\nnode = "lts"\n'}
+        files = {
+            "template/mise.toml.jinja": '[tools]\njq = "1.8.2"\nnode = "lts"\n',
+            "template/.config/mise/required-tools.jinja": "jq\nnode\n",
+        }
+        self.assertEqual(len(self.failures_in(files)), 1)
+
+    def test_required_tools_read_every_feature_block(self) -> None:
+        text = "# Comment\nhk\n[% if python %]\nruff\n[% endif %]\n"
+        self.assertEqual(check_versions.required_tools(text), {"hk", "ruff"})
+
+    def test_seeded_tool_must_be_required(self) -> None:
+        files = {"template/mise.toml.jinja": '[tools]\nhk = "latest"\njq = "latest"\n'}
         self.assertEqual(len(self.failures_in(files)), 1)
 
     def test_hk_package_must_match_hk(self) -> None:

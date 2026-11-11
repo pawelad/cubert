@@ -1,0 +1,36 @@
+# Template-owned. The tools that the shared hk steps and tasks call, one per line.
+# The required-tools hk step fails when mise.toml does not configure one.
+actionlint
+dprint
+hk
+jq
+[% if docker or openspec != 'none' %]
+node
+[% endif %]
+pkl
+shellcheck
+shfmt
+uv
+worktrunk
+yamllint
+pypi:copier
+[% if python %]
+ruff
+[% endif %]
+[% if docker %]
+hadolint
+npm:dclint
+[% endif %]
+[% if opentofu %]
+opentofu
+[% endif %]
+[% if ansible %]
+pypi:ansible-core
+pypi:ansible-lint
+[% endif %]
+[% if changelog %]
+git-cliff
+[% endif %]
+[% if openspec != 'none' %]
+npm:@fission-ai/openspec
+[% endif %]
