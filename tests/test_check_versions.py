@@ -13,7 +13,10 @@ check_versions = load_script("scripts/check_versions.py")
 
 class CheckVersionsTest(unittest.TestCase):
     def test_template_tools_reads_every_feature_block(self) -> None:
-        text = '[tools]\nhk = "1"\n[% if python %]\nruff = "2"\n[% endif %]\n\n[tasks.x]\nrun = "y"\n'
+        text = (
+            '[tools]\nhk = "1"\n[% if python %]\nruff = "2"\n[% endif %]\n'
+            '\n[tasks.x]\nrun = "y"\n'
+        )
         self.assertEqual(check_versions.template_tools(text), {"hk": "1", "ruff": "2"})
 
     def failures_in(self, files: dict[str, str]) -> list[str]:
@@ -23,6 +26,7 @@ class CheckVersionsTest(unittest.TestCase):
             "template/mise.toml.jinja": '[tools]\nhk = "latest"\n',
             "template/.config/hk/base.pkl": "",
             "template/.config/hk/cubert.pkl.jinja": "",
+            "hk.pkl": "",
             "template/.config/mise/required-tools.jinja": "hk\n",
         }
         with tempfile.TemporaryDirectory() as tmp:
@@ -52,13 +56,16 @@ class CheckVersionsTest(unittest.TestCase):
 
     def test_hk_package_must_match_hk(self) -> None:
         url = "package://github.com/jdx/hk/releases/download/v2.10.0/hk@2.10.0#/Config.pkl"
-        self.assertEqual(len(self.failures_in({"template/.config/hk/base.pkl": url})), 1)
+        self.assertEqual(
+            len(self.failures_in({"template/.config/hk/base.pkl": url})), 1
+        )
 
     def test_jinja_workflow_must_match_bumped_action(self) -> None:
         files = {
             ".github/workflows/ci.yml": '- uses: "actions/checkout@v7.0.2"\n',
             "template/.github/workflows/ci.yml.jinja": (
-                '- uses: "actions/checkout@v7.0.1"\n- uses: "./.github/actions/setup-mise"\n'
+                '- uses: "actions/checkout@v7.0.1"\n'
+                '- uses: "./.github/actions/setup-mise"\n'
             ),
         }
         self.assertEqual(len(self.failures_in(files)), 1)

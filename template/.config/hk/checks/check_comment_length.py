@@ -19,13 +19,15 @@ from pathlib import Path
 MAX_PROSE_LINES = 8
 
 SECTION_HEADER = re.compile(
-    r"^\s*(Args|Arguments|Attributes|Example|Examples|Raises|Returns|See Also|Yields)\s*:\s*$"
+    r"^\s*(Args|Arguments|Attributes|Example|Examples|Raises|Returns|See Also|Yields)"
+    r"\s*:\s*$"
 )
 JSDOC_TAG = re.compile(
     r"^\s*@(default|deprecated|example|param|returns?|see|template|throws|type)\b"
 )
 DIRECTIVE = re.compile(
-    r"^\s*(biome-ignore|eslint-disable|eslint-enable|@ts-expect-error|@ts-ignore|noqa|type: ignore|pragma|ruff:|mypy:|fmt:)"
+    r"^\s*(biome-ignore|eslint-disable|eslint-enable|@ts-expect-error|@ts-ignore"
+    r"|noqa|type: ignore|pragma|ruff:|mypy:|fmt:)"
 )
 PY_EXTENSIONS = {".py"}
 TS_EXTENSIONS = {".ts", ".tsx", ".js", ".mjs"}
@@ -108,6 +110,7 @@ def _ts_blocks(source: str) -> list[tuple[int, int]]:
 
 
 def main(paths: list[str]) -> int:
+    """Print each comment block over the cap in `paths`."""
     failures = 0
     for raw_path in paths:
         path = Path(raw_path)
@@ -121,7 +124,8 @@ def main(paths: list[str]) -> int:
             if length > MAX_PROSE_LINES:
                 failures += 1
                 print(
-                    f"{path}:{line}: comment has {length} prose lines (max {MAX_PROSE_LINES})"
+                    f"{path}:{line}: comment has {length} prose lines"
+                    f" (max {MAX_PROSE_LINES})"
                 )
     return 1 if failures else 0
 

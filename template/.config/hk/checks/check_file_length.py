@@ -19,6 +19,7 @@ CHECKED_EXTENSIONS = {".py", ".ts", ".tsx"}
 
 
 def main(paths: list[str]) -> int:
+    """Print each file in `paths` over the cap."""
     failures = 0
     for raw_path in paths:
         path = Path(raw_path)
@@ -27,7 +28,9 @@ def main(paths: list[str]) -> int:
         line_count = len(path.read_text(encoding="utf-8", errors="ignore").splitlines())
         if line_count > MAX_FILE_LINES:
             failures += 1
-            print(f"{path.as_posix()}: file has {line_count} lines (max {MAX_FILE_LINES})")
+            print(
+                f"{path.as_posix()}: file has {line_count} lines (max {MAX_FILE_LINES})"
+            )
     return 1 if failures else 0
 
 

@@ -19,15 +19,24 @@ CONFIG = Path("mise.toml")
 
 
 def missing(required: str, config: str) -> list[str]:
+    """Return the tools in the `required` list that the `config` TOML lacks."""
     tools = tomllib.loads(config).get("tools", {})
     names = [line.strip() for line in required.splitlines()]
-    return [name for name in names if name and not name.startswith("#") and name not in tools]
+    return [
+        name
+        for name in names
+        if name and not name.startswith("#") and name not in tools
+    ]
 
 
 def main() -> int:
+    """Print each required tool that `mise.toml` lacks."""
     tools = missing(REQUIRED.read_text(), CONFIG.read_text())
     for tool in tools:
-        print(f"{CONFIG}: {tool} is missing, and the shared steps need it. Fix: mise use --pin {tool}")
+        print(
+            f"{CONFIG}: {tool} is missing, and the shared steps need it."
+            f" Fix: mise use --pin {tool}"
+        )
     return 1 if tools else 0
 
 

@@ -29,11 +29,16 @@ class CheckPinsTest(unittest.TestCase):
 
     def test_action_full_tag_and_sha_pass(self) -> None:
         sha = "a" * 40
-        text = f'steps:\n  - uses: "actions/checkout@v7.0.1"\n  - uses: "x/y@{sha}"\n  - uses: "./local"\n'
+        text = (
+            'steps:\n  - uses: "actions/checkout@v7.0.1"\n'
+            f'  - uses: "x/y@{sha}"\n  - uses: "./local"\n'
+        )
         self.assertEqual(self.run_on("ci.yml", text), 0)
 
     def test_action_major_tag_fails(self) -> None:
-        self.assertEqual(self.run_on("ci.yml", 'steps:\n  - uses: "actions/checkout@v7"\n'), 1)
+        self.assertEqual(
+            self.run_on("ci.yml", 'steps:\n  - uses: "actions/checkout@v7"\n'), 1
+        )
 
 
 if __name__ == "__main__":

@@ -19,7 +19,11 @@ from pathlib import Path
 
 TEMPLATE_TOOLS = Path("template/mise.toml.jinja")
 REQUIRED_TOOLS = Path("template/.config/mise/required-tools.jinja")
-HK_CONFIGS = (Path("template/.config/hk/base.pkl"), Path("template/.config/hk/cubert.pkl.jinja"))
+HK_CONFIGS = (
+    Path("template/.config/hk/base.pkl"),
+    Path("template/.config/hk/cubert.pkl.jinja"),
+    Path("hk.pkl"),
+)
 UNPINNED = {"latest", "lts"}
 
 TOOL_LINE = re.compile(r'^"?(?P<name>[^"=\s]+)"? = "(?P<version>[^"]+)"$')
@@ -43,7 +47,9 @@ def template_tools(text: str) -> dict[str, str]:
 
 def required_tools(text: str) -> set[str]:
     """Return the tools that `check:repo` requires, across every feature block."""
-    return {line for line in text.splitlines() if line and not line.startswith(("[%", "#"))}
+    return {
+        line for line in text.splitlines() if line and not line.startswith(("[%", "#"))
+    }
 
 
 def action_refs(text: str) -> dict[str, str]:
@@ -51,14 +57,13 @@ def action_refs(text: str) -> dict[str, str]:
     return {match["action"]: match["ref"] for match in USES.finditer(text)}
 
 
-def failures(root: Path) -> list[str]:
-    own = tomllib.loads((root / "mise.toml").read_text())["tools"]
+def tool_failures(root: Path) -> list[str]:
+    """Return each seeded tool with a version, and any drift from the required list."""
     found: list[str] = []
-
     seeded = template_tools((root / TEMPLATE_TOOLS).read_text())
     for name, version in seeded.items():
         if version not in UNPINNED:
-            found.append(f"{TEMPLATE_TOOLS}: seed {name} = \"latest\", not {version!r}")
+            found.append(f'{TEMPLATE_TOOLS}: seed {name} = "latest", not {version!r}')
 
     required = required_tools((root / REQUIRED_TOOLS).read_text())
     if required != set(seeded):
@@ -66,12 +71,23 @@ def failures(root: Path) -> list[str]:
             f"{REQUIRED_TOOLS}: required tools differ from {TEMPLATE_TOOLS}:"
             f" {sorted(required ^ set(seeded))}"
         )
+    return found
 
-    for path in HK_CONFIGS:
-        for match in HK_PACKAGE.finditer((root / path).read_text()):
-            if not match["tag"] == match["version"] == own["hk"]:
-                found.append(f"{path}: hk package {match['version']!r}, mise.toml has {own['hk']!r}")
 
+def hk_failures(root: Path) -> list[str]:
+    """Return each hk package import whose version differs from cubert's hk tool."""
+    own = tomllib.loads((root / "mise.toml").read_text())["tools"]["hk"]
+    return [
+        f"{path}: hk package {match['version']!r}, mise.toml has {own!r}"
+        for path in HK_CONFIGS
+        for match in HK_PACKAGE.finditer((root / path).read_text())
+        if not match["tag"] == match["version"] == own
+    ]
+
+
+def action_failures(root: Path) -> list[str]:
+    """Return each action in a `.jinja` workflow that Dependabot bumped elsewhere."""
+    found: list[str] = []
     plain = [*root.glob(".github/**/*.yml"), *root.glob("template/.github/**/*.yml")]
     bumped: dict[str, str] = {}
     for path in sorted(plain):
@@ -79,12 +95,20 @@ def failures(root: Path) -> list[str]:
     for path in sorted(root.glob("template/.github/**/*.yml.jinja")):
         for action, ref in action_refs(path.read_text()).items():
             if action in bumped and bumped[action] != ref:
-                found.append(f"{path.relative_to(root)}: {action}@{ref}, other workflows use @{bumped[action]}")
-
+                found.append(
+                    f"{path.relative_to(root)}: {action}@{ref},"
+                    f" other workflows use @{bumped[action]}"
+                )
     return found
 
 
+def failures(root: Path) -> list[str]:
+    """Return every failure in the repository at `root`."""
+    return tool_failures(root) + hk_failures(root) + action_failures(root)
+
+
 def main() -> int:
+    """Print the failures in the current directory."""
     found = failures(Path())
     for failure in found:
         print(failure)

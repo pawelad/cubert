@@ -1,0 +1,55 @@
+# The template's rules (pyproject.toml.jinja), for cubert's scripts and tests.
+target-version = "py314"
+
+[lint]
+select = [
+  "A", # flake8-builtins
+  "ANN", # flake8-annotations
+  "ARG", # flake8-unused-arguments
+  "ASYNC", # flake8-async
+  "B", # flake8-bugbear
+  "BLE", # flake8-blind-except
+  "C4", # flake8-comprehensions
+  "C90", # mccabe
+  "D", # pydocstyle
+  "DTZ", # flake8-datetimez
+  "E", # pycodestyle
+  "ERA", # eradicate
+  "F", # pyflakes
+  "FA", # flake8-future-annotations
+  "FURB", # refurb
+  "G", # flake8-logging-format
+  "I", # isort
+  "ISC", # flake8-implicit-str-concat
+  "LOG", # flake8-logging
+  "N", # pep8-naming
+  "PERF", # perflint
+  "PIE", # flake8-pie
+  "PL", # pylint
+  "PT", # flake8-pytest-style
+  "PTH", # flake8-use-pathlib
+  "Q", # flake8-quotes
+  "RET", # flake8-return
+  "RUF", # ruff-specific
+  "S", # flake8-bandit
+  "SIM", # flake8-simplify
+  "T20", # flake8-print
+  "TID", # flake8-tidy-imports
+  "TRY", # tryceratops
+  "UP", # pyupgrade
+]
+ignore = [
+  "D104", # Missing docstring in public package
+  "D106", # Missing docstring in public nested class
+  "PERF401", # List comprehension instead of loop
+  "TRY003", # Avoid specifying long messages outside the exception class
+]
+
+[lint.per-file-ignores]
+# The tests use unittest, and each test name states the behavior it asserts.
+"tests/**/*.py" = ["D1", "PT009", "PT027", "PLR2004", "S101"]
+# Check scripts are CLIs that report on stdout.
+"{scripts,template/.config/hk/checks}/**/*.py" = ["T201"]
+
+[lint.pydocstyle]
+convention = "google"

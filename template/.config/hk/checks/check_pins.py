@@ -42,11 +42,14 @@ def _actions_failures(path: Path) -> list[str]:
             continue
         _, _, ref = action.partition("@")
         if not PINNED_REF.match(ref):
-            failures.append(f"{path}:{number}: pin {action!r} to @vX.Y.Z or a commit SHA")
+            failures.append(
+                f"{path}:{number}: pin {action!r} to @vX.Y.Z or a commit SHA"
+            )
     return failures
 
 
 def main(paths: list[str]) -> int:
+    """Print each unpinned tool and action in `paths`."""
     failures: list[str] = []
     for raw_path in paths:
         path = Path(raw_path)

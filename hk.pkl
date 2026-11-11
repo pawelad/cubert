@@ -1,10 +1,17 @@
 // cubert follows its own template: `.config/hk` links to `template/.config/hk`.
 amends ".config/hk/base.pkl"
 
+import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtins.pkl" as builtins
+
 // cubert's mise.toml holds its own tools, not a project's.
 skip_steps = List("required-tools")
 
 steps {
+  // The template's Python steps, for the scripts that cubert tests and ships.
+  ["ruff"] = builtins.ruff
+  ["ruff-format"] = (builtins.ruff_format) {
+    depends = "ruff"
+  }
   // The template's own workflows and actions are pinned too.
   ["pins"] {
     glob = List("mise.toml", ".github/**/*.yml", "template/.github/**/*.yml")

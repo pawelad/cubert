@@ -27,17 +27,24 @@ class CheckCommentLengthTest(unittest.TestCase):
         self.assertEqual(self.run_on("a.py", f'def f():\n    """{prose(MAX)}"""\n'), 0)
 
     def test_docstring_over_the_cap_fails(self) -> None:
-        self.assertEqual(self.run_on("a.py", f'def f():\n    """{prose(MAX + 1)}"""\n'), 1)
+        self.assertEqual(
+            self.run_on("a.py", f'def f():\n    """{prose(MAX + 1)}"""\n'), 1
+        )
 
     def test_docstring_sections_do_not_count(self) -> None:
-        text = f'def f(x):\n    """{prose(MAX)}\n    Args:\n{prose(MAX, "        ")}    """\n'
+        args = prose(MAX, "        ")
+        text = f'def f(x):\n    """{prose(MAX)}\n    Args:\n{args}    """\n'
         self.assertEqual(self.run_on("a.py", text), 0)
 
     def test_hash_comment_block_over_the_cap_fails(self) -> None:
         self.assertEqual(self.run_on("a.py", prose(MAX + 1, "# ")), 1)
 
     def test_directives_and_shebang_do_not_count(self) -> None:
-        text = "#!/usr/bin/env python\n" + prose(MAX, "# ") + "# noqa: E501\n# type: ignore\n"
+        text = (
+            "#!/usr/bin/env python\n"
+            + prose(MAX, "# ")
+            + "# noqa: E501\n# type: ignore\n"
+        )
         self.assertEqual(self.run_on("a.py", text), 0)
 
     def test_fenced_code_does_not_count(self) -> None:
@@ -45,14 +52,18 @@ class CheckCommentLengthTest(unittest.TestCase):
         self.assertEqual(self.run_on("a.py", text), 0)
 
     def test_ts_line_comments_over_the_cap_fail(self) -> None:
-        self.assertEqual(self.run_on("a.ts", prose(MAX + 1, "// ") + "const x = 1;\n"), 1)
+        self.assertEqual(
+            self.run_on("a.ts", prose(MAX + 1, "// ") + "const x = 1;\n"), 1
+        )
 
     def test_jsdoc_tags_do_not_count(self) -> None:
         text = "/**\n" + prose(MAX, " * ") + prose(MAX, " * @param x ") + " */\n"
         self.assertEqual(self.run_on("a.ts", text), 0)
 
     def test_jsdoc_over_the_cap_fails(self) -> None:
-        self.assertEqual(self.run_on("a.ts", "/**\n" + prose(MAX + 1, " * ") + " */\n"), 1)
+        self.assertEqual(
+            self.run_on("a.ts", "/**\n" + prose(MAX + 1, " * ") + " */\n"), 1
+        )
 
     def test_other_extensions_are_skipped(self) -> None:
         self.assertEqual(self.run_on("a.sh", prose(MAX + 1, "# ")), 0)

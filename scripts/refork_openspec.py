@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.14"
 # ///
-"""Turn a fresh `openspec schema fork spec-driven changes-only` into the changes-only schema.
+"""Turn a fresh `openspec schema fork spec-driven changes-only` into our schema.
 
 Edits the text, not parsed YAML, so the upstream wording and layout stay reviewable
 in the diff. Each edit must match once, so an upstream change fails loudly.
@@ -18,7 +18,9 @@ DESCRIPTION = "description: 'Change proposals without specs: proposal, design, t
 
 
 def _replace(text: str, pattern: str, replacement: str, *, name: str) -> str:
-    new_text, count = re.subn(pattern, replacement, text, count=1, flags=re.DOTALL | re.MULTILINE)
+    new_text, count = re.subn(
+        pattern, replacement, text, count=1, flags=re.DOTALL | re.MULTILINE
+    )
     if count != 1:
         msg = f"edit {name!r} did not match: upstream changed, update this script"
         raise SystemExit(msg)
@@ -26,6 +28,7 @@ def _replace(text: str, pattern: str, replacement: str, *, name: str) -> str:
 
 
 def transform_schema(text: str) -> str:
+    """Drop the specs artifact and its references from the forked schema."""
     text = _replace(text, r"^description: [^\n]*$", DESCRIPTION, name="description")
     text = _replace(
         text,
@@ -53,7 +56,8 @@ def transform_schema(text: str) -> str:
     )
     text = _replace(
         text,
-        r" Reference the\n(\s+)proposal for motivation and, once written, the specs for requirements -\n"
+        r" Reference the\n(\s+)proposal for motivation and, once written,"
+        r" the specs for requirements -\n"
         r"\s+if a section would only restate them, point to them instead\.",
         " Reference the\n\\1proposal for motivation instead of restating it.",
         name="design specs reference",
@@ -85,6 +89,7 @@ def transform_schema(text: str) -> str:
 
 
 def transform_proposal_template(text: str) -> str:
+    """Drop the Capabilities section, which only the specs artifact uses."""
     return _replace(
         text,
         r"^## Capabilities\n.*?(?=^## )",
@@ -94,6 +99,7 @@ def transform_proposal_template(text: str) -> str:
 
 
 def main(schema_dir: str) -> int:
+    """Rewrite the forked schema in `schema_dir` in place."""
     root = Path(schema_dir)
     schema = root / "schema.yaml"
     schema.write_text(transform_schema(schema.read_text()))
