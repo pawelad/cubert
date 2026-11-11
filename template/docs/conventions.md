@@ -127,9 +127,11 @@ header only when the file starts with the exact header text.
 
 ### Overriding a shared task
 
-A TOML task in `mise.toml` replaces a file task with the same name. Replace `install`
-this way, or `setup` if the project needs more steps. A file task in `mise-tasks/` does
-not replace a shared task: the `.config/mise/tasks/` file wins.
+A TOML task in `mise.toml` merges with the file task of the same name. Each field that
+the TOML task sets wins, and the rest come from the file. Give an override its own
+`run`: an override with only `depends` still runs the shared body after them. Replace
+`install` this way, or `setup` if the project needs more steps. A file task in
+`mise-tasks/` does not replace a shared task: the `.config/mise/tasks/` file wins.
 
 mise runs only one `postinstall` hook, and the hook in `.config/mise/config.toml` wins.
 Put project install steps in the `install` task.
@@ -154,6 +156,10 @@ enabled features). `hk.pkl` amends `cubert.pkl`:
 - Change a shared step: `steps { ["dprint"] { exclude = List("gen/**") } }`.
 - Turn a shared step off: `skip_steps = List("file-length")`.
 - Add a step: `steps { ["name"] = new Step { ... } }`.
+- Import the hk builtins under a name of your own:
+  `import "package://.../Builtins.pkl" as hkb`. hk's evaluator cannot resolve a second
+  import named `Builtins`, and `base.pkl` already has one.
+- hk 2.11.1 rejects a `Group` in `steps`. Give each step its own `dir` instead.
 
 The hk package version is pinned only in `base.pkl`.
 
