@@ -89,6 +89,19 @@ break_ansible() {
     >"$ansible_dir/roles/demo/tasks/main.yml"
 }
 
+# A package test script must replace bun test, so a failing one fails the task.
+expect_test_script() {
+  local dir
+  dir="$(tr -d '[]",' <<<"$ts_dirs" | awk '{ print $NF }')"
+  mise x -- jq '.scripts.test = "exit 7"' "$dir/package.json" >"$dir/package.json.new"
+  mv "$dir/package.json.new" "$dir/package.json"
+  if mise run test:typescript >/dev/null 2>&1; then
+    echo "render: test:typescript did not run the package test script" >&2
+    return 1
+  fi
+  git checkout --quiet -- "$dir/package.json"
+}
+
 # Stage one error, expect the pre-commit step to fail on it, then undo it. The staged
 # file selects the step, as in a real commit, and --check stops fixers from repairing it.
 expect_hook_failure() {

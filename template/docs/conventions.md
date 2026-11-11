@@ -79,7 +79,7 @@ path, so `check/repo` is `check:repo`:
 | `skills:update`      | OpenSpec option: updates the installed agent skills (`openspec update`) |
 | `test`               | Runs every `test:*` task                                                |
 | `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests    |
-| `test:typescript`    | TypeScript option: runs `bun test` in each directory                    |
+| `test:typescript`    | TypeScript option: runs each directory's test script, or `bun test`     |
 | `typescript:install` | TypeScript option: runs `bun install` in each directory                 |
 | `release:preview`    | Changelog option: prints the entries since the last release tag         |
 | `format`             | Runs the hk fixers on changed files (`--all` for every file)            |
@@ -109,9 +109,10 @@ project without pytest in its dev group skips with a message. Add it with
 The `typescript` option asks for `typescript_dirs`: the directories that hold a
 `package.json`, `["."]` by default. A monorepo lists each one. `typescript:install` and
 `test:typescript` loop over them and skip a directory without `package.json`. Dependabot
-gets the same list. `test:typescript` runs `bun test` and passes when it finds no tests.
-Given file paths, it runs only the directories that hold them. A test file that imports
-`bun:test` needs `bun add --dev @types/bun` for `tsc`.
+gets the same list. `test:typescript` runs the `test` script of a `package.json` that
+has one, such as Jest or Vitest. Otherwise it runs `bun test`, which passes when it
+finds no tests. Given file paths, it runs only the directories that hold them. A test
+file that imports `bun:test` needs `bun add --dev @types/bun` for `tsc`.
 
 The `changelog` option adds git-cliff, `cliff.toml`, `CHANGELOG.md` and
 `release:preview`. git-cliff pipes its output through dprint, so the changelog keeps the

@@ -115,9 +115,8 @@ Copy from GitHub, not from a local clone. Copier records the source in
 5. Move what cubert now owns out of the project files: the `postinstall` hook, the
    `[settings]` and `[env]` entries that `.config/mise/config.toml` already sets, and
    duplicate hk steps. Split a project `check` or `test` task into `check:<area>` and
-   `test:<area>` tasks. A TypeScript project that does not test with `bun test` replaces
-   `test:typescript`. Turn shell scripts into file tasks in `mise-tasks/`, unless tests
-   cover them.
+   `test:<area>` tasks. Turn shell scripts into file tasks in `mise-tasks/`, unless
+   tests cover them.
 6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,
    `mise run setup` and `mise run format --all`. Commit the reformat alone, and add its
    hash to `.git-blame-ignore-revs`.

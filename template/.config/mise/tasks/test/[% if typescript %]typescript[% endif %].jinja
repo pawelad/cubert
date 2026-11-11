@@ -29,5 +29,10 @@ for dir in "${dirs[@]}"; do
   if [ "${#files[@]}" -gt 0 ] && [ "${#args[@]}" -eq 0 ]; then
     continue
   fi
-  (cd "$dir" && bun test --pass-with-no-tests "${args[@]+"${args[@]}"}")
+  # A package that tests with Jest or Vitest names its runner in its test script.
+  if jq -e '.scripts.test' "$dir/package.json" >/dev/null; then
+    (cd "$dir" && bun run test "${args[@]+"${args[@]}"}")
+  else
+    (cd "$dir" && bun test --pass-with-no-tests "${args[@]+"${args[@]}"}")
+  fi
 done
