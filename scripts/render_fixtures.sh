@@ -9,6 +9,8 @@ prose_fixture() {
   mkdir -p fixtures
   printf '{\n  "colour": "red \xe2\x80\x94 dark"\n}\n' >data.json
   printf -- '---\ncolour: "grey \xe2\x80\x94 dark"\n' >settings.yaml
+  # A Markdown heading in a string is not a divider.
+  printf 'story: |\n  ###### Fine print\n' >>settings.yaml
   printf '# Legacy\n\nThe colour is grey.\n' >fixtures/legacy.md
 }
 
@@ -69,6 +71,7 @@ YAML
 break_prose() { printf '# Notes\n\nThe colour is red.\n' >notes.md; }
 break_comment() { printf '# The colour is red.\n' >>settings.yaml; }
 break_dash() { printf '# One \xe2\x80\x94 two.\n' >>settings.yaml; }
+break_divider() { printf '# ----------\n' >>settings.yaml; }
 # Default yamllint allows a plain string, so this fails only with the shared rules.
 break_yaml() { printf 'plain: text\n' >>settings.yaml; }
 break_typo() { printf '# Notes\n\nWe recieve data.\n' >notes.md; } # spellchecker:disable-line
@@ -100,6 +103,19 @@ expect_test_script() {
     return 1
   fi
   git checkout --quiet -- "$dir/package.json"
+}
+
+# One failing check step must not stop the fixers that run after it.
+expect_format_despite_failure() {
+  break_prose
+  printf '{"a":1}\n' >format.json
+  git add --all
+  mise run format --all >/dev/null 2>&1 || true
+  if [ "$(cat format.json)" = '{"a":1}' ]; then
+    echo "render: a failing check step stopped format --all" >&2
+    return 1
+  fi
+  git reset --quiet --hard HEAD
 }
 
 # Stage one error, expect the pre-commit step to fail on it, then undo it. The staged

@@ -106,13 +106,43 @@ select = ["E", "F", "I"]
 TOML
   printf 'def add(a: int, b: int) -> int:\n    return a + b\n' >apps/backend/app.py
   printf '# backend\n' >README.md
+  # The project's own CI and yamllint rules. Both are project-owned, so Copier keeps them.
+  mkdir -p .github/workflows
+  cat >.github/workflows/ci.yml <<'YAML'
+---
+name: "CI"
+
+on:
+  pull_request:
+
+permissions:
+  contents: "read"
+
+jobs:
+  backend:
+    name: "Backend"
+    runs-on: "ubuntu-24.04"
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Test the backend"
+        run: "uv run --project apps/backend pytest"
+YAML
+  printf -- '---\nrules:\n  line-length:\n    max: 120\n' >.yamllint
+  # Longer than the shared 88 columns, so only the project's yamllint rule passes it.
+  printf -- '---\nnote: "%s"\n' "$(printf 'x%.0s' {1..100})" >apps/backend/settings.yaml
   # The project's hk.pkl before adoption. It does not know cubert.
   printf 'amends "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Config.pkl"\n' >hk.pkl
   commit_existing
 
   snapshot
-  # The project's hk.pkl must amend cubert's before hk can run anything.
+  # The project's hk.pkl must amend cubert's before hk can run anything, and its
+  # .yamllint must extend the shared rules.
   after_copy() {
+    printf -- '---\nextends: ".config/yamllint.yaml"\n%s\n' "$(sed 1d .yamllint)" >.yamllint
     cat >hk.pkl <<'PKL'
 amends ".config/hk/cubert.pkl"
 
@@ -131,7 +161,7 @@ steps {
 PKL
   }
   adopt -d python=false
-  same apps/backend/pyproject.toml apps/backend/app.py
+  same apps/backend/pyproject.toml apps/backend/app.py .github/workflows/ci.yml
   grep -q 'uv sync --project apps/backend' mise.toml || fail "mise.toml lost the project's install task"
 
   git -c user.name=adopt -c user.email=adopt@example.com commit --quiet --no-verify -m "chore: adopt cubert"
