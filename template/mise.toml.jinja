@@ -79,7 +79,10 @@ run = [
 # Not part of `install`: it contacts the state backend and needs the operator's login.
 description = "Initialize the OpenTofu providers and state backend (needs credentials)"
 dir = "[[ tofu_dir ]]"
-run = "tofu init -input=false"
+run = '''
+if [ -n "${TF_PLUGIN_CACHE_DIR:-}" ]; then mkdir -p "$TF_PLUGIN_CACHE_DIR"; fi
+tofu init -input=false
+'''
 [% endif %]
 [% if ansible %]
 

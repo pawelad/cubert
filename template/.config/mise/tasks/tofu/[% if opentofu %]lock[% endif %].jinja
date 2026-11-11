@@ -4,6 +4,8 @@
 #USAGE flag "--upgrade" help="Select new provider versions, after a version constraint change"
 set -euo pipefail
 
+if [ -n "${TF_PLUGIN_CACHE_DIR:-}" ]; then mkdir -p "$TF_PLUGIN_CACHE_DIR"; fi
+
 # `providers lock` keeps a locked version, so a changed constraint needs `init -upgrade`.
 if [ "${usage_upgrade:-false}" = "true" ]; then
   TF_DATA_DIR=.terraform-validate tofu init -backend=false -input=false -upgrade >/dev/null

@@ -107,7 +107,9 @@ alone. Run `mise run tofu:init` once per checkout before a plan or apply.
 `check:opentofu` never changes `.terraform.lock.hcl`, and it fails when the lock file
 lacks a provider. `mise run tofu:lock` then adds the hashes for macOS and Linux, with no
 backend login. After a version constraint change, run `mise run tofu:lock --upgrade`.
-`tofu init` would lock only the local platform, and CI would change the file.
+`tofu init` would lock only the local platform, and CI would change the file. The
+OpenTofu tasks create the configured provider cache before invoking OpenTofu. An
+existing project's own `tofu:init` task must create `TF_PLUGIN_CACHE_DIR` too.
 `.config/mise/config.toml` sets `TF_PLUGIN_CACHE_DIR`, so each worktree reuses the
 providers that another one downloaded.
 

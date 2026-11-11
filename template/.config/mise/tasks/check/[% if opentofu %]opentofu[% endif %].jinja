@@ -3,6 +3,9 @@
 #MISE dir="[[ tofu_dir ]]"
 set -euo pipefail
 
+# OpenTofu requires an existing cache root, even before backend-free initialization.
+if [ -n "${TF_PLUGIN_CACHE_DIR:-}" ]; then mkdir -p "$TF_PLUGIN_CACHE_DIR"; fi
+
 # Validation needs the providers but not the state backend or its credentials. Its own
 # data dir keeps `-backend=false` from replacing the backend that `tofu:init` set up.
 export TF_DATA_DIR=.terraform-validate
