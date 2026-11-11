@@ -5,6 +5,8 @@
 set -euo pipefail
 
 root="$1" out="$2" name="$3"
+# shellcheck source=scripts/e2e_env.sh
+source "$root/scripts/e2e_env.sh"
 flags="${name%%_*}"
 openspec="${name#*_}"
 dest="$out/$name"
@@ -20,9 +22,6 @@ if [ "$python" = true ]; then ts_dirs='["apps/web", "apps/api"]'; else ts_dirs='
 ones="${flags//[^1]/}"
 license="MPL-2.0"
 if [ $((${#ones} % 2)) -eq 1 ]; then license="ARR"; fi
-
-# The nested mise runs must resolve the rendered project, not cubert.
-unset MISE_PROJECT_ROOT MISE_CONFIG_ROOT MISE_ORIGINAL_CWD MISE_TASK_NAME MISE_TASK_DIR MISE_TASK_FILE
 
 # shellcheck source=scripts/render_fixtures.sh
 source "$root/scripts/render_fixtures.sh"

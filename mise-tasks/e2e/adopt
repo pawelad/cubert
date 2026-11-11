@@ -8,10 +8,8 @@ set -euo pipefail
 
 root="$PWD"
 out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-adopt.XXXXXX")}"
-mkdir -p "$out"
-
-# The nested mise runs must resolve the rendered project, not cubert.
-unset MISE_PROJECT_ROOT MISE_CONFIG_ROOT MISE_ORIGINAL_CWD MISE_TASK_NAME MISE_TASK_DIR MISE_TASK_FILE
+# shellcheck source=scripts/e2e_env.sh
+source "$root/scripts/e2e_env.sh"
 # Copier and the project commit in temporary repos, where global hk hooks would run.
 export HK=0
 # The infra layout must pass with no cloud login.

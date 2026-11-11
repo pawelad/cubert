@@ -4,12 +4,12 @@
 set -euo pipefail
 
 out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-conflict.XXXXXX")}"
+# shellcheck source=scripts/e2e_env.sh
+source "$PWD/scripts/e2e_env.sh"
 src="$out/cubert"
 dest="$out/demo"
 rm -rf "$src" "$dest"
 
-# The nested mise runs must resolve the rendered project, not cubert.
-unset MISE_PROJECT_ROOT MISE_CONFIG_ROOT MISE_ORIGINAL_CWD MISE_TASK_NAME MISE_TASK_DIR MISE_TASK_FILE
 # Copier and the project commit in temporary repos, where global hk hooks would run.
 export HK=0
 

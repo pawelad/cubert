@@ -14,7 +14,8 @@ if [ -z "${usage_filter:-}" ] && [ "${usage_all:-false}" != "true" ] && [ -z "${
 fi
 
 out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-render.XXXXXX")}"
-mkdir -p "$out"
+# shellcheck source=scripts/e2e_env.sh
+source "$PWD/scripts/e2e_env.sh"
 
 names=()
 for p in 0 1; do for d in 0 1; do for t in 0 1; do for a in 0 1; do for c in 0 1; do for s in 0 1; do

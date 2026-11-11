@@ -90,6 +90,8 @@ breaking change, and say what projects must do in the release notes.
 | `mise run e2e:adopt`    | Adopts cubert in an existing repo: Python in `apps/backend`, and infra code |
 
 - Renders read the working tree, including uncommitted changes.
+- E2E output paths become absolute. A mise ceiling keeps parent project tasks out,
+  including when `--out` points inside cubert.
 - `e2e:render` runs 192 combinations, about 20 minutes with `--jobs 6`. Locally,
   `e2e:render` needs `--filter <regex>` for the combinations that a change touches, or
   `--all` when you really want every one. Names look like `p1d0t1a0c1s1_changes-only`:

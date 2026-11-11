@@ -7,11 +7,10 @@ set -euo pipefail
 root="$PWD"
 from="$(git rev-parse --verify "${usage_from:-HEAD~1}^{commit}")"
 out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-update.XXXXXX")}"
+# shellcheck source=scripts/e2e_env.sh
+source "$root/scripts/e2e_env.sh"
 dest="$out/demo"
 rm -rf "$dest"
-
-# The nested mise runs must resolve the rendered project, not cubert.
-unset MISE_PROJECT_ROOT MISE_CONFIG_ROOT MISE_ORIGINAL_CWD MISE_TASK_NAME MISE_TASK_DIR MISE_TASK_FILE
 
 step() { echo "e2e:update: $*"; }
 
