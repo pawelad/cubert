@@ -19,15 +19,18 @@ REQUIRED = Path(".config/mise/required-tools")
 CONFIG = Path("mise.toml")
 
 
-def _requirements(required: str) -> list[tuple[str, str | None]]:
-    """Return a (name, minimum version) pair for each line of the required list."""
-    pairs = []
+# `node@lts` adds the tool from a channel. A scoped npm name keeps its own `@`.
+LINE = re.compile(r"(?P<name>.+?)(?:@(?P<channel>[a-z]+))?(?:>=(?P<minimum>.+))?")
+
+
+def _requirements(required: str) -> list[tuple[str, str | None, str | None]]:
+    """Return (name, minimum version, channel) for each line of the required list."""
+    found = []
     for raw in required.splitlines():
         line = raw.strip()
-        if line and not line.startswith("#"):
-            name, _, minimum = line.partition(">=")
-            pairs.append((name, minimum or None))
-    return pairs
+        if line and not line.startswith("#") and (match := LINE.fullmatch(line)):
+            found.append((match["name"], match["minimum"], match["channel"]))
+    return found
 
 
 def _numbers(version: str) -> tuple[int, ...]:
@@ -43,14 +46,14 @@ def _configured_version(spec: object) -> str | None:
 def missing(required: str, config: str) -> list[str]:
     """Return the tools in the `required` list that the `config` TOML lacks."""
     tools = tomllib.loads(config).get("tools", {})
-    return [name for name, _ in _requirements(required) if name not in tools]
+    return [name for name, _, _ in _requirements(required) if name not in tools]
 
 
 def outdated(required: str, config: str) -> list[tuple[str, str, str]]:
     """Return (name, minimum, configured) for each tool below its minimum version."""
     tools = tomllib.loads(config).get("tools", {})
     found = []
-    for name, minimum in _requirements(required):
+    for name, minimum, _ in _requirements(required):
         configured = _configured_version(tools.get(name))
         if minimum and configured and _numbers(configured) < _numbers(minimum):
             found.append((name, minimum, configured))
@@ -63,7 +66,11 @@ def main(args: list[str]) -> int:
     tools = missing(required, config)
     old = outdated(required, config)
     if args == ["--names"]:
-        print("\n".join([*tools, *(f"{name}@{minimum}" for name, minimum, _ in old)]))
+        channels = {name: channel for name, _, channel in _requirements(required)}
+        added = [
+            f"{tool}@{channels[tool]}" if channels[tool] else tool for tool in tools
+        ]
+        print("\n".join([*added, *(f"{name}@{minimum}" for name, minimum, _ in old)]))
         return 0
     for tool in tools:
         print(f"{CONFIG}: {tool} is missing, and the shared steps need it.")

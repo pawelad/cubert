@@ -83,3 +83,23 @@ def test_check_mode_names_the_outdated_tool(
     assert status == 1
     assert "hk 1.51.0 is below 2.11.1" in out
     assert "Fix: mise run setup" in out
+
+
+def test_names_mode_adds_a_tool_from_its_channel(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / ".config/mise").mkdir(parents=True)
+    required = "node@lts\nnpm:@fission-ai/openspec\n"
+    (tmp_path / ".config/mise/required-tools").write_text(required)
+    (tmp_path / "mise.toml").write_text("[tools]\n")
+    monkeypatch.chdir(tmp_path)
+    status = check_required_tools.main(["--names"])
+    assert (status, capsys.readouterr().out) == (
+        0,
+        "node@lts\nnpm:@fission-ai/openspec\n",
+    )
+
+
+def test_channel_is_not_part_of_the_tool_name() -> None:
+    config = '[tools]\nnode = "24.11.0"\n'
+    assert check_required_tools.missing("node@lts\n", config) == []

@@ -49,7 +49,7 @@ def template_tools(text: str) -> dict[str, str]:
 def required_tools(text: str) -> set[str]:
     """Return the tools that `check:repo` requires, across every feature block."""
     return {
-        line.partition(">=")[0]
+        re.sub(r"@[a-z]+$", "", line.partition(">=")[0])
         for line in text.splitlines()
         if line and not line.startswith(("[%", "#"))
     }

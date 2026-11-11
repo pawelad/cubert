@@ -289,7 +289,8 @@ An update cannot add a tool to the project-owned `mise.toml`.
 `mise run setup` adds each missing one to `mise.toml`, pinned. The `required-tools` hk
 step fails until it does. A line such as `hk>=2.11.1` sets a minimum version: an older
 hk cannot load the shared config, so setup raises the pin to the minimum and the step
-names the tool when it is too old. Other pins above the minimum stay as they are.
+names the tool when it is too old. Other pins above the minimum stay as they are. A line
+such as `node@lts` adds a missing tool from that channel, as a new project seeds it.
 
 Run Copier only through this task. Copier commits in temporary repos, and global hk
 hooks there drop `mise.lock` from the update. The task runs Copier with `HK=0`.
