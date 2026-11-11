@@ -79,7 +79,7 @@ copyright_year:
 
 python:
   type: "bool"
-  help: "Python project (pyproject.toml, ruff, mypy, Dependabot uv)?"
+  help: "Python project with pyproject.toml at the root (ruff, mypy, Dependabot uv)?"
   default: false
 
 docker:
