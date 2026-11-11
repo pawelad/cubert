@@ -10,7 +10,8 @@ on:
 permissions:
   contents: "read"
 
-# Each render resolves `latest` for every tool. Unauthenticated GitHub API calls hit the rate limit.
+# Each render resolves `latest` for every tool. Unauthenticated GitHub API calls hit
+# the rate limit.
 env:
   MISE_GITHUB_TOKEN: "${{ github.token }}"
 
@@ -79,4 +80,6 @@ jobs:
       - name: "Render every feature combination"
         env:
           OPENSPEC: "${{ matrix.openspec }}"
-        run: "mise run test:render --jobs 4 --out \"${RUNNER_TEMP}/renders\" --filter \"_${OPENSPEC}\\$\""
+        run: |
+          mise run test:render --jobs 4 --out "${RUNNER_TEMP}/renders" \
+            --filter "_${OPENSPEC}\$"

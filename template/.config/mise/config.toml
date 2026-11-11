@@ -1,5 +1,7 @@
-# Template-owned: edit in cubert, not in a project. Tools and project tasks go in `mise.toml`.
-# No [tools] here: tools in this file get a second lockfile, and `mise upgrade --bump` rewrites it.
+# Template-owned: edit in cubert, not in a project.
+# Tools and project tasks go in `mise.toml`.
+# No [tools] here: tools in this file get a second lockfile, and
+# `mise upgrade --bump` rewrites it.
 
 [settings]
 lockfile = true
@@ -9,7 +11,8 @@ minimum_release_age = "7d"
 [env]
 HK_MISE = 1
 DO_NOT_TRACK = "1"
-# Otherwise terminal managers (such as Orca) kill the background cleanup when a session closes.
+# Otherwise terminal managers (such as Orca) kill the background cleanup when a
+# session closes.
 WORKTRUNK_FOREGROUND = 1
 
 # mise runs one postinstall hook, and this file's hook wins over `mise.toml`.

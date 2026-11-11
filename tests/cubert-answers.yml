@@ -1,5 +1,7 @@
 ---
-# The answers that cubert would give its own template. The shared-agents hk step renders with them.
+# The answers that cubert would give its own template.
+# The shared-agents hk step renders with them.
 project_name: "cubert"
-description: "A Copier template for my projects: shared tooling, checks and agent rules."
+description: >-
+  A Copier template for my projects: shared tooling, checks and agent rules.
 openspec: "none"

@@ -1,4 +1,5 @@
-# cubert's own tools and tasks. mise installs every tool; pypi: tools install through uv.
+# cubert's own tools and tasks. mise installs every tool.
+# pypi: tools install through uv.
 # A short task goes here. A task with logic goes in mise-tasks/ as a file task.
 
 [settings]
@@ -40,7 +41,10 @@ run = "hk check --all --no-fail-fast"
 
 [tasks."check:scripts"]
 description = "Run the unit tests for the check scripts"
-run = "uv run --no-project --python 3.14 python -m unittest discover --start-directory tests --top-level-directory ."
+run = """
+uv run --no-project --python 3.14 python -m unittest discover \
+  --start-directory tests --top-level-directory .
+"""
 
 [tasks.format]
 description = "Run the hk fixers on changed and untracked files (--all for every file)"
@@ -55,5 +59,6 @@ run = '''
 # shellcheck disable=SC2086
 mise upgrade --bump ${usage_tools:-}
 dprint config update --config template/.config/dprint.json --yes
-dprint config update --config "template/.config/[% if docker %]dprint-docker.json[% endif %]" --yes
+dprint config update --yes \
+  --config "template/.config/[% if docker %]dprint-docker.json[% endif %]"
 '''

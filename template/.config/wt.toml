@@ -7,7 +7,8 @@ setup = "mise run worktree:setup"
 # `wt merge` and `wt step squash` pass this to the LLM that writes the commit message.
 [commit.generation]
 template-append = """
-- Write a Conventional Commit subject: `<type>(<scope>): <description>`, with a kebab-case scope.
+- Write a Conventional Commit subject: `<type>(<scope>): <description>`.
+- Use a kebab-case scope.
 - Types: feat fix docs style refactor perf test build ci chore revert.
 - A feat, fix or perf subject describes the change that a user sees.
 - Use active voice, one idea per sentence, and American English.

@@ -1,7 +1,7 @@
 {
+  "lineWidth": 88,
   "markdown": {
-    "textWrap": "always",
-    "lineWidth": 88
+    "textWrap": "always"
   },
   "toml": {},
   "json": {},

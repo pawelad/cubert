@@ -71,5 +71,9 @@ run = "tofu init -input=false"
 [tasks."ansible:install"]
 description = "Install the Ansible collections from requirements.yml"
 dir = "[[ ansible_dir ]]"
-run = "if [ -f requirements.yml ]; then ansible-galaxy collection install -r requirements.yml; fi"
+run = '''
+if [ -f requirements.yml ]; then
+  ansible-galaxy collection install -r requirements.yml
+fi
+'''
 [% endif %]
