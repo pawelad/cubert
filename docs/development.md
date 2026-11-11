@@ -103,8 +103,9 @@ breaking change, and say what projects must do in the release notes.
 - `e2e:update --from <ref>` tests the update from an older release.
 - `e2e:adopt` follows the README's adoption steps for two layouts. The infra one has an
   OpenTofu S3 backend and an Ansible project collection, and runs with no cloud login.
-- CI runs `check`, `test`, `e2e:update`, `e2e:conflict`, `e2e:adopt` and the full render
-  matrix.
+- CI runs `check`, `test`, `audit`, `e2e:update`, `e2e:conflict`, `e2e:adopt` and the
+  full render matrix. A weekly run repeats `audit` and the render matrix, which catch
+  new advisories and tool releases.
 - The e2e tasks are not `test:*` tasks, so `mise run test` stays fast.
 
 The unit tests in `tests/` cover the template's check scripts, so projects do not test

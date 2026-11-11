@@ -6,6 +6,9 @@ on:
     branches: ["main"]
   pull_request:
   workflow_dispatch:
+  # New advisories and tool releases appear without a commit: audit and render weekly.
+  schedule:
+    - cron: "17 6 * * 1"
 
 permissions:
   contents: "read"
@@ -22,6 +25,7 @@ concurrency:
 jobs:
   check:
     name: "Check"
+    if: "github.event_name != 'schedule'"
     runs-on: "ubuntu-24.04"
     timeout-minutes: 20
     steps:
@@ -63,6 +67,7 @@ jobs:
 
   update:
     name: "Update from the previous commit"
+    if: "github.event_name != 'schedule'"
     runs-on: "ubuntu-24.04"
     timeout-minutes: 20
     steps:
@@ -89,6 +94,7 @@ jobs:
 
   adopt:
     name: "Adopt in an existing repository"
+    if: "github.event_name != 'schedule'"
     runs-on: "ubuntu-24.04"
     timeout-minutes: 30
     steps:
