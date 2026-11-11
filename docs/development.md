@@ -100,6 +100,8 @@ breaking change, and say what projects must do in the release notes.
   per feature and expects the matching hk step to fail. A step that stays green on that
   error is not running.
 - Each render pins the newest tool releases, so upstream breakage shows up here first.
+- Parallel renders can exceed GitHub's limit for calls without a token. Set the mise
+  credential command from [conventions.md](../template/docs/conventions.md#tools) first.
 - `e2e:update --from <ref>` tests the update from an older release.
 - `e2e:adopt` follows the README's adoption steps for two layouts. The infra one has an
   OpenTofu S3 backend and an Ansible project collection, and runs with no cloud login.

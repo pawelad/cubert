@@ -11,4 +11,8 @@ done < <(git ls-files --cached --others --exclude-standard -- '*.md')
 # A root lychee.toml layers on the shared config, as in the lychee hk step.
 config=(--config .config/lychee.toml)
 if [ -f lychee.toml ]; then config+=(--config lychee.toml); fi
+# lychee checks github.com links through the API, which limits calls without a token.
+if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null && token="$(gh auth token 2>/dev/null)"; then
+  export GITHUB_TOKEN="$token"
+fi
 lychee --no-progress "${config[@]}" "${files[@]}"

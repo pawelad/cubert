@@ -47,6 +47,10 @@ What an update does to a missing or removed file:
   `uses: "actions/checkout@<sha>" # v7.0.1`. A tag can move, and a SHA cannot.
   Dependabot updates both. zizmor enforces the pin and audits workflows for injection
   and credential leaks.
+- mise calls the GitHub API to resolve and lock tools. GitHub limits calls without a
+  token. With `gh` logged in, run
+  `mise settings set github.credential_command "gh auth token"` once per machine. mise
+  ignores this setting in a project's config. `audit:links` uses the `gh` token too.
 - A new project's `mise.toml` seeds `latest` (`lts` for Node). The first
   `mise run setup` pins each one to the newest release that `minimum_release_age`
   allows, so cubert holds no tool versions. Add a tool with `mise use --pin <tool>`.
