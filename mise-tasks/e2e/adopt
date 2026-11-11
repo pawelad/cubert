@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+#MISE description="Adopt cubert in an existing repository as the README says, for a backend-subdir or an infra layout"
+#USAGE flag "--layout <name>" default="all" help="backend-subdir, infra or all"
+#USAGE flag "--out <dir>" help="Write the projects here (default: a new temp dir)"
+# The layout functions are called by name, and after_copy is redefined per layout.
+# shellcheck disable=SC2329
+set -euo pipefail
+
+root="$PWD"
+out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-adopt.XXXXXX")}"
+mkdir -p "$out"
+
+# The nested mise runs must resolve the rendered project, not cubert.
+unset MISE_PROJECT_ROOT MISE_CONFIG_ROOT MISE_ORIGINAL_CWD MISE_TASK_NAME MISE_TASK_DIR MISE_TASK_FILE
+# Copier and the project commit in temporary repos, where global hk hooks would run.
+export HK=0
+# The infra layout must pass with no cloud login.
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_PROFILE
+
+# shellcheck source=scripts/render_fixtures.sh
+source "$root/scripts/render_fixtures.sh"
+
+step() { echo "e2e:adopt[$layout]: $*"; }
+fail() {
+  echo "e2e:adopt[$layout]: $*" >&2
+  exit 1
+}
+
+# A copy of the working tree, so the test does not depend on what HEAD changed.
+snapshot() {
+  src="$out/cubert"
+  rm -rf "$src"
+  mkdir -p "$src"
+  git -C "$root" ls-files -z --cached --others --exclude-standard --deduplicate \
+    | tar --null -C "$root" -T - -cf - | tar -xf - -C "$src"
+  git -C "$src" -c init.defaultBranch=main init --quiet
+  git -C "$src" add --all
+  git -C "$src" -c user.name=adopt -c user.email=adopt@example.com commit --quiet --no-verify -m "chore: base"
+  base="$(git -C "$src" rev-parse HEAD)"
+}
+
+after_copy() { :; }
+
+# Steps 1 to 7 of "Adopt cubert in an existing repository" in the README.
+adopt() {
+  local answers=("$@") project="$PWD"
+  step "copy the template over the existing files"
+  # From cubert, where mise resolves copier. The project does not list it yet.
+  (cd "$root" && copier copy --quiet --defaults --overwrite --vcs-ref "$base" \
+    -d project_name="demo" -d description="An existing project." \
+    "${answers[@]}" "$src" "$project" >/dev/null)
+  # README step 4: merge the project files that Copier kept.
+  after_copy
+  mise trust --quiet --all
+  step "set up the tools"
+  mise run setup >"$out/$layout-setup.log" 2>&1 || fail "setup failed, see $out/$layout-setup.log"
+  mise run format --all >"$out/$layout-format.log" 2>&1 || fail "format failed, see $out/$layout-format.log"
+  git add --all
+  step "check"
+  mise run check >"$out/$layout-check.log" 2>&1 || {
+    tail -n 40 "$out/$layout-check.log" >&2
+    fail "check failed, see $out/$layout-check.log"
+  }
+}
+
+same() {
+  git diff --quiet HEAD -- "$@" || fail "adoption changed a project-owned file: $*"
+}
+
+commit_existing() {
+  git -c init.defaultBranch=main init --quiet
+  git add --all
+  git -c user.name=adopt -c user.email=adopt@example.com commit --quiet --no-verify -m "chore: existing project"
+}
+
+# Python lives in apps/backend, so the python option stays off and hk.pkl keeps the
+# project's own ruff and mypy steps, with the template's hk.pkl layering as the README says.
+backend_subdir() {
+  dest="$out/backend-subdir"
+  rm -rf "$dest"
+  mkdir -p "$dest/apps/backend/tests"
+  cd "$dest"
+  cat >mise.toml <<'TOML'
+[tools]
+uv = "latest"
+
+[tasks.install]
+description = "Install project dependencies"
+run = "uv sync --project apps/backend"
+TOML
+  cat >apps/backend/pyproject.toml <<'TOML'
+[project]
+name = "backend"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = ["mypy", "ruff"]
+
+[tool.mypy]
+strict = true
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+TOML
+  printf 'def add(a: int, b: int) -> int:\n    return a + b\n' >apps/backend/app.py
+  printf '# backend\n' >README.md
+  # The project's hk.pkl before adoption. It does not know cubert.
+  printf 'amends "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Config.pkl"\n' >hk.pkl
+  commit_existing
+
+  snapshot
+  # The project's hk.pkl must amend cubert's before hk can run anything.
+  after_copy() {
+    cat >hk.pkl <<'PKL'
+amends ".config/hk/cubert.pkl"
+
+steps {
+  ["backend-ruff"] = new Step {
+    dir = "apps/backend"
+    glob = List("**/*.py")
+    check = "uv run ruff check {{files}}"
+  }
+  ["backend-mypy"] = new Step {
+    dir = "apps/backend"
+    glob = List("**/*.py")
+    check = "uv run mypy {{files}}"
+  }
+}
+PKL
+  }
+  adopt -d python=false
+  same apps/backend/pyproject.toml apps/backend/app.py
+  grep -q 'uv sync --project apps/backend' mise.toml || fail "mise.toml lost the project's install task"
+
+  git -c user.name=adopt -c user.email=adopt@example.com commit --quiet --no-verify -m "chore: adopt cubert"
+  break_backend() { printf 'x: int = "text"\n' >>apps/backend/app.py; }
+  expect_hook_failure backend backend-mypy
+  step "pass (project: $dest)"
+}
+
+# OpenTofu with a remote backend, and Ansible with a project collection and its own
+# ansible.cfg. Setup and check must need no cloud login and keep the state backend alone.
+infra() {
+  dest="$out/infra"
+  rm -rf "$dest"
+  mkdir -p "$dest/opentofu" "$dest/ansible/playbooks" \
+    "$dest/ansible/collections/ansible_collections/demo/util/roles/hello/tasks"
+  cd "$dest"
+  printf '[tools]\nopentofu = "latest"\n' >mise.toml
+  printf '# infra\n' >README.md
+  printf 'terraform {\n  required_version = ">= 1.8"\n}\n' >opentofu/versions.tf
+  printf 'terraform {\n  backend "s3" {\n    bucket = "demo-state"\n    key    = "demo.tfstate"\n    region = "eu-west-1"\n  }\n}\n' >opentofu/backend.tf
+  printf 'output "greeting" {\n  value = "hello"\n}\n' >opentofu/main.tf
+  # A nested mise.toml in a subdirectory is the project's own.
+  printf '[env]\nTF_VAR_environment = "dev"\n' >opentofu/mise.toml
+  printf '[defaults]\nroles_path = roles\ncollections_path = collections\n' >ansible/ansible.cfg
+  printf -- '---\nnamespace: "demo"\nname: "util"\nversion: "1.0.0"\nreadme: "README.md"\nauthors:\n  - "demo"\n' \
+    >ansible/collections/ansible_collections/demo/util/galaxy.yml
+  printf '# util\n' >ansible/collections/ansible_collections/demo/util/README.md
+  printf -- '---\n- name: "Say hello"\n  ansible.builtin.debug:\n    msg: "hello"\n' \
+    >ansible/collections/ansible_collections/demo/util/roles/hello/tasks/main.yml
+  printf -- '---\n- name: "Configure the demo hosts"\n  hosts: "all"\n  roles:\n    - role: "demo.util.hello"\n' \
+    >ansible/playbooks/site.yml
+  commit_existing
+
+  snapshot
+  adopt -d opentofu=true -d ansible=true
+  same opentofu/versions.tf opentofu/backend.tf opentofu/mise.toml ansible/ansible.cfg
+  # Setup adds the tools that the shared steps need, and pins the project's own.
+  grep -q '^"pypi:ansible-lint" = "[0-9]' mise.toml || fail "setup did not add ansible-lint to mise.toml"
+  [ ! -e opentofu/.terraform ] || fail "setup or check ran tofu init against the backend"
+  grep -q 'configuration is valid' "$out/$layout-check.log" || fail "check:opentofu did not validate"
+  git add --all
+  git -c user.name=adopt -c user.email=adopt@example.com commit --quiet --no-verify -m "chore: adopt cubert"
+  break_ansible_collection() {
+    printf -- '---\n- name: "Say hello"\n  ansible.builtin.no_such_module:\n    msg: "hello"\n' \
+      >ansible/collections/ansible_collections/demo/util/roles/hello/tasks/main.yml
+  }
+  expect_hook_failure ansible_collection ansible-syntax-check
+  step "pass (project: $dest)"
+}
+
+status=0
+for layout in backend-subdir infra; do
+  if [ "${usage_layout:-all}" = "all" ] || [ "${usage_layout}" = "$layout" ]; then
+    # A background subshell keeps `set -e` on, which `if (...)` would turn off.
+    ("${layout//-/_}") &
+    wait "$!" || status=1
+  fi
+done
+exit "$status"
