@@ -3,8 +3,7 @@
 name: "Setup mise"
 description: "Install a pinned mise and let it export the repo's tool versions"
 
-# mise.toml can't declare mise's own version, so this is the one pin that lives
-# in CI. Keeping it here means workflows never restate it and can't drift apart.
+# mise.toml cannot pin mise itself, so this is the one CI pin. Workflows omit it.
 inputs:
   version:
     description: "mise version to install (the pin; callers should not override it)"
@@ -21,8 +20,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # Built here so the tool list can be slugified, and so the key stays
-    # readable in the two places below.
+    # The tool list goes in the key, so jobs with different tools keep separate caches.
     - name: "Compute the mise cache key"
       id: "key"
       shell: "bash"
@@ -37,10 +35,7 @@ runs:
           echo "key=${prefix}-${CONFIG_HASH}"
         } >> "${GITHUB_OUTPUT}"
 
-    # Cached here rather than by mise-action: it only writes its cache when it
-    # also runs the install, and that install is the step that needs retrying.
-    # A partial restore is still worth it - `mise install` then only fetches
-    # what the bump actually changed.
+    # Not mise-action's cache: it saves only after its own install, which cannot retry.
     - name: "Restore mise tools"
       id: "cache"
       if: "inputs.tools != 'none'"
@@ -57,8 +52,7 @@ runs:
         install: "false"
         cache: "false"
 
-    # mise installs tools in parallel, and a fork from one install can leave a
-    # freshly written binary ETXTBSY ("Text file busy") for another, so retry.
+    # Parallel installs can leave a new binary busy (ETXTBSY) for another install.
     - name: "Install pinned tools"
       shell: "bash"
       env:
@@ -79,15 +73,13 @@ runs:
         done
         exit 1
 
-    # `mise run` otherwise installs every tool in mise.toml before each task, which
-    # downloaded all 19 uncached tools in every job and voided the `tools` list.
+    # Otherwise `mise run` installs every tool in mise.toml before each task.
     - name: "Limit tasks to the requested tools"
       if: "inputs.tools != ''"
       shell: "bash"
       run: "echo 'MISE_TASK_RUN_AUTO_INSTALL=false' >> \"${GITHUB_ENV}\""
 
-    # Without this the versions a partial restore carried in would be saved
-    # again beside the new ones, so every bump would grow the entry for good.
+    # Otherwise a partial restore saves old versions beside the new ones.
     - name: "Prune tool versions no config asks for"
       if: "inputs.tools != 'none' && steps.cache.outputs.cache-hit != 'true'"
       shell: "bash"
