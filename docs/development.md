@@ -20,6 +20,8 @@ cubert follows its own template, at the working tree and not at a release:
   `.shellcheckrc` link into `template/`.
 - `.config/mise/tasks/` links each shared task that cubert can run. Tasks with a
   conditional name stay out: mise would load them under that name.
+- `.github/workflows/pr-title.yml` is a copy, not a link, because GitHub ignores a
+  symlinked workflow. `test_cubert_workflows.py` fails when the copy drifts.
 - `hk.pkl`, `dprint.json` and `.yamllint` layer on the template's files, as a project's
   files do.
 
@@ -96,10 +98,12 @@ breaking change, and say what projects must do in the release notes.
 - The e2e tasks are not `test:*` tasks, so `mise run test` stays fast.
 
 The unit tests in `tests/` cover the template's check scripts, so projects do not test
-them. Three more tests read the template itself:
+them. Four more tests read the template itself:
 
 - `test_file_ownership.py` fails when the ownership table in `conventions.md`, the
   `_skip_if_exists` list or `template/` disagree.
+- `test_cubert_workflows.py` fails when cubert's workflow copy differs from the
+  template's.
 - `test_render.py` renders a project with awkward answers and parses the output.
 - `test_worktree_setup.py` renders a project and runs `git worktree add`. It skips when
   `git`, `mise`, `copier` or `wt` is missing.
