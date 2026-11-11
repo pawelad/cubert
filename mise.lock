@@ -462,6 +462,7 @@ url_api = "https://api.github.com/repos/apple/pkl/releases/assets/663854370"
 version = "9.19.1"
 backend = "pypi:copier"
 specifiers = ["9.19.1"]
+uv = { path = ".mise/locks/pypi-copier/9.19.1", digest = "sha256:6373e5ab56d109c58d8e304692a4efaacbba2e455a3da528e6bdb360a7b94bae" }
 
 [[tools.ruff]]
 version = "0.17.4"
@@ -749,6 +750,7 @@ repository_ids = { repository = "1078528927" }
 version = "1.38.0"
 backend = "pypi:yamllint"
 specifiers = ["1.38.0"]
+uv = { path = ".mise/locks/yamllint/1.38.0", digest = "sha256:7988e918b039b2fda4d4e47dbf813c7ccfa50bffa4d6efefc1a723a6a24d300d" }
 
 [[tools.zizmor]]
 version = "1.32.0"
