@@ -14,6 +14,8 @@ DO_NOT_TRACK = "1"
 # Otherwise terminal managers (such as Orca) kill the background cleanup when a
 # session closes.
 WORKTRUNK_FOREGROUND = 1
+# Each worktree and data dir would download every provider again. Only tofu reads it.
+TF_PLUGIN_CACHE_DIR = "{{ env.HOME }}/.cache/opentofu/plugins"
 
 # mise runs one postinstall hook, and this file's hook wins over `mise.toml`.
 # Add project steps to the `install` task instead.

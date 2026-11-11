@@ -72,6 +72,7 @@ path, so `check/repo` is `check:repo`:
 | `check`              | Runs every `check:*` task                                               |
 | `check:repo`         | Runs hk on every file, plus the repository guards                       |
 | `check:opentofu`     | OpenTofu option: runs `tofu validate`, with no backend or credentials   |
+| `tofu:lock`          | OpenTofu option: locks the providers for macOS and Linux (`--upgrade`)  |
 | `ci:check`           | Runs `check`, then `test`: the CI check job. A project can replace it   |
 | `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it       |
 | `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities                |
@@ -100,6 +101,13 @@ never run `tofu:init`, because it contacts the state backend and needs the opera
 login. `check:opentofu` validates with `init -backend=false` in its own data directory
 (`.terraform-validate`), so it needs no credentials and leaves the real `.terraform`
 alone. Run `mise run tofu:init` once per checkout before a plan or apply.
+
+`check:opentofu` never changes `.terraform.lock.hcl`, and it fails when the lock file
+lacks a provider. `mise run tofu:lock` then adds the hashes for macOS and Linux, with no
+backend login. After a version constraint change, run `mise run tofu:lock --upgrade`.
+`tofu init` would lock only the local platform, and CI would change the file.
+`.config/mise/config.toml` sets `TF_PLUGIN_CACHE_DIR`, so each worktree reuses the
+providers that another one downloaded.
 
 The `python` option adds `test:python`. It runs `uv run pytest` and treats pytest's exit
 code 5 (no tests collected) as a pass, so a fresh project passes `mise run test`. A

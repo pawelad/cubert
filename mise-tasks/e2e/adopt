@@ -183,6 +183,8 @@ infra() {
   printf 'terraform {\n  required_version = ">= 1.8"\n}\n' >opentofu/versions.tf
   printf 'terraform {\n  backend "s3" {\n    bucket = "demo-state"\n    key    = "demo.tfstate"\n    region = "eu-west-1"\n  }\n}\n' >opentofu/backend.tf
   printf 'output "greeting" {\n  value = "hello"\n}\n' >opentofu/main.tf
+  printf 'terraform {\n  required_providers {\n    random = {\n      source  = "hashicorp/random"\n      version = "3.6.3"\n    }\n  }\n}\n' \
+    >opentofu/providers.tf
   # A nested mise.toml in a subdirectory is the project's own.
   printf '[env]\nTF_VAR_environment = "dev"\n' >opentofu/mise.toml
   printf '[defaults]\nroles_path = roles\ncollections_path = collections\n' >ansible/ansible.cfg
@@ -193,6 +195,10 @@ infra() {
     >ansible/collections/ansible_collections/demo/util/roles/hello/tasks/main.yml
   printf -- '---\n- name: "Configure the demo hosts"\n  hosts: "all"\n  roles:\n    - role: "demo.util.hello"\n' \
     >ansible/playbooks/site.yml
+  # The existing project locked its providers for every platform, as tofu:lock does.
+  (cd "$root" && mise x opentofu@latest -- tofu -chdir="$dest/opentofu" providers lock \
+    -platform=darwin_arm64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 \
+    >/dev/null)
   commit_existing
 
   snapshot
@@ -209,6 +215,16 @@ infra() {
       >ansible/collections/ansible_collections/demo/util/roles/hello/tasks/main.yml
   }
   expect_hook_failure ansible_collection ansible-syntax-check
+
+  step "lock file guard"
+  sed -i.bak 's/3.6.3/3.6.2/' opentofu/providers.tf && rm opentofu/providers.tf.bak
+  if mise run check:opentofu >"$out/$layout-lock.log" 2>&1; then
+    fail "check:opentofu passed with a stale lock file"
+  fi
+  grep -q 'mise run tofu:lock' "$out/$layout-lock.log" || fail "check:opentofu did not name tofu:lock"
+  mise run tofu:lock --upgrade >>"$out/$layout-lock.log" 2>&1 || fail "tofu:lock failed, see $out/$layout-lock.log"
+  mise run check:opentofu >>"$out/$layout-lock.log" 2>&1 || fail "check:opentofu failed after tofu:lock"
+  git reset --quiet --hard HEAD
   step "pass (project: $dest)"
 }
 
