@@ -1,2 +1,5 @@
 # Commits that only reformat code. `git blame` and GitHub skip them.
 # `mise run setup` sets blame.ignoreRevsFile for local blame.
+
+# build: lint and format cubert's own Python with the template's ruff rules
+ef59d261cb1e929497f8ea5888f4eb6c3a8c68cb
