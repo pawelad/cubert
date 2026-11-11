@@ -1,15 +1,5 @@
-# cubert's own tools and tasks. mise installs every tool.
-# pypi: tools install through uv.
-# A short task goes here. A task with logic goes in mise-tasks/ as a file task.
-
-[settings]
-lockfile = true
-# Matches the Dependabot cooldown. Exact pins and mise.lock entries are not filtered.
-minimum_release_age = "7d"
-
-[env]
-HK_MISE = 1
-DO_NOT_TRACK = "1"
+# cubert's own tools and tasks. Shared settings and tasks: .config/mise/, which links
+# into template/. A task with logic goes in mise-tasks/ as a file task.
 
 [tools]
 actionlint = "1.7.12"
@@ -27,29 +17,12 @@ yamllint = "1.38.0"
 "npm:@fission-ai/openspec" = "1.16.0"
 "pypi:copier" = "9.19.1"
 
-[tasks.setup]
-description = "Set up a checkout: tools and git hooks"
-run = ["mise install", "hk install --mise"]
-
-[tasks.check]
-description = "Run every check (check:*)"
-depends = ["check:*"]
-
-[tasks."check:repo"]
-description = "Run hk on every file"
-run = "hk check --all --no-fail-fast"
-
-[tasks."check:scripts"]
+[tasks."test:scripts"]
 description = "Run the unit tests for the check scripts"
 run = """
 uv run --no-project --python 3.14 python -m unittest discover \
   --start-directory tests --top-level-directory .
 """
-
-[tasks.format]
-description = "Run the hk fixers on changed and untracked files (--all for every file)"
-usage = 'flag "--all" help="Fix every file in the repository"'
-run = 'if [ "${usage_all:-false}" = "true" ]; then hk fix --all; else hk fix; fi'
 
 [tasks.upgrade]
 description = "Upgrade cubert's tools and the template's dprint plugins"

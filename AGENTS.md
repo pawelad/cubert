@@ -10,7 +10,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   [docs/development.md](./docs/development.md).
 - Template: `copier.yml` (questions and settings) and `template/` (the rendered files).
   `template/docs/conventions.md` documents the tooling that every project gets.
-- Tasks: `mise tasks`. cubert's tasks: `mise.toml` and `mise-tasks/`.
+- Tasks: `mise tasks`. Shared tasks: `.config/mise/tasks/`, which links into
+  `template/`. cubert's tasks: `mise.toml` and `mise-tasks/`.
 - Git hooks: `hk.pkl`, which amends the template's `base.pkl` through the `.config/hk`
   link. A rule that a tool enforces is not listed here. Its error states the fix.
 - Reports: `tmp/reports/YYYY-MM-DD-<topic>.md`. Scratch work: `tmp/<task>/`.
@@ -123,6 +124,6 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 
 ### Done
 
-- [ ] A template change: `mise run test:render --filter <regex>` passes for the
+- [ ] A template change: `mise run e2e:render --filter <regex>` passes for the
       combinations it touches.
-- [ ] A change to a template-owned or merged file: `mise run test:update` passes.
+- [ ] A change to a template-owned or merged file: `mise run e2e:update` passes.

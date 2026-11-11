@@ -37,12 +37,15 @@ jobs:
       - name: "Run the checks"
         run: "mise run check"
 
+      - name: "Run the tests"
+        run: "mise run test"
+
   update:
     name: "Update from the previous commit"
     runs-on: "ubuntu-24.04"
     timeout-minutes: 20
     steps:
-      # test:update renders HEAD~1, so it needs history.
+      # e2e:update renders HEAD~1, so it needs history.
       - name: "Check out the repository"
         uses: "actions/checkout@v7.0.1"
         with:
@@ -58,7 +61,7 @@ jobs:
           git config --global user.email "ci@users.noreply.github.com"
 
       - name: "Test the update"
-        run: "mise run test:update"
+        run: "mise run e2e:update"
 
   render:
     name: "Render ${{ matrix.openspec }}"
@@ -81,5 +84,5 @@ jobs:
         env:
           OPENSPEC: "${{ matrix.openspec }}"
         run: |
-          mise run test:render --jobs 4 --out "${RUNNER_TEMP}/renders" \
+          mise run e2e:render --jobs 4 --out "${RUNNER_TEMP}/renders" \
             --filter "_${OPENSPEC}\$"

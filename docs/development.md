@@ -14,9 +14,16 @@ described in [template/docs/conventions.md](../template/docs/conventions.md).
 | `tests/`                   | Unit tests for the check scripts, and cubert's own answers    |
 | `AGENTS.md`                | Agent rules. The shared block must match a render (see below) |
 
-cubert follows its own template. `.config/hk`, `.editorconfig` and `.shellcheckrc` link
-into `template/`. `hk.pkl`, `dprint.json` and `.yamllint` layer on the template's files,
-as a project's files do.
+cubert follows its own template, at the working tree and not at a release:
+
+- `.config/hk`, `.config/mise/config.toml`, `.config/wt.toml`, `.editorconfig` and
+  `.shellcheckrc` link into `template/`.
+- `.config/mise/tasks/` links each shared task that cubert can run. Tasks with a
+  conditional name stay out: mise would load them under that name.
+- `hk.pkl`, `dprint.json` and `.yamllint` layer on the template's files, as a project's
+  files do.
+
+A new shared task needs a link here too. Run `mise run setup` after you clone cubert.
 
 ## Template syntax
 
@@ -65,20 +72,22 @@ breaking change, and say what projects must do in the release notes.
 
 ## Tests
 
-| Task                   | Covers                                                                           |
-| ---------------------- | -------------------------------------------------------------------------------- |
-| `mise run check`       | hk on every file (`shared-agents` included) and the unit tests (`check:scripts`) |
-| `mise run test:render` | Renders every feature combination, then runs `setup` and `check` in each         |
-| `mise run test:update` | Renders `HEAD~1`, adds project edits, updates to the working tree, checks        |
+| Task                  | Covers                                                                    |
+| --------------------- | ------------------------------------------------------------------------- |
+| `mise run check`      | hk on every file, `shared-agents` included                                |
+| `mise run test`       | The unit tests for the check scripts (`test:scripts`)                     |
+| `mise run e2e:render` | Renders every feature combination, then runs `setup`, `check`, `test`     |
+| `mise run e2e:update` | Renders `HEAD~1`, adds project edits, updates to the working tree, checks |
 
 - Renders read the working tree, including uncommitted changes.
-- `test:render` runs 96 combinations, about 10 minutes with `--jobs 6`. Use
+- `e2e:render` runs 96 combinations, about 10 minutes with `--jobs 6`. Use
   `--filter <regex>` for the combinations that a change touches. Names look like
   `p1d0t1a0c1_changes-only`: python, docker, opentofu, ansible, changelog, then
   openspec.
 - Each render pins the newest tool releases, so upstream breakage shows up here first.
-- `test:update --from <ref>` tests the update from an older release.
-- CI runs `check`, `test:update` and the full render matrix.
+- `e2e:update --from <ref>` tests the update from an older release.
+- CI runs `check`, `test`, `e2e:update` and the full render matrix.
+- The e2e tasks are not `test:*` tasks, so `mise run test` stays fast.
 
 The unit tests in `tests/` cover the template's check scripts, so projects do not test
 them.
@@ -99,8 +108,8 @@ them.
 cubert uses SemVer tags (`v0.1.0`). `template:update` updates a project to the latest
 tag, so a tag is a release.
 
-1. Run `mise run check`, `mise run test:render` and
-   `mise run test:update --from <previous tag>`.
+1. Run `mise run check`, `mise run test`, `mise run e2e:render` and
+   `mise run e2e:update --from <previous tag>`.
 2. Write the release notes from `git log <previous tag>..HEAD`. Name each step a project
    must take by hand.
 3. Tag: `git tag -a vX.Y.Z -m "<notes>"`. Then push the tag.

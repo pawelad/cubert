@@ -32,6 +32,7 @@ run() {
   mise run setup
   git add --all
   mise run check
+  mise run test
 }
 
 rm -rf "$dest"
