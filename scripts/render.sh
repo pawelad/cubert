@@ -47,6 +47,18 @@ run() {
   git add --all
   mise run check
   mise run test
+  if [ "$opentofu" = true ]; then
+    # Setup and check must not touch the state backend or its data dir.
+    [ ! -e "$tofu_dir/.terraform" ] || {
+      echo "render: setup or check ran tofu init" >&2
+      exit 1
+    }
+    [ -z "$(git status --porcelain --untracked-files=all "$tofu_dir/.terraform-validate")" ] \
+      || {
+        echo "render: .terraform-validate is not ignored" >&2
+        exit 1
+      }
+  fi
 
   git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify -m "chore: render"
   if [ "$python" = true ]; then expect_hook_failure python mypy; fi

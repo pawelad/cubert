@@ -76,6 +76,12 @@ To add a test suite, add a `test:<area>` task. `test` runs it, and so does CI. L
 take test file paths (`#USAGE arg "[files]..."`), so a run can cover only the touched
 files.
 
+The `opentofu` option adds `check:opentofu` and `tofu:init`. `setup` and worktree setup
+never run `tofu:init`, because it contacts the state backend and needs the operator's
+login. `check:opentofu` validates with `init -backend=false` in its own data directory
+(`.terraform-validate`), so it needs no credentials and leaves the real `.terraform`
+alone. Run `mise run tofu:init` once per checkout before a plan or apply.
+
 The `python` option adds `test:python`. It runs `uv run pytest` and treats pytest's exit
 code 5 (no tests collected) as a pass, so a fresh project passes `mise run test`. A
 project without pytest in its dev group skips with a message. Add it with

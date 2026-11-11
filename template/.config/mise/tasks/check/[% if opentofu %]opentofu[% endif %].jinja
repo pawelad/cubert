@@ -3,6 +3,8 @@
 #MISE dir="[[ tofu_dir ]]"
 set -euo pipefail
 
-# Validation needs the providers but not the state backend or its credentials.
+# Validation needs the providers but not the state backend or its credentials. Its own
+# data dir keeps `-backend=false` from replacing the backend that `tofu:init` set up.
+export TF_DATA_DIR=.terraform-validate
 tofu init -backend=false -input=false >/dev/null
 tofu validate

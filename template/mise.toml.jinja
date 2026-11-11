@@ -45,13 +45,13 @@ git-cliff = "latest"
 [% if openspec != 'none' %]
 "npm:@fission-ai/openspec" = "latest"
 [% endif %]
-[% if python or opentofu or ansible or typescript %]
+[% if python or ansible or typescript %]
 
 [tasks.install]
 description = "Install project dependencies"
-[% if python and not (opentofu or ansible or typescript) %]
+[% if python and not (ansible or typescript) %]
 run = "uv sync"
-[% elif typescript and not (python or opentofu or ansible) %]
+[% elif typescript and not (python or ansible) %]
 run = "mise run typescript:install"
 [% else %]
 run = [
@@ -60,9 +60,6 @@ run = [
 [% endif %]
 [% if typescript %]
   "mise run typescript:install",
-[% endif %]
-[% if opentofu %]
-  "mise run tofu:init",
 [% endif %]
 [% if ansible %]
   "mise run ansible:install",
@@ -73,7 +70,8 @@ run = [
 [% if opentofu %]
 
 [tasks."tofu:init"]
-description = "Initialize the OpenTofu providers and state backend"
+# Not part of `install`: it contacts the state backend and needs the operator's login.
+description = "Initialize the OpenTofu providers and state backend (needs credentials)"
 dir = "[[ tofu_dir ]]"
 run = "tofu init -input=false"
 [% endif %]
