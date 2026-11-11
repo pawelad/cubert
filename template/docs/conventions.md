@@ -6,11 +6,11 @@ belongs to the template: change it in cubert, not here. Project setup lives in
 
 ## File ownership
 
-| Kind           | Files                                                                                                                                                                                                                                                                                                                                              | On `copier update`            |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Template-owned | `.config/`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                                                            | Takes the template's changes  |
-| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `.github/workflows/ci.yml`, `openspec/config.yaml`                                                                                                                                                                                   | Merges your additions         |
-| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `.yamllint`, `biome.json`, `mise-tasks/`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<tofu_dir>/versions.tf`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
+| Kind           | Files                                                                                                                                                                                                                                                                                                                                                                                                         | On `copier update`            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Template-owned | `.config/`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/cubert-check.yml`, `.github/workflows/cubert-audit.yml`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                                           | Takes the template's changes  |
+| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `openspec/config.yaml`                                                                                                                                                                                                                                                                          | Merges your additions         |
+| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `.yamllint`, `biome.json`, `mise-tasks/`, `.github/workflows/ci.yml`, `.github/workflows/audit.yml`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<tofu_dir>/versions.tf`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
 
 Copier treats template-owned and merged files the same way: a 3-way merge of the
 template's change and your edit. The kinds differ in how you edit them. A change to a
@@ -72,6 +72,7 @@ path, so `check/repo` is `check:repo`:
 | `check`              | Runs every `check:*` task                                               |
 | `check:repo`         | Runs hk on every file, plus the repository guards                       |
 | `check:opentofu`     | OpenTofu option: runs `tofu validate`, with no backend or credentials   |
+| `ci:check`           | Runs `check`, then `test`: the CI check job. A project can replace it   |
 | `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it       |
 | `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities                |
 | `audit:links`        | Checks every link in the Markdown files, URLs included                  |
@@ -188,14 +189,35 @@ Three hk steps cover what the formatters and linters miss:
 config-based hooks that `hk install --global` writes, with no error. Fix it with
 `git config --local --unset core.hooksPath`.
 
+## CI
+
+The template owns the shared jobs, and the project owns every trigger. Triggers decide
+how many CI minutes a project spends, so each project sets its own.
+
+| Workflow           | Owner    | Does                                                         |
+| ------------------ | -------- | ------------------------------------------------------------ |
+| `cubert-check.yml` | Template | The `Check` job, `mise run ci:check`. Runs only when called  |
+| `cubert-audit.yml` | Template | The `Audit` job, `mise run audit`. Runs only when called     |
+| `ci.yml`           | Project  | Calls `cubert-check.yml` on pushes to main and pull requests |
+| `audit.yml`        | Project  | Calls `cubert-audit.yml` on the same events and weekly       |
+| `pr-title.yml`     | Template | Checks the pull request title                                |
+
+- Add project jobs to `ci.yml` or to another workflow. Path filters, draft rules,
+  concurrency and a `workflow_call` trigger for a deploy gate go there too.
+- The weekly schedule is in `audit.yml`, so it does not start the CI jobs.
+- A caller sets `permissions`. A called workflow can only narrow them.
+- `ci:check` runs `check`, then `test`. When other jobs run the slow suites with their
+  services, replace it in `mise.toml`: `[tasks."ci:check"] run = "mise run check:repo"`.
+  `mise run ci:check` runs the same job locally.
+
 ## Audits
 
 `mise run audit` runs the checks that need the network: osv-scanner on `uv.lock` and
 `bun.lock`, and lychee on every URL. Hooks and `mise run check` skip them, so they stay
 fast and work offline. A new advisory then fails the audit and never an unrelated
-commit. CI runs the audit as its own job, on each push and pull request and once a week.
-Run it locally before a release or after a dependency change. osv-scanner is a tool of
-the `python` and `typescript` options.
+commit. CI runs it from `audit.yml`, on each push and pull request and once a week. Run
+it locally before a release or after a dependency change. osv-scanner is a tool of the
+`python` and `typescript` options.
 
 ## Formatting
 

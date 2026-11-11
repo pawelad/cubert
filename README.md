@@ -83,10 +83,12 @@ Copy from GitHub, not from a local clone. Copier records the source in
    ```
 
 3. Review `git diff`. Copier replaced each template-owned and merged file that existed,
-   such as `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.config/wt.toml`,
-   the CI workflow and `dependabot.yml`. Put the project's own content back into each
-   merged file, below the shared parts:
-   - CI jobs go below the project jobs marker in `ci.yml`.
+   such as `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.config/wt.toml`
+   and `dependabot.yml`. Put the project's own content back into each merged file, below
+   the shared parts:
+   - Copier keeps an existing `ci.yml` and `audit.yml`, because they are project-owned.
+     Replace their check and audit jobs with calls to `cubert-check.yml` and
+     `cubert-audit.yml` (see [conventions.md](./template/docs/conventions.md#ci)).
    - `wt.toml` hooks become `.worktreeinclude`, `.worktreelinks` and the `install` task.
    - yamllint relaxations go in the project's `.yamllint`, which extends
      `.config/yamllint.yaml`.

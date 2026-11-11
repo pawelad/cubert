@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Run what the CI check job runs: check, then test. A project can replace it"
+set -euo pipefail
+
+mise run check
+mise run test

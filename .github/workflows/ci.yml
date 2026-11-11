@@ -38,11 +38,9 @@ jobs:
       - name: "Set up mise"
         uses: "./template/.github/actions/setup-mise"
 
-      - name: "Run the checks"
-        run: "mise run check"
-
-      - name: "Run the tests"
-        run: "mise run test"
+      # The task that a project's check job runs.
+      - name: "Run the checks and tests"
+        run: "mise run ci:check"
 
   # Needs the network, so it is not part of `mise run check`. A new advisory fails this
   # job and leaves the check job green.

@@ -29,6 +29,8 @@ _skip_if_exists:
   - "hk.pkl"
   - "dprint.json"
   - ".yamllint"
+  - ".github/workflows/ci.yml"
+  - ".github/workflows/audit.yml"
   - ".worktreeinclude"
   - ".worktreelinks"
   - "docs/setup.md"
