@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.support import ROOT, project_env, run
+from tests.support import project_env, run, snapshot_template
 
 MARKER = "cubert-worktree-setup-done"
 NEEDED_TOOLS = ("git", "mise", "copier", "wt")
@@ -60,6 +60,8 @@ def project(tmp_path_factory: pytest.TempPathFactory) -> Project:
     env = make_env(base)
     primary = base / "demo"
     worktree = base / "demo-feature"
+    source = base / "cubert"
+    ref = snapshot_template(source)
     run(
         [
             "copier",
@@ -67,12 +69,12 @@ def project(tmp_path_factory: pytest.TempPathFactory) -> Project:
             "--quiet",
             "--defaults",
             "--vcs-ref",
-            "HEAD",
+            ref,
             "-d",
             "project_name=demo",
             "-d",
             "description=A demo project.",
-            str(ROOT),
+            str(source),
             str(primary),
         ],
         base,
