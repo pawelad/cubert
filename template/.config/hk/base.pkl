@@ -103,11 +103,12 @@ steps {
     exclude = frozen
     check = "grep -inHE '\(commentLine).*(\(britishEnglish))' {{files}} && exit 1 || exit 0"
   }
+  // A run of # counts only alone on its line: `###### Fine print` is a Markdown heading.
   ["no-dividers"] = new Step {
     glob = codeFiles
     exclude = frozen
     check = """
-      if grep -nHE '^[[:space:]]*(#|//|--)[[:space:]]*[-=*#~]{5,}' {{files}}; then
+      if grep -nHE '^[[:space:]]*(#|//|--)[[:space:]]*([-=*~]{5,}|#{5,}[[:space:]]*$)' {{files}}; then
         echo 'Remove decorative comment dividers and banners.' >&2
         exit 1
       fi
