@@ -43,6 +43,7 @@ run() {
   if [ "$docker" = true ]; then docker_fixture; fi
   if [ "$opentofu" = true ]; then opentofu_fixture; fi
   if [ "$ansible" = true ]; then ansible_fixture; fi
+  if [ "$openspec" != none ]; then openspec_fixture; fi
   mise run setup
   if [ "$typescript" = true ]; then typescript_dependency_fixture; fi
   git add --all
@@ -81,6 +82,10 @@ run() {
   if [ "$docker" = true ]; then expect_hook_failure docker "hadolint"; fi
   if [ "$opentofu" = true ]; then expect_hook_failure opentofu "tofu-fmt"; fi
   if [ "$ansible" = true ]; then expect_hook_failure ansible "ansible-syntax-check"; fi
+  if [ "$openspec" = spec-driven ]; then
+    expect_hook_failure openspec_warning openspec
+    expect_openspec_info
+  fi
 }
 
 # Not `if (run)`: bash turns `set -e` off inside a condition, so only the last command

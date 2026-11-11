@@ -88,6 +88,78 @@ YAML
 YAML
 }
 
+openspec_fixture() {
+  mkdir -p openspec/changes/improve-greeting
+  printf 'schema: "%s"\n' "$openspec" >openspec/changes/improve-greeting/.openspec.yaml
+  if [ "$openspec" = changes-only ]; then
+    # `openspec new change` marks schemas without a specs artifact the same way.
+    printf 'skip_specs: true\n' >>openspec/changes/improve-greeting/.openspec.yaml
+  fi
+  cat >openspec/changes/improve-greeting/proposal.md <<'MARKDOWN'
+# Improve the greeting
+
+## Why
+
+The demo needs a consistent greeting so callers receive the same friendly response.
+
+## What Changes
+
+- Return a friendly greeting to callers.
+
+## Impact
+
+- The demo greeting behavior.
+MARKDOWN
+  if [ "$openspec" = spec-driven ]; then
+    mkdir -p openspec/specs/greeting openspec/changes/improve-greeting/specs/greeting
+    cat >openspec/specs/greeting/spec.md <<'MARKDOWN'
+# Greeting
+
+## Purpose
+
+Define the greeting returned to callers so the demo has a consistent response.
+
+## Requirements
+
+### Requirement: Greeting
+
+The system SHALL return a greeting.
+
+#### Scenario: Request a greeting
+
+- **WHEN** a caller requests a greeting
+- **THEN** the system returns hello
+MARKDOWN
+    {
+      printf '## MODIFIED Requirements\n\n'
+      sed -n '/^### Requirement:/,$p' openspec/specs/greeting/spec.md
+    } >openspec/changes/improve-greeting/specs/greeting/spec.md
+  fi
+}
+
+break_openspec_warning() {
+  perl -0pi -e 's/The system SHALL return a greeting\./"The system SHALL return a greeting. " x 20/e' \
+    openspec/specs/greeting/spec.md
+}
+
+break_openspec_info() {
+  perl -pi -e 's/^### Requirement: Greeting$/### Requirement: Missing greeting/' \
+    openspec/changes/improve-greeting/specs/greeting/spec.md
+}
+
+# An advisory must fail hk even when OpenSpec's strict exit status stays successful.
+expect_openspec_info() {
+  local info_log="$out/$name.openspec-info.log"
+  break_openspec_info
+  mise x -- openspec validate --all --strict >"$info_log" 2>&1
+  grep -qF '[INFO]' "$info_log" || {
+    cat "$info_log" >&2
+    echo "render: the advisory fixture did not produce INFO" >&2
+    return 1
+  }
+  expect_hook_failure openspec_info openspec
+}
+
 # Each case writes one known error. A check that stays green on it is not running.
 break_prose() { printf '# Notes\n\nThe colour is red.\n' >notes.md; }
 break_comment() { printf '# The colour is red.\n' >>settings.yaml; }
