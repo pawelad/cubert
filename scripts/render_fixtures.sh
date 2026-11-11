@@ -100,3 +100,20 @@ expect_hook_failure() {
   fi
   git reset --quiet --hard HEAD
 }
+
+# Cut two releases as the docs describe, so a header or format drift fails the render.
+changelog_release() {
+  local commit=(git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify)
+  printf '\n## [0.1.0] - 2026-01-01\n\nInitial release.\n' >>CHANGELOG.md
+  "${commit[@]}" -am "chore(release): v0.1.0"
+  git tag v0.1.0
+  "${commit[@]}" --allow-empty -m "feat: add a feature with a subject long enough that dprint must wrap the entry"
+  mise run release:preview | grep -q '^## \[Unreleased\]'
+  RUST_LOG=warn mise x -- git-cliff --tag v0.2.0 --unreleased --prepend CHANGELOG.md
+  if [ "$(grep -c '^# Changelog' CHANGELOG.md)" -ne 1 ]; then
+    echo "render: the second release wrote a second changelog header" >&2
+    return 1
+  fi
+  mise x -- dprint check CHANGELOG.md
+  git reset --quiet --hard HEAD
+}

@@ -65,6 +65,7 @@ run() {
   if [ "$python" = true ] || [ "$typescript" = true ]; then mise run audit:deps; fi
 
   git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify -m "chore: render"
+  if [ "$changelog" = true ]; then changelog_release; fi
   expect_hook_failure prose no-british-english
   expect_hook_failure comment no-british-english-comments
   expect_hook_failure dash no-em-dashes-comments
