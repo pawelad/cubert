@@ -67,13 +67,21 @@ steps {
 [% if ansible %]
   ["ansible-lint"] = new Step {
     dir = "[[ ansible_dir ]]"
-    glob = List("playbooks/*.yml", "roles/**/*.yml")
+    glob = List("playbooks/**/*.yml", "playbooks/**/*.yaml", "roles/**/*.yml", "roles/**/*.yaml")
     check = "ansible-lint {{files}}"
   }
+  // A role edit changes every playbook that uses it, so check them all, not {{files}}.
   ["ansible-syntax-check"] = new Step {
     dir = "[[ ansible_dir ]]"
-    glob = List("playbooks/*.yml")
-    check = "ansible-playbook --syntax-check {{files}}"
+    glob = List("playbooks/**/*.yml", "playbooks/**/*.yaml", "roles/**/*.yml", "roles/**/*.yaml")
+    check = """
+      bad=0
+      for f in playbooks/*.yml playbooks/*.yaml; do
+        [ -e "$f" ] || continue
+        ansible-playbook --syntax-check "$f" || bad=1
+      done
+      exit "$bad"
+      """
   }
 [% endif %]
 [% if openspec != 'none' %]
