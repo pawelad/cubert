@@ -67,13 +67,19 @@ steps {
 [% if ansible %]
   ["ansible-lint"] = new Step {
     dir = "[[ ansible_dir ]]"
-    glob = List("playbooks/**/*.yml", "playbooks/**/*.yaml", "roles/**/*.yml", "roles/**/*.yaml")
+    glob = List(
+      "playbooks/**/*.yml", "playbooks/**/*.yaml", "roles/**/*.yml", "roles/**/*.yaml",
+      "collections/**/roles/**/*.yml", "collections/**/roles/**/*.yaml"
+    )
     check = "ansible-lint {{files}}"
   }
-  // A role edit changes every playbook that uses it, so check them all, not {{files}}.
+  // A role or collection edit changes every playbook that uses it, so check them all.
   ["ansible-syntax-check"] = new Step {
     dir = "[[ ansible_dir ]]"
-    glob = List("playbooks/**/*.yml", "playbooks/**/*.yaml", "roles/**/*.yml", "roles/**/*.yaml")
+    glob = List(
+      "playbooks/**/*.yml", "playbooks/**/*.yaml", "roles/**/*.yml", "roles/**/*.yaml",
+      "collections/**/*.yml", "collections/**/*.yaml"
+    )
     check = """
       bad=0
       for f in playbooks/*.yml playbooks/*.yaml; do
