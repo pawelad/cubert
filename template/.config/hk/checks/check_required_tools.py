@@ -2,14 +2,15 @@
 # /// script
 # requires-python = ">=3.14"
 # ///
-"""Fail when `mise.toml` lacks a tool that the shared hk steps and tasks call.
+"""Fail when `mise.toml` lacks a tool, or has one too old, for the shared hk steps.
 
-A template update can add a tool to `.config/mise/required-tools`, but it cannot add
-the tool to the project-owned `mise.toml`.
+A template update can add a tool or raise its minimum in `.config/mise/required-tools`
+(`hk>=2.11.1`), but it cannot change the project-owned `mise.toml`.
 """
 
 from __future__ import annotations
 
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -18,28 +19,59 @@ REQUIRED = Path(".config/mise/required-tools")
 CONFIG = Path("mise.toml")
 
 
+def _requirements(required: str) -> list[tuple[str, str | None]]:
+    """Return a (name, minimum version) pair for each line of the required list."""
+    pairs = []
+    for raw in required.splitlines():
+        line = raw.strip()
+        if line and not line.startswith("#"):
+            name, _, minimum = line.partition(">=")
+            pairs.append((name, minimum or None))
+    return pairs
+
+
+def _numbers(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in re.findall(r"\d+", version)[:3])
+
+
+def _configured_version(spec: object) -> str | None:
+    """Return the version of a tool entry, or None for a list or an alias."""
+    value = spec.get("version") if isinstance(spec, dict) else spec
+    return value if isinstance(value, str) and re.match(r"v?\d", value) else None
+
+
 def missing(required: str, config: str) -> list[str]:
     """Return the tools in the `required` list that the `config` TOML lacks."""
     tools = tomllib.loads(config).get("tools", {})
-    names = [line.strip() for line in required.splitlines()]
-    return [
-        name
-        for name in names
-        if name and not name.startswith("#") and name not in tools
-    ]
+    return [name for name, _ in _requirements(required) if name not in tools]
+
+
+def outdated(required: str, config: str) -> list[tuple[str, str, str]]:
+    """Return (name, minimum, configured) for each tool below its minimum version."""
+    tools = tomllib.loads(config).get("tools", {})
+    found = []
+    for name, minimum in _requirements(required):
+        configured = _configured_version(tools.get(name))
+        if minimum and configured and _numbers(configured) < _numbers(minimum):
+            found.append((name, minimum, configured))
+    return found
 
 
 def main(args: list[str]) -> int:
-    """Print each required tool that `mise.toml` lacks. `--names` prints only names."""
-    tools = missing(REQUIRED.read_text(), CONFIG.read_text())
+    """Print each tool that `mise.toml` lacks or has too old. `--names` prints fixes."""
+    required, config = REQUIRED.read_text(), CONFIG.read_text()
+    tools = missing(required, config)
+    old = outdated(required, config)
     if args == ["--names"]:
-        print("\n".join(tools))
+        print("\n".join([*tools, *(f"{name}@{minimum}" for name, minimum, _ in old)]))
         return 0
     for tool in tools:
         print(f"{CONFIG}: {tool} is missing, and the shared steps need it.")
-    if tools:
+    for name, minimum, configured in old:
+        print(f"{CONFIG}: {name} {configured} is below {minimum}, the minimum.")
+    if tools or old:
         print("Fix: mise run setup")
-    return 1 if tools else 0
+    return 1 if tools or old else 0
 
 
 if __name__ == "__main__":

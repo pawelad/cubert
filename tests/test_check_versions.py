@@ -17,7 +17,7 @@ def failures_in(tmp_path: Path, files: dict[str, str]) -> list[str]:
         "template/.config/hk/base.pkl": "",
         "template/.config/hk/cubert.pkl.jinja": "",
         "hk.pkl": "",
-        "template/.config/mise/required-tools.jinja": "hk\n",
+        "template/.config/mise/required-tools.jinja": "hk>=2.11.1\n",
     }
     for name, text in (base | files).items():
         (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
@@ -39,8 +39,10 @@ def test_minimal_repository_passes(tmp_path: Path) -> None:
 
 def test_exact_seed_fails(tmp_path: Path) -> None:
     files = {
-        "template/mise.toml.jinja": '[tools]\njq = "1.8.2"\nnode = "lts"\n',
-        "template/.config/mise/required-tools.jinja": "jq\nnode\n",
+        "template/mise.toml.jinja": (
+            '[tools]\nhk = "latest"\njq = "1.8.2"\nnode = "lts"\n'
+        ),
+        "template/.config/mise/required-tools.jinja": "hk>=2.11.1\njq\nnode\n",
     }
     assert len(failures_in(tmp_path, files)) == 1
 
@@ -73,3 +75,12 @@ def test_jinja_workflow_must_match_bumped_action(tmp_path: Path) -> None:
 
 def test_repository_passes() -> None:
     assert check_versions.failures(Path()) == []
+
+
+def test_required_hk_minimum_must_match_the_hk_tool(tmp_path: Path) -> None:
+    files = {"template/.config/mise/required-tools.jinja": "hk>=2.10.0\n"}
+    assert len(failures_in(tmp_path, files)) == 1
+
+
+def test_required_minimum_does_not_change_the_tool_name(tmp_path: Path) -> None:
+    assert failures_in(tmp_path, {}) == []

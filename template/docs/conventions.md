@@ -214,7 +214,9 @@ hooks) and `mise run check`, then commit the result as one commit.
 An update cannot add a tool to the project-owned `mise.toml`.
 `.config/mise/required-tools` lists the tools that the shared steps and tasks call.
 `mise run setup` adds each missing one to `mise.toml`, pinned. The `required-tools` hk
-step fails until it does.
+step fails until it does. A line such as `hk>=2.11.1` sets a minimum version: an older
+hk cannot load the shared config, so setup raises the pin to the minimum and the step
+names the tool when it is too old. Other pins above the minimum stay as they are.
 
 Run Copier only through this task. Copier commits in temporary repos, and global hk
 hooks there drop `mise.lock` from the update. The task runs Copier with `HK=0`.

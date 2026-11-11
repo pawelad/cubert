@@ -1,8 +1,10 @@
 # Template-owned. The tools that the shared hk steps and tasks call, one per line.
-# The required-tools hk step fails when mise.toml does not configure one.
+# `name>=version` sets a minimum. The required-tools hk step fails when mise.toml does
+# not configure a tool, or configures one below its minimum. hk needs a minimum: an
+# older hk cannot load the shared config.
 actionlint
 dprint
-hk
+hk>=2.11.1
 jq
 [% if docker or typescript or openspec != 'none' %]
 node

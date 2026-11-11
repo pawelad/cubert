@@ -115,7 +115,9 @@ them. Five more tests read the template itself:
 
 - `mise run upgrade` bumps cubert's own tools and the template's dprint plugins.
 - After an hk bump, change the hk package version in `template/.config/hk/base.pkl` and
-  `cubert.pkl.jinja`. The `template-versions` hk step fails until they match.
+  `cubert.pkl.jinja`, and the `hk>=` minimum in
+  `template/.config/mise/required-tools.jinja`. The `template-versions` hk step fails
+  until they match.
 - After an OpenSpec bump, run `mise run openspec:refork`. It rebuilds the changes-only
   schema from the new built-in one. Review the diff, then run the render tests.
 - The mise version for CI is the `version` input default in

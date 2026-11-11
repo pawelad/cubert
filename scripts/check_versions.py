@@ -5,7 +5,8 @@
 """Fail when the template ships a tool version that cubert would have to keep current.
 
 The template seeds `latest` (or `lts`), and the project's `mise run setup` pins it.
-`check:repo` requires each seeded tool. The hk package must match cubert's own hk tool.
+`check:repo` requires each seeded tool. The hk package and the hk minimum in the
+required list must match cubert's own hk tool.
 Dependabot skips `.jinja` workflows, so their actions must match the versions in the
 workflows that it bumps.
 """
@@ -48,8 +49,19 @@ def template_tools(text: str) -> dict[str, str]:
 def required_tools(text: str) -> set[str]:
     """Return the tools that `check:repo` requires, across every feature block."""
     return {
-        line for line in text.splitlines() if line and not line.startswith(("[%", "#"))
+        line.partition(">=")[0]
+        for line in text.splitlines()
+        if line and not line.startswith(("[%", "#"))
     }
+
+
+def required_minimums(text: str) -> dict[str, str]:
+    """Return the minimum version of each tool that the required list gives one."""
+    return dict(
+        line.split(">=")
+        for line in text.splitlines()
+        if ">=" in line and not line.startswith("#")
+    )
 
 
 def action_refs(text: str) -> dict[str, str]:
@@ -85,6 +97,15 @@ def hk_failures(root: Path) -> list[str]:
     ]
 
 
+def hk_minimum_failures(root: Path) -> list[str]:
+    """Return a failure when the required hk minimum differs from cubert's hk tool."""
+    own = tomllib.loads((root / "mise.toml").read_text())["tools"]["hk"]
+    minimum = required_minimums((root / REQUIRED_TOOLS).read_text()).get("hk")
+    if minimum == own:
+        return []
+    return [f"{REQUIRED_TOOLS}: hk minimum is {minimum!r}, mise.toml has {own!r}"]
+
+
 def action_failures(root: Path) -> list[str]:
     """Return each action in a `.jinja` workflow that Dependabot bumped elsewhere."""
     found: list[str] = []
@@ -104,7 +125,12 @@ def action_failures(root: Path) -> list[str]:
 
 def failures(root: Path) -> list[str]:
     """Return every failure in the repository at `root`."""
-    return tool_failures(root) + hk_failures(root) + action_failures(root)
+    return (
+        tool_failures(root)
+        + hk_failures(root)
+        + hk_minimum_failures(root)
+        + action_failures(root)
+    )
 
 
 def main() -> int:

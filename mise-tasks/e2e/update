@@ -53,8 +53,23 @@ for edit in "AGENTS.md:rotate the demo API key" ".gitignore:demo-cache/" "README
 done
 [ "$status" -eq 0 ] || exit 1
 
+# A project can pin an hk that cannot load the shared config. The check must say so, and
+# setup must raise the pin.
+step "pin an old hk, expect required-tools to fail, then setup to repair it"
+perl -pi -e 's/^hk = .*/hk = "1.51.0"/' mise.toml
+if .config/hk/checks/check_required_tools.py >"$out/required.log" 2>&1; then
+  echo "e2e:update: required-tools passed with hk 1.51.0" >&2
+  exit 1
+fi
+grep -q 'hk 1.51.0 is below' "$out/required.log" || {
+  cat "$out/required.log" >&2
+  echo "e2e:update: required-tools failed without naming hk" >&2
+  exit 1
+}
+
 step "run setup, check and test"
 mise run setup >>"$out/setup.log" 2>&1
+.config/hk/checks/check_required_tools.py
 git add --all
 mise run check
 mise run test
