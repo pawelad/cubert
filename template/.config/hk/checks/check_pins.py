@@ -4,9 +4,9 @@
 # ///
 """Fail on unpinned tool versions in `mise.toml`.
 
-A mise tool must name a version like `1.8.2`. An alias (`latest`, `lts`, `stable`), a
-prefix (`sub-1`, `20`) or a `ref:` floats. zizmor checks the GitHub
-Actions pins, and hadolint and dclint check the Docker images.
+A mise request must name its locked version. A dotted request can still float:
+`node = "24.22"` selects a patch, while jq has real two-component releases.
+zizmor checks GitHub Actions pins. hadolint and dclint check Docker images.
 """
 
 from __future__ import annotations
@@ -16,19 +16,35 @@ import sys
 import tomllib
 from pathlib import Path
 
-# A dotted number. A bare `20` or `v20` matches the newest 20.x, so it floats.
+# Syntax alone cannot distinguish a partial request from a two-component release.
 PINNED = re.compile(r"v?\d+(\.\d+)+([-+.][0-9A-Za-z.+-]*)?")
 
 
 def _mise_failures(path: Path) -> list[str]:
     tools = tomllib.loads(path.read_text()).get("tools", {})
     failures = []
+    lock_path = path.with_name("mise.lock")
+    locked = (
+        tomllib.loads(lock_path.read_text()).get("tools", {})
+        if lock_path.is_file()
+        else {}
+    )
     for name, spec in tools.items():
         versions = spec if isinstance(spec, list) else [spec]
         for version in versions:
             value = version.get("version") if isinstance(version, dict) else version
             if not isinstance(value, str) or not PINNED.fullmatch(value):
                 failures.append(f"{path}: tool {name!r} has no pinned version")
+                continue
+            resolved = {
+                entry["version"].removeprefix("v") for entry in locked.get(name, [])
+            }
+            if value.removeprefix("v") not in resolved:
+                failures.append(
+                    f"{path}: tool {name!r} request {value!r}"
+                    " does not match its locked version."
+                    f" Fix: mise use --pin {name}"
+                )
     return failures
 
 
