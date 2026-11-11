@@ -57,6 +57,8 @@ steps {
   ["dprint"] = Builtins.dprint
   ["executable-shebangs"] = new Step {
     glob = List("**/*")
+    // A Jinja template runs only after Ansible renders it, which sets the mode there.
+    exclude = List("**/*.j2")
     check = """
       bad=0
       for f in {{files}}; do
