@@ -24,6 +24,10 @@ cubert follows its own template, at the working tree and not at a release:
   symlinked workflow. `test_cubert_workflows.py` fails when the copy drifts.
 - `hk.pkl`, `dprint.json`, `.yamllint` and `lychee.toml` layer on the template's files,
   as a project's files do.
+- `cliff.toml` and `CHANGELOG.md` are project-owned copies. cubert's `cliff.toml` hides
+  only the `agents`, `docs` and `e2e` scopes, because its tooling is what projects get.
+- `release:preview` is a TOML task in `mise.toml`, because the shared one has a
+  conditional name.
 
 A new shared task needs a link here too. Run `mise run setup` after you clone cubert.
 
@@ -132,13 +136,22 @@ them. Five more tests read the template itself:
 ## Releases
 
 cubert uses SemVer tags (`v0.1.0`). `template:update` updates a project to the latest
-tag, so a tag is a release.
+tag, so a tag is a release. git-cliff generates the release notes from the commits.
 
-1. Run `mise run check`, `mise run test`, `mise run e2e:render` and
+1. Run `mise run check`, `mise run test`, `mise run e2e:render --all` and
    `mise run e2e:update --from <previous tag>`.
-2. Write the release notes from `git log <previous tag>..HEAD`. Name each step a project
-   must take by hand.
-3. Tag: `git tag -a vX.Y.Z -m "<notes>"`. Then push the tag.
+2. Run `mise run release:preview` and read the entries.
+3. Add the notes to `CHANGELOG.md`:
+   - The first release appends `## [0.1.0] - <date>` and `Initial release.` below the
+     header.
+   - A later release runs `git-cliff --tag vX.Y.Z --unreleased --prepend CHANGELOG.md`.
+4. Below the new entries, name each step a project must take by hand.
+5. Commit with `chore(release): vX.Y.Z`. git-cliff skips that commit.
+6. Copy the new section, without its heading, to `tmp/release-notes.md`. Tag with it:
+   `git tag -a vX.Y.Z -F tmp/release-notes.md`. Then push the commit and the tag.
+
+git-cliff pipes its output through dprint, so the changelog keeps the 88-column limit.
+The `cliff.toml` header is wrapped the same way, so `--prepend` finds it and keeps one.
 
 Before 1.0, a breaking change bumps the minor version. A breaking change is one that
 makes `template:update` conflict or need a manual step.

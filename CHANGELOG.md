@@ -1,0 +1,4 @@
+# Changelog
+
+All notable changes to this project are documented here. Generated from Conventional
+Commit history by [git-cliff](https://git-cliff.org) - do not hand-edit past entries.

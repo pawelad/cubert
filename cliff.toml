@@ -1,0 +1,55 @@
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this project are documented here. Generated from Conventional
+Commit history by [git-cliff](https://git-cliff.org) - do not hand-edit past entries.
+"""
+body = """
+{% if version %}\
+    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [Unreleased]
+{% endif %}\
+{% if commits | length == 0 %}
+    No user-facing changes.
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.scope %}_({{ commit.scope }})_ {% endif %}\
+            {{ commit.message | upper_first }} \
+            ({{ commit.id | truncate(length=7, end="") }})\
+    {% endfor %}
+{% endfor %}\n
+"""
+trim = true
+footer = ""
+# dprint wraps Markdown at 88 columns. Formatting here keeps every output in that form.
+postprocessors = [
+  { pattern = ".*", replace_command = "dprint fmt --stdin CHANGELOG.md" },
+]
+# A release with only skipped commits still needs a section for its GitHub Release.
+render_always = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+protect_breaking_commits = true
+filter_commits = false
+tag_pattern = "v[0-9]*"
+sort_commits = "oldest"
+
+# The changelog lists what shipped. The HTML comments set the group order.
+# cubert's tooling is what projects get, so only cubert's own docs and tests are hidden.
+commit_parsers = [
+  { message = "^chore\\(release\\)", skip = true },
+  { field = "breaking", pattern = "true", group = "<!-- 0 -->Breaking Changes" },
+  { message = "^(feat|fix|perf)\\((agents|docs|e2e)\\)", skip = true },
+  { message = "^feat", group = "<!-- 1 -->Features" },
+  { message = "^fix", group = "<!-- 2 -->Bug Fixes" },
+  { message = "^perf", group = "<!-- 3 -->Performance" },
+  { message = "^revert", group = "<!-- 4 -->Reverts" },
+  { message = ".*", skip = true },
+]
