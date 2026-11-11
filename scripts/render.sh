@@ -45,9 +45,10 @@ run() {
   if [ "$opentofu" = true ]; then opentofu_fixture; fi
   if [ "$ansible" = true ]; then ansible_fixture; fi
   mise run setup
+  if [ "$typescript" = true ]; then typescript_dependency_fixture; fi
   git add --all
-  mise run check
-  mise run test
+  # A runner starts without application dependencies, unlike a checkout after setup.
+  CI=true mise run ci:check
   if [ "$opentofu" = true ]; then
     # Setup and check must not touch the state backend or its data dir.
     [ ! -e "$tofu_dir/.terraform" ] || {

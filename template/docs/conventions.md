@@ -73,7 +73,7 @@ path, so `check/repo` is `check:repo`:
 | `check:repo`         | Runs hk on every file, plus the repository guards                       |
 | `check:opentofu`     | OpenTofu option: runs `tofu validate`, with no backend or credentials   |
 | `tofu:lock`          | OpenTofu option: locks the providers for macOS and Linux (`--upgrade`)  |
-| `ci:check`           | Runs `check`, then `test`: the CI check job. A project can replace it   |
+| `ci:check`           | Runs `install`, `check`, then `test`: the CI check job                  |
 | `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it       |
 | `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities                |
 | `audit:links`        | Checks every link in the Markdown files, URLs included                  |
@@ -220,9 +220,11 @@ how many CI minutes a project spends, so each project sets its own.
   concurrency and a `workflow_call` trigger for a deploy gate go there too.
 - The weekly schedule is in `audit.yml`, so it does not start the CI jobs.
 - A caller sets `permissions`. A called workflow can only narrow them.
-- `ci:check` runs `check`, then `test`. When other jobs run the slow suites with their
-  services, replace it in `mise.toml`: `[tasks."ci:check"] run = "mise run check:repo"`.
-  `mise run ci:check` runs the same job locally.
+- `ci:check` runs `install`, `check`, then `test`. When other jobs run the slow suites
+  with their services, replace it in `mise.toml`:
+  `[tasks."ci:check"] run = "mise run check:repo"`. Include `mise run install` in an
+  override when its checks need project dependencies. `mise run ci:check` runs the same
+  job locally.
 
 ## Audits
 

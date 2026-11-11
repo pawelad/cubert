@@ -44,6 +44,27 @@ services:
 YAML
 }
 
+# A local dependency tests installation without adding a registry or another tool.
+typescript_dependency_fixture() {
+  local dir
+  for dir in $(tr -d '[],"' <<<"$ts_dirs"); do
+    mkdir -p "$dir/fixtures/library"
+    printf '{"name":"demo-library","version":"1.0.0","main":"index.js","types":"index.d.ts"}\n' \
+      >"$dir/fixtures/library/package.json"
+    printf 'export const offset = 0;\n' >"$dir/fixtures/library/index.js"
+    printf 'export declare const offset: number;\n' >"$dir/fixtures/library/index.d.ts"
+    mise x -- jq '.dependencies = {"demo-library": "file:./fixtures/library"}' \
+      "$dir/package.json" >"$dir/package.json.new"
+    mv "$dir/package.json.new" "$dir/package.json"
+    printf 'import { offset } from "demo-library";\n\nexport const add = (a: number, b: number): number => a + b + offset;\n' \
+      >"$dir/src/add.ts"
+    mise x -- bun install --cwd "$dir"
+    # Commit the lock, then reproduce a fresh CI checkout without node_modules.
+    rm -rf "$dir/node_modules"
+  done
+  mise run format --all
+}
+
 opentofu_fixture() {
   printf 'output "greeting" {\n  value = "hello"\n}\n' >"$tofu_dir/main.tf"
 }
