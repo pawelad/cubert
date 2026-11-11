@@ -75,7 +75,7 @@ breaking change, and say what projects must do in the release notes.
 | Task                    | Covers                                                                      |
 | ----------------------- | --------------------------------------------------------------------------- |
 | `mise run check`        | hk on every file, `shared-agents` included                                  |
-| `mise run test`         | The pytest tests: check scripts, file ownership, worktree setup             |
+| `mise run test`         | The pytest tests: check scripts, file ownership, rendered files, worktree   |
 | `mise run e2e:render`   | Renders every feature combination, then runs `setup`, `check`, `test`       |
 | `mise run e2e:update`   | Renders `HEAD~1`, adds project edits, updates to the working tree, checks   |
 | `mise run e2e:conflict` | Changes one line in a merged file on both sides, expects the update to stop |
@@ -86,16 +86,21 @@ breaking change, and say what projects must do in the release notes.
   `--all` when you really want every one. Names look like `p1d0t1a0c1s1_changes-only`:
   python, docker, opentofu, ansible, changelog, typescript, then openspec. A typescript
   render with python on lists two directories.
+- Each render adds a small project for each enabled feature
+  (`scripts/render_fixtures.sh`). After `check` and `test`, it stages one known error
+  per feature and expects the matching hk step to fail. A step that stays green on that
+  error is not running.
 - Each render pins the newest tool releases, so upstream breakage shows up here first.
 - `e2e:update --from <ref>` tests the update from an older release.
 - CI runs `check`, `test`, `e2e:update`, `e2e:conflict` and the full render matrix.
 - The e2e tasks are not `test:*` tasks, so `mise run test` stays fast.
 
 The unit tests in `tests/` cover the template's check scripts, so projects do not test
-them. Two more tests read the template itself:
+them. Three more tests read the template itself:
 
 - `test_file_ownership.py` fails when the ownership table in `conventions.md`, the
   `_skip_if_exists` list or `template/` disagree.
+- `test_render.py` renders a project with awkward answers and parses the output.
 - `test_worktree_setup.py` renders a project and runs `git worktree add`. It skips when
   `git`, `mise`, `copier` or `wt` is missing.
 

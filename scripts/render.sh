@@ -13,6 +13,7 @@ log="$out/$name.log"
 bit() { [ "${flags:$1:1}" = "1" ] && echo true || echo false; }
 python="$(bit 1)" docker="$(bit 3)" opentofu="$(bit 5)" ansible="$(bit 7)" changelog="$(bit 9)"
 typescript="$(bit 11)"
+tofu_dir=opentofu ansible_dir=ansible
 # Alternate the directory list, so both the root and the monorepo shapes render.
 if [ "$python" = true ]; then ts_dirs='["apps/web", "apps/api"]'; else ts_dirs='["."]'; fi
 # Alternate the license, so both texts render without doubling the matrix.
@@ -23,18 +24,8 @@ if [ $((${#ones} % 2)) -eq 1 ]; then license="ARR"; fi
 # The nested mise runs must resolve the rendered project, not cubert.
 unset MISE_PROJECT_ROOT MISE_CONFIG_ROOT MISE_ORIGINAL_CWD MISE_TASK_NAME MISE_TASK_DIR MISE_TASK_FILE
 
-# hk skips biome and tsc when no TypeScript file changed, so a bare render proves nothing.
-# This adds a small project to each directory, so check and test run both tools.
-typescript_fixture() {
-  local dir
-  for dir in $(tr -d '[]",' <<<"$ts_dirs"); do
-    mkdir -p "$dir/src"
-    printf '{\n  "name": "demo",\n  "private": true,\n  "type": "module"\n}\n' >"$dir/package.json"
-    printf '{\n  "compilerOptions": {\n    "strict": true,\n    "noEmit": true,\n    "module": "ESNext",\n    "moduleResolution": "bundler"\n  },\n  "include": ["src"],\n  "exclude": ["src/**/*.test.ts"]\n}\n' >"$dir/tsconfig.json"
-    printf 'export const add = (a: number, b: number): number => a + b;\n' >"$dir/src/add.ts"
-    printf 'import { expect, test } from "bun:test";\nimport { add } from "./add";\n\ntest("add sums two numbers", () => {\n  expect(add(1, 2)).toBe(3);\n});\n' >"$dir/src/add.test.ts"
-  done
-}
+# shellcheck source=scripts/render_fixtures.sh
+source "$root/scripts/render_fixtures.sh"
 
 run() {
   copier copy --quiet --defaults --vcs-ref HEAD \
@@ -47,11 +38,22 @@ run() {
   git -c init.defaultBranch=main init --quiet
   git add --all
   mise trust --quiet --all
+  if [ "$python" = true ]; then python_fixture; fi
   if [ "$typescript" = true ]; then typescript_fixture; fi
+  if [ "$docker" = true ]; then docker_fixture; fi
+  if [ "$opentofu" = true ]; then opentofu_fixture; fi
+  if [ "$ansible" = true ]; then ansible_fixture; fi
   mise run setup
   git add --all
   mise run check
   mise run test
+
+  git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify -m "chore: render"
+  if [ "$python" = true ]; then expect_hook_failure python mypy; fi
+  if [ "$typescript" = true ]; then expect_hook_failure typescript "tsc"; fi
+  if [ "$docker" = true ]; then expect_hook_failure docker "hadolint"; fi
+  if [ "$opentofu" = true ]; then expect_hook_failure opentofu "tofu-fmt"; fi
+  if [ "$ansible" = true ]; then expect_hook_failure ansible "ansible-syntax-check"; fi
 }
 
 rm -rf "$dest"
