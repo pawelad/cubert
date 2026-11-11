@@ -80,10 +80,11 @@ breaking change, and say what projects must do in the release notes.
 | `mise run e2e:update` | Renders `HEAD~1`, adds project edits, updates to the working tree, checks |
 
 - Renders read the working tree, including uncommitted changes.
-- `e2e:render` runs 192 combinations, about 20 minutes with `--jobs 6`. Use
-  `--filter <regex>` for the combinations that a change touches. Names look like
-  `p1d0t1a0c1s1_changes-only`: python, docker, opentofu, ansible, changelog, typescript,
-  then openspec. A typescript render with python on lists two directories.
+- `e2e:render` runs 192 combinations, about 20 minutes with `--jobs 6`. Locally,
+  `e2e:render` needs `--filter <regex>` for the combinations that a change touches, or
+  `--all` when you really want every one. Names look like `p1d0t1a0c1s1_changes-only`:
+  python, docker, opentofu, ansible, changelog, typescript, then openspec. A typescript
+  render with python on lists two directories.
 - Each render pins the newest tool releases, so upstream breakage shows up here first.
 - `e2e:update --from <ref>` tests the update from an older release.
 - CI runs `check`, `test`, `e2e:update` and the full render matrix.

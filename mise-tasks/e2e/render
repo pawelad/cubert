@@ -2,9 +2,16 @@
 #MISE description="Render every feature combination, then run setup, check and test in each"
 #USAGE flag "-j --jobs <n>" default="4" help="Renders to run in parallel"
 #USAGE flag "--filter <regex>" help="Only render the combinations whose name matches"
+#USAGE flag "--all" help="Render every combination (CI does; locally, only when asked)"
 #USAGE flag "--out <dir>" help="Write the renders here (default: a new temp dir)"
 set -euo pipefail
 # macOS runs bash 3.2: no mapfile, no associative arrays.
+
+# The full matrix is 192 renders. Locally, name the combinations that a change touches.
+if [ -z "${usage_filter:-}" ] && [ "${usage_all:-false}" != "true" ] && [ -z "${CI:-}" ]; then
+  echo "e2e:render: pass --filter <regex> for the combinations you touched, or --all." >&2
+  exit 2
+fi
 
 out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-render.XXXXXX")}"
 mkdir -p "$out"
