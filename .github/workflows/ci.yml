@@ -64,13 +64,14 @@ jobs:
         run: "mise run e2e:update"
 
   render:
-    name: "Render ${{ matrix.openspec }}"
+    name: "Render typescript ${{ matrix.typescript }}, ${{ matrix.openspec }}"
     runs-on: "ubuntu-24.04"
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         openspec: ["none", "changes-only", "spec-driven"]
+        typescript: ["0", "1"]
     steps:
       - name: "Check out the repository"
         uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
@@ -83,6 +84,7 @@ jobs:
       - name: "Render every feature combination"
         env:
           OPENSPEC: "${{ matrix.openspec }}"
+          TYPESCRIPT: "${{ matrix.typescript }}"
         run: |
           mise run e2e:render --jobs 4 --out "${RUNNER_TEMP}/renders" \
-            --filter "_${OPENSPEC}\$"
+            --filter "s${TYPESCRIPT}_${OPENSPEC}\$"

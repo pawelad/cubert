@@ -10,14 +10,14 @@ out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-render.XXXXXX")}"
 mkdir -p "$out"
 
 names=()
-for p in 0 1; do for d in 0 1; do for t in 0 1; do for a in 0 1; do for c in 0 1; do
+for p in 0 1; do for d in 0 1; do for t in 0 1; do for a in 0 1; do for c in 0 1; do for s in 0 1; do
   for openspec in none changes-only spec-driven; do
-    name="p${p}d${d}t${t}a${a}c${c}_${openspec}"
+    name="p${p}d${d}t${t}a${a}c${c}s${s}_${openspec}"
     if [ -z "${usage_filter:-}" ] || grep -qE "$usage_filter" <<<"$name"; then
       names+=("$name")
     fi
   done
-done; done; done; done; done
+done; done; done; done; done; done
 
 echo "Rendering ${#names[@]} combinations into $out"
 status=0

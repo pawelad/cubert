@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Render one feature combination into <out>/<name>, then run setup and check there.
-# Name format: p1d0t1a0c1_changes-only (python, docker, opentofu, ansible, changelog; openspec).
+# Name format: p1d0t1a0c1s1_changes-only (python, docker, opentofu, ansible, changelog,
+# typescript; openspec).
 set -euo pipefail
 
 root="$1" out="$2" name="$3"
@@ -11,6 +12,9 @@ log="$out/$name.log"
 
 bit() { [ "${flags:$1:1}" = "1" ] && echo true || echo false; }
 python="$(bit 1)" docker="$(bit 3)" opentofu="$(bit 5)" ansible="$(bit 7)" changelog="$(bit 9)"
+typescript="$(bit 11)"
+# Alternate the directory list, so both the root and the monorepo shapes render.
+if [ "$python" = true ]; then ts_dirs='["apps/web", "apps/api"]'; else ts_dirs='["."]'; fi
 # Alternate the license, so both texts render without doubling the matrix.
 ones="${flags//[^1]/}"
 license="MPL-2.0"
@@ -24,6 +28,7 @@ run() {
     -d project_name="demo" -d description="A demo project." -d license="$license" \
     -d python="$python" -d docker="$docker" -d opentofu="$opentofu" \
     -d ansible="$ansible" -d changelog="$changelog" -d openspec="$openspec" \
+    -d typescript="$typescript" -d typescript_dirs="$ts_dirs" \
     "$root" "$dest"
   cd "$dest"
   git -c init.defaultBranch=main init --quiet
