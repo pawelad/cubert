@@ -60,7 +60,10 @@ updates:
 [% if docker %]
 
   - package-ecosystem: "docker"
-    directory: "/"
+    # A plain "/" scans only the root, and images often live in app directories.
+    directories:
+      - "/"
+      - "/**/*"
     schedule:
       interval: "monthly"
     cooldown:
@@ -74,7 +77,10 @@ updates:
         update-types: ["minor", "patch"]
 
   - package-ecosystem: "docker-compose"
-    directory: "/"
+    # A plain "/" scans only the root, and images often live in app directories.
+    directories:
+      - "/"
+      - "/**/*"
     schedule:
       interval: "monthly"
     cooldown:
