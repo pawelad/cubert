@@ -1,10 +1,10 @@
 // Template-owned: edit in cubert, not in a project. Shared steps are in `base.pkl`.
 // This file adds the steps for the features that the project enabled in Copier.
 amends "base.pkl"
-[% if python or docker or opentofu %]
+[% if python or typescript or docker or opentofu %]
 import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtins.pkl" as builtins
 [% endif %]
-[% if python or docker or opentofu or ansible or openspec != 'none' %]
+[% if python or typescript or docker or opentofu or ansible or openspec != 'none' %]
 steps {
 [% if python %]
   // The check scripts in .config/ are tested in cubert, so project lint rules skip them.
@@ -20,6 +20,16 @@ steps {
     glob = List("**/*.py", "**/*.pyi")
     exclude = List(".config/**")
     check = "uv run mypy {{files}}"
+  }
+[% endif %]
+[% if typescript %]
+  // Biome formats JSON too, but dprint owns it: one tool per file type.
+  ["biome"] = (builtins.biome) {
+    glob = List("**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs", "**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts", "**/*.css")
+  }
+  // hk runs tsc once per nearest tsconfig.json, so a monorepo needs no directory list.
+  ["tsc"] = (builtins.tsc) {
+    glob = List("**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts", "**/tsconfig*.json")
   }
 [% endif %]
 [% if docker %]

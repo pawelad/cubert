@@ -15,8 +15,8 @@ so a fix lands once in cubert and reaches each project with `mise run template:u
 - Worktree setup that runs once for `wt switch --create`, plain `git worktree add` and
   the agent apps built on it.
 - GitHub Actions CI, a PR title check and Dependabot.
-- Optional features: Python, Docker, OpenTofu, Ansible, OpenSpec and a git-cliff
-  changelog.
+- Optional features: Python, TypeScript with Bun, Docker, OpenTofu, Ansible, OpenSpec
+  and a git-cliff changelog.
 
 [`template/docs/conventions.md`](./template/docs/conventions.md) describes the shared
 tooling in detail. Every project gets that file as `docs/conventions.md`.
@@ -41,15 +41,16 @@ $ git commit -m "chore: start from the cubert template"
 
 Copier asks these questions:
 
-| Question                                                               | Default        |
-| ---------------------------------------------------------------------- | -------------- |
-| `project_name`, `description`                                          | none           |
-| `github_owner`                                                         | `pawelad`      |
-| `license`: `MPL-2.0` or all rights reserved                            | `MPL-2.0`      |
-| `copyright_year`, for all rights reserved                              | `2026`         |
-| `python`, `docker`, `opentofu` (`tofu_dir`), `ansible` (`ansible_dir`) | `false`        |
-| `openspec`: `none`, `changes-only` or `spec-driven`                    | `changes-only` |
-| `changelog`                                                            | `false`        |
+| Question                                                                  | Default           |
+| ------------------------------------------------------------------------- | ----------------- |
+| `project_name`, `description`                                             | none              |
+| `github_owner`                                                            | `pawelad`         |
+| `license`: `MPL-2.0` or all rights reserved                               | `MPL-2.0`         |
+| `copyright_year`, for all rights reserved                                 | `2026`            |
+| `python`, `docker`, `opentofu` (`tofu_dir`), `ansible` (`ansible_dir`)    | `false`           |
+| `typescript` (`typescript_dirs`, a list of directories with package.json) | `false` (`["."]`) |
+| `openspec`: `none`, `changes-only` or `spec-driven`                       | `changes-only`    |
+| `changelog`                                                               | `false`           |
 
 `mise run setup` pins the seeded `latest` tool versions in `mise.toml`, so commit
 `mise.toml` and `mise.lock` after it.

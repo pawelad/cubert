@@ -34,6 +34,7 @@ _skip_if_exists:
   - "LICENSE"
   - "CONTRIBUTING.md"
   - "pyproject.toml"
+  - "biome.json"
   - ".python-version"
   - "cliff.toml"
   - "CHANGELOG.md"
@@ -81,6 +82,17 @@ python:
   type: "bool"
   help: "Python project with pyproject.toml at the root (ruff, mypy, Dependabot uv)?"
   default: false
+
+typescript:
+  type: "bool"
+  help: "TypeScript with Bun (biome, tsc, bun test, Dependabot bun)?"
+  default: false
+
+typescript_dirs:
+  type: "yaml"
+  help: "Directories with package.json and tsconfig.json, one tsc check each"
+  default: ["."]
+  when: "[[ typescript ]]"
 
 docker:
   type: "bool"

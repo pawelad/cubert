@@ -4,7 +4,7 @@ actionlint
 dprint
 hk
 jq
-[% if docker or openspec != 'none' %]
+[% if docker or typescript or openspec != 'none' %]
 node
 [% endif %]
 pkl
@@ -17,6 +17,11 @@ zizmor
 pypi:copier
 [% if python %]
 ruff
+[% endif %]
+[% if typescript %]
+biome
+bun
+npm:typescript
 [% endif %]
 [% if docker %]
 hadolint

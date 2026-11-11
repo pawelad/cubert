@@ -37,6 +37,26 @@ updates:
       python:
         update-types: ["minor", "patch"]
 [% endif %]
+[% if typescript %]
+
+  - package-ecosystem: "bun"
+    directories:
+[% for dir in typescript_dirs %]
+      - "/[[ '' if dir == '.' else dir ]]"
+[% endfor %]
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "build(deps)"
+      prefix-development: "build(deps-dev)"
+    groups:
+      bun:
+        update-types: ["minor", "patch"]
+[% endif %]
 [% if docker %]
 
   - package-ecosystem: "docker"

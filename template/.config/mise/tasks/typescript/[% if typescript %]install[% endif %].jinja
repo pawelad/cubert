@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#MISE description="Install the Bun dependencies of each TypeScript directory"
+set -euo pipefail
+
+# bun reads bunfig.toml only from the working directory, so the age filter is a flag.
+# 604800 seconds = 7 days, the same as `minimum_release_age` in the mise settings.
+# The tag sits in a string, so shfmt and shellcheck can read this file as it is.
+read -ra dirs <<<"[[ typescript_dirs | join(' ') ]]"
+
+for dir in "${dirs[@]}"; do
+  # A fresh project has no package.json yet.
+  [ -f "$dir/package.json" ] || continue
+  bun install --frozen-lockfile --minimum-release-age=604800 --cwd "$dir"
+done

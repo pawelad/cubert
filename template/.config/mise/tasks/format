@@ -3,8 +3,9 @@
 #USAGE flag "--all" help="Fix every file in the repository"
 set -euo pipefail
 
+# tsc has no fixer, and its type errors would abort the fixers that run after it.
 if [ "${usage_all:-false}" = "true" ]; then
-  hk fix --all
+  hk fix --all --skip-step tsc
 else
-  hk fix
+  hk fix --skip-step tsc
 fi

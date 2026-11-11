@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#MISE description="Run the TypeScript tests"
+#USAGE arg "[files]..." help="Test files to run"
+set -euo pipefail
+
+# mise passes usage args only as usage_* variables, and the list must split into words.
+read -ra files <<<"${usage_files:-}"
+# The tag sits in a string, so shfmt and shellcheck can read this file as it is.
+read -ra dirs <<<"[[ typescript_dirs | join(' ') ]]"
+
+for dir in "${dirs[@]}"; do
+  [ -f "$dir/package.json" ] || continue
+  # bun test takes paths relative to its own directory, so keep the files of this one.
+  args=()
+  for file in "${files[@]+"${files[@]}"}"; do
+    case "$file" in
+      ./*) file="${file#./}" ;;
+    esac
+    # Jinja reads a double bracket as a variable tag, so match with case.
+    if [ "$dir" = "." ]; then
+      args+=("./$file")
+    else
+      case "$file" in
+        "$dir"/*) args+=("./${file#"$dir"/}") ;;
+      esac
+    fi
+  done
+  # With files given, a directory that holds none of them has nothing to run.
+  if [ "${#files[@]}" -gt 0 ] && [ "${#args[@]}" -eq 0 ]; then
+    continue
+  fi
+  (cd "$dir" && bun test --pass-with-no-tests "${args[@]+"${args[@]}"}")
+done

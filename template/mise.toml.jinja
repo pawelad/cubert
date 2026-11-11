@@ -8,7 +8,7 @@ actionlint = "latest"
 dprint = "latest"
 hk = "latest"
 jq = "latest"
-[% if docker or openspec != 'none' %]
+[% if docker or typescript or openspec != 'none' %]
 # npm: tools run on this Node, so CI and every machine use the same one.
 node = "lts"
 [% endif %]
@@ -22,6 +22,11 @@ zizmor = "latest"
 "pypi:copier" = "latest"
 [% if python %]
 ruff = "latest"
+[% endif %]
+[% if typescript %]
+biome = "latest"
+bun = "latest"
+"npm:typescript" = "latest"
 [% endif %]
 [% if docker %]
 hadolint = "latest"
@@ -40,16 +45,21 @@ git-cliff = "latest"
 [% if openspec != 'none' %]
 "npm:@fission-ai/openspec" = "latest"
 [% endif %]
-[% if python or opentofu or ansible %]
+[% if python or opentofu or ansible or typescript %]
 
 [tasks.install]
 description = "Install project dependencies"
-[% if python and not (opentofu or ansible) %]
+[% if python and not (opentofu or ansible or typescript) %]
 run = "uv sync"
+[% elif typescript and not (python or opentofu or ansible) %]
+run = "mise run typescript:install"
 [% else %]
 run = [
 [% if python %]
   "uv sync",
+[% endif %]
+[% if typescript %]
+  "mise run typescript:install",
 [% endif %]
 [% if opentofu %]
   "mise run tofu:init",

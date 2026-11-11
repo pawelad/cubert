@@ -10,7 +10,7 @@ belongs to the template: change it in cubert, not here. Project setup lives in
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
 | Template-owned | `.config/`, `.editorconfig`, `.yamllint`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/` | Replaced by the new version   |
 | Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `.github/workflows/ci.yml`, `openspec/config.yaml`                                                                     | 3-way merge, conflicts inline |
-| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `mise-tasks/`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`                                                                                             | Created once, never changed   |
+| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `biome.json`, `mise-tasks/`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`                                                                               | Created once, never changed   |
 
 Do not edit a template-owned file in a project: the next update conflicts with the edit.
 Each project-owned file layers on its template-owned file, so a project change goes
@@ -21,6 +21,7 @@ there:
 | mise   | `.config/mise/config.toml`, `tasks/` | `mise.toml`   | mise loads both; `mise.toml` wins         |
 | hk     | `.config/hk/cubert.pkl`, `base.pkl`  | `hk.pkl`      | `hk.pkl` amends `cubert.pkl`              |
 | dprint | `.config/dprint.json`                | `dprint.json` | `dprint.json` extends it; excludes add up |
+| Biome  | `.config/biome.json`                 | `biome.json`  | `biome.json` extends it (`typescript`)    |
 
 Copier deletes nothing. If you delete a project-owned file, the next update creates it
 again.
@@ -32,6 +33,9 @@ again.
 - A Python CLI is a mise `pypi:` tool, which mise installs with uv. Do not run `uvx` or
   `pipx` directly.
 - A project with `npm:` tools pins `node` in `mise.toml` too.
+- The `typescript` option seeds `bun`, `biome` and `npm:typescript` (the `tsc`
+  compiler). Bun runs the tests and installs packages. The project does not list
+  `typescript` in `package.json`.
 - A GitHub Action is pinned to a commit SHA, with its version in a comment:
   `uses: "actions/checkout@<sha>" # v7.0.1`. A tag can move, and a SHA cannot.
   Dependabot updates both. zizmor enforces the pin and audits workflows for injection
@@ -49,21 +53,23 @@ that the task acts on (`kif:deploy`, `tofu:init`). A wildcard then selects one a
 The shared tasks are file tasks in `.config/mise/tasks/`. mise names each one from its
 path, so `check/repo` is `check:repo`:
 
-| Task              | Does                                                                 |
-| ----------------- | -------------------------------------------------------------------- |
-| `setup`           | Adds and pins tools, installs them and the git hooks, runs `install` |
-| `install`         | Nothing. The project replaces it with its dependency installs        |
-| `check`           | Runs every `check:*` task                                            |
-| `check:repo`      | Runs hk on every file, plus the repository guards                    |
-| `test`            | Runs every `test:*` task                                             |
-| `test:python`     | Python option: runs `uv run pytest` on the given files, or all tests |
-| `format`          | Runs the hk fixers on changed files (`--all` for every file)         |
-| `upgrade`         | Bumps the tools in `mise.toml` (`mise upgrade --bump`)               |
-| `hooks:install`   | Installs the hk hooks and the `post-checkout` worktree hook          |
-| `template:update` | Updates the template-owned and merged files from cubert              |
-| `template:check`  | Fails if a newer cubert version exists                               |
-| `worktree:setup`  | Sets up a new worktree once (see below)                              |
-| `worktree:clean`  | Empties the worktrunk trash                                          |
+| Task                 | Does                                                                 |
+| -------------------- | -------------------------------------------------------------------- |
+| `setup`              | Adds and pins tools, installs them and the git hooks, runs `install` |
+| `install`            | Nothing. The project replaces it with its dependency installs        |
+| `check`              | Runs every `check:*` task                                            |
+| `check:repo`         | Runs hk on every file, plus the repository guards                    |
+| `test`               | Runs every `test:*` task                                             |
+| `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests |
+| `test:typescript`    | TypeScript option: runs `bun test` in each directory                 |
+| `typescript:install` | TypeScript option: runs `bun install` in each directory              |
+| `format`             | Runs the hk fixers on changed files (`--all` for every file)         |
+| `upgrade`            | Bumps the tools in `mise.toml` (`mise upgrade --bump`)               |
+| `hooks:install`      | Installs the hk hooks and the `post-checkout` worktree hook          |
+| `template:update`    | Updates the template-owned and merged files from cubert              |
+| `template:check`     | Fails if a newer cubert version exists                               |
+| `worktree:setup`     | Sets up a new worktree once (see below)                              |
+| `worktree:clean`     | Empties the worktrunk trash                                          |
 
 To add a project check, add a `check:<area>` task. `check` runs it with no other change.
 To add a test suite, add a `test:<area>` task. `test` runs it, and so does CI. Let it
@@ -74,6 +80,13 @@ The `python` option adds `test:python`. It runs `uv run pytest` and treats pytes
 code 5 (no tests collected) as a pass, so a fresh project passes `mise run test`. A
 project without pytest in its dev group skips with a message. Add it with
 `uv add --dev pytest`.
+
+The `typescript` option asks for `typescript_dirs`: the directories that hold a
+`package.json`, `["."]` by default. A monorepo lists each one. `typescript:install` and
+`test:typescript` loop over them and skip a directory without `package.json`. Dependabot
+gets the same list. `test:typescript` runs `bun test` and passes when it finds no tests.
+Given file paths, it runs only the directories that hold them. A test file that imports
+`bun:test` needs `bun add --dev @types/bun` for `tsc`.
 
 ### Project tasks
 
@@ -123,8 +136,12 @@ config-based hooks that `hk install --global` writes, with no error. Fix it with
 ## Formatting
 
 dprint formats Markdown, TOML, JSON and YAML. yamllint requires double-quoted strings.
-The hk builtins check trailing whitespace, final newlines and line endings from
-`.editorconfig`.
+With the `typescript` option, Biome formats and lints JavaScript, TypeScript and CSS. It
+does not format JSON, so dprint stays the only JSON formatter. The `biome` step covers
+format, lint and import order, so there is no separate format step. hk runs `tsc` once
+per nearest `tsconfig.json`, so a monorepo needs no setup. `mise run format` skips
+`tsc`, which cannot fix anything. The hk builtins check trailing whitespace, final
+newlines and line endings from `.editorconfig`.
 
 Every file type has the same maximum line length: 88 columns, the Black and ruff
 default. dprint wraps Markdown prose and formats the other files to it, and yamllint
@@ -168,6 +185,10 @@ Notes:
   ecosystem for `mise.toml`.
 - mise skips releases younger than 7 days (`minimum_release_age`), which matches the
   Dependabot cooldown. Installs from `mise.lock` and exact pins are not filtered.
+- `typescript:install` passes `--minimum-release-age=604800` (7 days) to `bun install`.
+  Bun reads `bunfig.toml` only from the working directory, so a flag covers every
+  directory. Add a `bunfig.toml` with `[install] minimumReleaseAge = 604800` to a
+  directory where you also run `bun add` or `bun update`.
 - The dprint plugin versions belong to the template. cubert bumps them.
 
 ## Template updates
