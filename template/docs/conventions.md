@@ -119,8 +119,10 @@ The `typescript` option asks for `typescript_dirs`: the directories that hold a
 `test:typescript` loop over them and skip a directory without `package.json`. Dependabot
 gets the same list. `test:typescript` runs the `test` script of a `package.json` that
 has one, such as Jest or Vitest. Otherwise it runs `bun test`, which passes when it
-finds no tests. Given file paths, it runs only the directories that hold them. A test
-file that imports `bun:test` needs `bun add --dev @types/bun` for `tsc`.
+finds no tests. Given file paths, it runs only the directories that hold them. Leading
+`./` and trailing `/` in directory names are accepted. A selection outside every
+configured package fails with a message. A test file that imports `bun:test` needs
+`bun add --dev @types/bun` for `tsc`.
 
 The `changelog` option adds git-cliff, `cliff.toml`, `CHANGELOG.md` and
 `release:preview`. git-cliff pipes its output through dprint, so the changelog keeps the

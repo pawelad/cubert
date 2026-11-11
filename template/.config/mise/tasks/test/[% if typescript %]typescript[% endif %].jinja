@@ -8,7 +8,12 @@ read -ra files <<<"${usage_files:-}"
 # The tag sits in a string, so shfmt and shellcheck can read this file as it is.
 read -ra dirs <<<"[[ typescript_dirs | join(' ') ]]"
 
+selected=0
 for dir in "${dirs[@]}"; do
+  # File arguments and configured directories must use the same relative spelling.
+  dir="${dir#./}"
+  dir="${dir%/}"
+  [ -n "$dir" ] || dir=.
   [ -f "$dir/package.json" ] || continue
   # bun test takes paths relative to its own directory, so keep the files of this one.
   args=()
@@ -29,6 +34,7 @@ for dir in "${dirs[@]}"; do
   if [ "${#files[@]}" -gt 0 ] && [ "${#args[@]}" -eq 0 ]; then
     continue
   fi
+  selected=$((selected + ${#args[@]}))
   # A package that tests with Jest or Vitest names its runner in its test script.
   if jq -e '.scripts.test' "$dir/package.json" >/dev/null; then
     (cd "$dir" && bun run test "${args[@]+"${args[@]}"}")
@@ -36,3 +42,8 @@ for dir in "${dirs[@]}"; do
     (cd "$dir" && bun test --pass-with-no-tests "${args[@]+"${args[@]}"}")
   fi
 done
+
+if [ "${#files[@]}" -gt 0 ] && [ "$selected" -eq 0 ]; then
+  echo "test:typescript: no selected files belong to a configured package: ${files[*]}" >&2
+  exit 1
+fi
