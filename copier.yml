@@ -70,6 +70,13 @@ license:
     All rights reserved: "ARR"
   default: "MPL-2.0"
 
+# Stored in the answers file, so a later cubert release does not change the year.
+copyright_year:
+  type: "str"
+  help: "Copyright year, the year of first publication"
+  default: "2026"
+  when: "[[ license == 'ARR' ]]"
+
 python:
   type: "bool"
   help: "Python project (pyproject.toml, ruff, mypy, Dependabot uv)?"
@@ -125,9 +132,4 @@ author_name:
 author_url:
   type: "str"
   default: "https://pawelad.me/"
-  when: false
-
-copyright_year:
-  type: "str"
-  default: "2026"
   when: false

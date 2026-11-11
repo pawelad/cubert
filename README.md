@@ -46,6 +46,7 @@ Copier asks these questions:
 | `project_name`, `description`                                          | none           |
 | `github_owner`                                                         | `pawelad`      |
 | `license`: `MPL-2.0` or all rights reserved                            | `MPL-2.0`      |
+| `copyright_year`, for all rights reserved                              | `2026`         |
 | `python`, `docker`, `opentofu` (`tofu_dir`), `ansible` (`ansible_dir`) | `false`        |
 | `openspec`: `none`, `changes-only` or `spec-driven`                    | `changes-only` |
 | `changelog`                                                            | `false`        |
