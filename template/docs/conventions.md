@@ -60,27 +60,29 @@ that the task acts on (`kif:deploy`, `tofu:init`). A wildcard then selects one a
 The shared tasks are file tasks in `.config/mise/tasks/`. mise names each one from its
 path, so `check/repo` is `check:repo`:
 
-| Task                 | Does                                                                 |
-| -------------------- | -------------------------------------------------------------------- |
-| `setup`              | Adds and pins tools, installs them and the git hooks, runs `install` |
-| `install`            | Nothing. The project replaces it with its dependency installs        |
-| `check`              | Runs every `check:*` task                                            |
-| `check:repo`         | Runs hk on every file, plus the repository guards                    |
-| `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it    |
-| `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities             |
-| `audit:links`        | Checks every link in the Markdown files, URLs included               |
-| `test`               | Runs every `test:*` task                                             |
-| `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests |
-| `test:typescript`    | TypeScript option: runs `bun test` in each directory                 |
-| `typescript:install` | TypeScript option: runs `bun install` in each directory              |
-| `release:preview`    | Changelog option: prints the entries since the last release tag      |
-| `format`             | Runs the hk fixers on changed files (`--all` for every file)         |
-| `upgrade`            | Bumps the tools in `mise.toml` (`mise upgrade --bump`)               |
-| `hooks:install`      | Installs the hk hooks and the `post-checkout` worktree hook          |
-| `template:update`    | Updates the template-owned and merged files from cubert              |
-| `template:check`     | Fails if a newer cubert version exists                               |
-| `worktree:setup`     | Sets up a new worktree once (see below)                              |
-| `worktree:clean`     | Empties the worktrunk trash                                          |
+| Task                 | Does                                                                    |
+| -------------------- | ----------------------------------------------------------------------- |
+| `setup`              | Adds and pins tools, installs them and the git hooks, runs `install`    |
+| `install`            | Nothing. The project replaces it with its dependency installs           |
+| `check`              | Runs every `check:*` task                                               |
+| `check:repo`         | Runs hk on every file, plus the repository guards                       |
+| `check:opentofu`     | OpenTofu option: runs `tofu validate`, with no backend or credentials   |
+| `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it       |
+| `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities                |
+| `audit:links`        | Checks every link in the Markdown files, URLs included                  |
+| `skills:update`      | OpenSpec option: updates the installed agent skills (`openspec update`) |
+| `test`               | Runs every `test:*` task                                                |
+| `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests    |
+| `test:typescript`    | TypeScript option: runs `bun test` in each directory                    |
+| `typescript:install` | TypeScript option: runs `bun install` in each directory                 |
+| `release:preview`    | Changelog option: prints the entries since the last release tag         |
+| `format`             | Runs the hk fixers on changed files (`--all` for every file)            |
+| `upgrade`            | Bumps the tools in `mise.toml` (`mise upgrade --bump`)                  |
+| `hooks:install`      | Installs the hk hooks and the `post-checkout` worktree hook             |
+| `template:update`    | Updates the template-owned and merged files from cubert                 |
+| `template:check`     | Fails if a newer cubert version exists                                  |
+| `worktree:setup`     | Sets up a new worktree once (see below)                                 |
+| `worktree:clean`     | Empties the worktrunk trash                                             |
 
 To add a project check, add a `check:<area>` task. `check` runs it with no other change.
 To add a test suite, add a `test:<area>` task. `test` runs it, and so does CI. Let it
