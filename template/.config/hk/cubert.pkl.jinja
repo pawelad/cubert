@@ -90,11 +90,21 @@ steps {
       """
   }
 [% endif %]
-[% if openspec != 'none' %]
+[% if openspec == 'changes-only' %]
   // Only the exit code counts: changes-only changes always print an [INFO] line.
   ["openspec"] = new Step {
     glob = List("openspec/**")
     check = "openspec validate --all --strict"
+  }
+[% elif openspec == 'spec-driven' %]
+  // An [INFO] or [WARNING] line fails too, such as a requirement over 500 characters.
+  ["openspec"] = new Step {
+    glob = List("openspec/**")
+    check = """
+      out="$(openspec validate --all --strict 2>&1)"; status=$?
+      printf '%s\n' "$out"
+      [ "$status" -eq 0 ] && ! printf '%s\n' "$out" | grep -qF -e '[INFO]' -e '[WARNING]'
+      """
   }
 [% endif %]
 }

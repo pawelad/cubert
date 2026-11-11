@@ -174,6 +174,11 @@ API or hold a fixture, so the rules leave it alone. Paths named `fixtures`, `tes
 Skip another path with
 `steps { ["no-british-english"] { exclude = List("docs/legacy/**") } }`.
 
+The `openspec` step runs `openspec validate --all --strict`. With `spec-driven`, an
+`[INFO]` or `[WARNING]` line fails it too, such as a requirement over 500 characters.
+`changes-only` changes always print an `[INFO]` line, so only the exit code counts
+there.
+
 Three hk steps cover what the formatters and linters miss:
 
 - `typos` checks spelling in text files, and the prose rules keep American English. It
