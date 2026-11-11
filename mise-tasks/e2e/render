@@ -26,6 +26,10 @@ for p in 0 1; do for d in 0 1; do for t in 0 1; do for a in 0 1; do for c in 0 1
   done
 done; done; done; done; done; done
 
+if [ "${#names[@]}" -eq 0 ]; then
+  echo "e2e:render: --filter '$usage_filter' matches no combination, such as p1d0t0a0c0s0_none." >&2
+  exit 2
+fi
 echo "Rendering ${#names[@]} combinations into $out"
 status=0
 printf '%s\n' "${names[@]}" | xargs -P "${usage_jobs:-4}" -I{} scripts/render.sh "$PWD" "$out" {} || status=1
