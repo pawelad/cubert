@@ -27,7 +27,9 @@ HK_CONFIGS = (
 )
 UNPINNED = {"latest", "lts"}
 
-TOOL_LINE = re.compile(r'^"?(?P<name>[^"=\s]+)"? = "(?P<version>[^"]+)"$')
+TOOL_LINE = re.compile(
+    r'^"?(?P<name>[^"=\s]+)"? = (?:\{ version = )?"(?P<version>[^"]+)"(?:,.*\})?$'
+)
 USES = re.compile(r'uses:\s*"?(?P<action>[^"@\s.][^"@\s]*)@(?P<ref>[^"\s#]+)')
 HK_PACKAGE = re.compile(r"hk/releases/download/v(?P<tag>[^/]+)/hk@(?P<version>[^#]+)#")
 
@@ -49,7 +51,7 @@ def template_tools(text: str) -> dict[str, str]:
 def required_tools(text: str) -> set[str]:
     """Return the tools that `check:repo` requires, across every feature block."""
     return {
-        re.sub(r"@[a-z]+$", "", line.partition(">=")[0])
+        re.sub(r"\[python=[0-9.]+\]|@[a-z]+$", "", line.partition(">=")[0])
         for line in text.splitlines()
         if line and not line.startswith(("[%", "#"))
     }

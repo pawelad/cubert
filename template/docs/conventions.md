@@ -40,6 +40,9 @@ What an update does to a missing or removed file:
   tools with `mise install`, not with setup actions.
 - A Python CLI is a mise `pypi:` tool, which mise installs with uv. Do not run `uvx` or
   `pipx` directly.
+- Python CLI tools select a private Python 3.14 runtime through their `python` option.
+  mise installs it before the tools and limits their graphs to that Python line. The
+  application's `.python-version` stays independent.
 - A project with `npm:` tools pins `node` in `mise.toml` too.
 - The `typescript` option seeds `bun`, `biome` and `npm:typescript` (the `tsc`
   compiler). Bun runs the tests and installs packages. The project does not list
@@ -318,7 +321,9 @@ An update cannot add a tool to the project-owned `mise.toml`.
 step fails until it does. A line such as `hk>=2.11.1` sets a minimum version: an older
 hk cannot load the shared config, so setup raises the pin to the minimum and the step
 names the tool when it is too old. Other pins above the minimum stay as they are. A line
-such as `node@lts` adds a missing tool from that channel, as a new project seeds it.
+such as `node@lts` adds a missing tool from that channel, as a new project seeds it. A
+selector such as `yamllint[python=3.14]` also repairs the tool's private runtime without
+changing its configured version. `setup` preserves other inline tool options.
 
 Run Copier only through this task. Copier commits in temporary repos, and global hk
 hooks there drop `mise.lock` from the update. The task runs Copier with `HK=0`.

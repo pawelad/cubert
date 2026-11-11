@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
 from tests.support import load_script
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    import pytest
 
 check_required_tools = load_script("template/.config/hk/checks/check_required_tools.py")
 
@@ -103,3 +103,52 @@ def test_names_mode_adds_a_tool_from_its_channel(
 def test_channel_is_not_part_of_the_tool_name() -> None:
     config = '[tools]\nnode = "24.11.0"\n'
     assert check_required_tools.missing("node@lts\n", config) == []
+
+
+@pytest.mark.parametrize(
+    ("configured", "expected"),
+    [
+        ('"9.19.1"', ["pypi:copier[python=3.14]@9.19.1"]),
+        (
+            '{ version = "9.19.1", python = "3.12" }',
+            ["pypi:copier[python=3.14]@9.19.1"],
+        ),
+        ('{ version = "9.19.1", python = "3.14" }', []),
+        (
+            '["9.19.1", "9.18.0"]',
+            [
+                "pypi:copier[python=3.14]@9.19.1",
+                "pypi:copier[python=3.14]@9.18.0",
+            ],
+        ),
+    ],
+)
+def test_runtime_repairs_preserve_configured_versions(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    configured: str,
+    expected: list[str],
+) -> None:
+    (tmp_path / ".config/mise").mkdir(parents=True)
+    (tmp_path / ".config/mise/required-tools").write_text("pypi:copier[python=3.14]\n")
+    (tmp_path / "mise.toml").write_text(f'[tools]\n"pypi:copier" = {configured}\n')
+    monkeypatch.chdir(tmp_path)
+    assert check_required_tools.main(["--names"]) == 0
+    assert capsys.readouterr().out.split() == expected
+
+
+def test_seeded_inline_options_can_put_the_version_in_any_position() -> None:
+    config = '[tools]\nyamllint = { python = "3.14", version = "latest" }\n'
+    assert check_required_tools.unpinned(config) == ["yamllint@latest"]
+
+
+def test_seeded_version_list_preserves_its_pinned_versions() -> None:
+    config = '[tools]\nnode = ["24.22.2", "lts"]\n'
+    assert check_required_tools.unpinned(config) == ["node@24.22.2", "node@lts"]
+
+
+def test_missing_tool_retains_its_private_runtime_selector() -> None:
+    assert check_required_tools.missing("yamllint[python=3.14]\n", "[tools]\n") == [
+        "yamllint"
+    ]

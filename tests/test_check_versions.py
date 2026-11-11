@@ -84,3 +84,17 @@ def test_required_hk_minimum_must_match_the_hk_tool(tmp_path: Path) -> None:
 
 def test_required_minimum_does_not_change_the_tool_name(tmp_path: Path) -> None:
     assert failures_in(tmp_path, {}) == []
+
+
+def test_inline_tool_options_keep_the_seeded_version_visible() -> None:
+    text = '[tools]\n"pypi:copier" = { version = "latest", python = "3.14" }\n'
+    assert check_versions.template_tools(text) == {"pypi:copier": "latest"}
+
+
+def test_inline_tool_options_do_not_hide_an_exact_seed(tmp_path: Path) -> None:
+    files = {
+        "template/mise.toml.jinja": (
+            '[tools]\nhk = { version = "2.11.1", python = "3.14" }\n'
+        ),
+    }
+    assert len(failures_in(tmp_path, files)) == 1

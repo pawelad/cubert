@@ -20,16 +20,23 @@ CONFIG = Path("mise.toml")
 
 
 # `node@lts` adds the tool from a channel. A scoped npm name keeps its own `@`.
-LINE = re.compile(r"(?P<name>.+?)(?:@(?P<channel>[a-z]+))?(?:>=(?P<minimum>.+))?")
+LINE = re.compile(
+    r"(?P<name>.+?)(?:\[python=(?P<python>[0-9.]+)\])?"
+    r"(?:@(?P<channel>[a-z]+))?(?:>=(?P<minimum>.+))?"
+)
 
 
-def _requirements(required: str) -> list[tuple[str, str | None, str | None]]:
-    """Return (name, minimum version, channel) for each line of the required list."""
+def _requirements(
+    required: str,
+) -> list[tuple[str, str | None, str | None, str | None]]:
+    """Return the name, minimum, channel and private Python for each requirement."""
     found = []
     for raw in required.splitlines():
         line = raw.strip()
         if line and not line.startswith("#") and (match := LINE.fullmatch(line)):
-            found.append((match["name"], match["minimum"], match["channel"]))
+            found.append(
+                (match["name"], match["minimum"], match["channel"], match["python"])
+            )
     return found
 
 
@@ -46,39 +53,94 @@ def _configured_version(spec: object) -> str | None:
 def missing(required: str, config: str) -> list[str]:
     """Return the tools in the `required` list that the `config` TOML lacks."""
     tools = tomllib.loads(config).get("tools", {})
-    return [name for name, _, _ in _requirements(required) if name not in tools]
+    return [name for name, _, _, _ in _requirements(required) if name not in tools]
+
+
+def unpinned(config: str) -> list[str]:
+    """Return seeded requests, preserving inline options through mise's own writer."""
+    found = []
+    for name, spec in tomllib.loads(config).get("tools", {}).items():
+        specs = spec if isinstance(spec, list) else [spec]
+        versions = [
+            item.get("version") if isinstance(item, dict) else item for item in specs
+        ]
+        if any(version in ("latest", "lts") for version in versions):
+            found.extend(f"{name}@{version}" for version in versions)
+    return found
 
 
 def outdated(required: str, config: str) -> list[tuple[str, str, str]]:
     """Return (name, minimum, configured) for each tool below its minimum version."""
     tools = tomllib.loads(config).get("tools", {})
     found = []
-    for name, minimum, _ in _requirements(required):
+    for name, minimum, _, _ in _requirements(required):
         configured = _configured_version(tools.get(name))
         if minimum and configured and _numbers(configured) < _numbers(minimum):
             found.append((name, minimum, configured))
     return found
 
 
+def missing_runtimes(required: str, config: str) -> list[tuple[str, str, str]]:
+    """Return fixes for private runtimes, preserving every configured tool version."""
+    tools = tomllib.loads(config).get("tools", {})
+    found = []
+    for name, _, _, runtime in _requirements(required):
+        if not runtime or name not in tools:
+            continue
+        specs = tools[name] if isinstance(tools[name], list) else [tools[name]]
+        if all(
+            isinstance(spec, dict) and spec.get("python") == runtime for spec in specs
+        ):
+            continue
+        for spec in specs:
+            version = spec.get("version") if isinstance(spec, dict) else spec
+            if isinstance(version, str):
+                found.append((name, runtime, version))
+    return found
+
+
+def _request(name: str, version: str | None, runtime: str | None) -> str:
+    options = f"[python={runtime}]" if runtime else ""
+    return f"{name}{options}" + (f"@{version}" if version else "")
+
+
 def main(args: list[str]) -> int:
     """Print each tool that `mise.toml` lacks or has too old. `--names` prints fixes."""
     required, config = REQUIRED.read_text(), CONFIG.read_text()
+    if args == ["--unpinned"]:
+        print("\n".join(unpinned(config)))
+        return 0
     tools = missing(required, config)
     old = outdated(required, config)
+    runtimes = missing_runtimes(required, config)
     if args == ["--names"]:
-        channels = {name: channel for name, _, channel in _requirements(required)}
-        added = [
-            f"{tool}@{channels[tool]}" if channels[tool] else tool for tool in tools
+        requirements = {
+            name: (channel, runtime)
+            for name, _, channel, runtime in _requirements(required)
+        }
+        added = [_request(tool, *requirements[tool]) for tool in tools]
+        raised = [
+            _request(name, minimum, requirements[name][1]) for name, minimum, _ in old
         ]
-        print("\n".join([*added, *(f"{name}@{minimum}" for name, minimum, _ in old)]))
+        changed = set(tools) | {name for name, _, _ in old}
+        configured = [
+            _request(name, version, runtime)
+            for name, runtime, version in runtimes
+            if name not in changed
+        ]
+        print("\n".join([*added, *raised, *configured]))
         return 0
     for tool in tools:
         print(f"{CONFIG}: {tool} is missing, and the shared steps need it.")
     for name, minimum, configured in old:
         print(f"{CONFIG}: {name} {configured} is below {minimum}, the minimum.")
-    if tools or old:
+    for name, runtime, _ in runtimes:
+        print(
+            f"{CONFIG}: {name} needs private Python {runtime} for its dependency graph."
+        )
+    if tools or old or runtimes:
         print("Fix: mise run setup")
-    return 1 if tools or old else 0
+    return int(bool(tools or old or runtimes))
 
 
 if __name__ == "__main__":

@@ -23,9 +23,10 @@ shfmt = "latest"
 typos = "latest"
 uv = "latest"
 worktrunk = "latest"
-yamllint = "latest"
+# A private runtime keeps CLI wheels and dependency graphs independent of app Python.
+yamllint = { version = "latest", python = "3.14" }
 zizmor = "latest"
-"pypi:copier" = "latest"
+"pypi:copier" = { version = "latest", python = "3.14" }
 [% if python %]
 ruff = "latest"
 [% endif %]
@@ -42,8 +43,8 @@ hadolint = "latest"
 opentofu = "latest"
 [% endif %]
 [% if ansible %]
-"pypi:ansible-core" = "latest"
-"pypi:ansible-lint" = "latest"
+"pypi:ansible-core" = { version = "latest", python = "3.14" }
+"pypi:ansible-lint" = { version = "latest", python = "3.14" }
 [% endif %]
 [% if changelog %]
 git-cliff = "latest"

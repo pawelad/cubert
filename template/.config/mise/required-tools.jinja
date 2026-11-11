@@ -3,6 +3,7 @@
 # The required-tools hk step fails when mise.toml does not configure a tool, or
 # configures one below its minimum. hk needs a minimum: an older hk cannot load the
 # shared config.
+# `[python=3.14]` selects a private runtime; setup repairs a missing selector.
 actionlint
 betterleaks
 dprint
@@ -21,9 +22,9 @@ shfmt
 typos
 uv
 worktrunk
-yamllint
+yamllint[python=3.14]
 zizmor
-pypi:copier
+pypi:copier[python=3.14]
 [% if python %]
 ruff
 [% endif %]
@@ -40,8 +41,8 @@ npm:dclint
 opentofu
 [% endif %]
 [% if ansible %]
-pypi:ansible-core
-pypi:ansible-lint
+pypi:ansible-core[python=3.14]
+pypi:ansible-lint[python=3.14]
 [% endif %]
 [% if changelog %]
 git-cliff
