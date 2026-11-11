@@ -82,9 +82,16 @@ Copy from GitHub, not from a local clone. Copier records the source in
    $ mise x pypi:copier -- copier copy --overwrite gh:pawelad/cubert .
    ```
 
-3. Review `git diff`. Copier replaced the template-owned and merged files (`AGENTS.md`,
-   `README.md`, `.gitignore`, the CI workflow). Put the project's own content back into
-   each merged file, below the shared parts.
+3. Review `git diff`. Copier replaced each template-owned and merged file that existed,
+   such as `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.yamllint`,
+   `.config/wt.toml`, the CI workflow and `dependabot.yml`. Put the project's own
+   content back into each merged file, below the shared parts:
+   - CI jobs go below the project jobs marker in `ci.yml`.
+   - `wt.toml` hooks become `.worktreeinclude`, `.worktreelinks` and the `install` task.
+   - An edit to `.yamllint` stays an edit of a template-owned file. An update merges it,
+     but keep it small.
+   - Delete an old config that a template file replaces, such as `.dclintrc` next to
+     `.dclintrc.yaml`.
 4. Copier kept the project-owned files that already existed: `mise.toml`, `hk.pkl`,
    `dprint.json`, `LICENSE` and the others in
    [conventions.md](./template/docs/conventions.md#file-ownership). Render a fresh copy
@@ -100,12 +107,19 @@ Copy from GitHub, not from a local clone. Copier records the source in
    root. A monorepo with Python in a subdirectory answers `false` and keeps its own ruff
    and mypy steps in `hk.pkl`. Leave the tool list in `mise.toml` alone:
    `mise run setup` adds the tools that cubert needs and raises an hk pin that is too
-   old.
-5. Move tool config that cubert now owns out of the project files. Turn shell scripts
-   into file tasks in `mise-tasks/`.
-6. Run `mise trust`, `mise run setup`, then `mise run format --all`. Commit the reformat
-   alone, and add its hash to `.git-blame-ignore-revs`.
-7. Fix what `mise run check` reports, then commit.
+   old. A changelog project copies the `cliff.toml` header and `postprocessors` from the
+   fresh copy, so `--prepend` still finds the header after the reformat.
+5. Move what cubert now owns out of the project files: the `postinstall` hook, the
+   `[settings]` and `[env]` entries that `.config/mise/config.toml` already sets, and
+   duplicate hk steps. Split a project `check` or `test` task into `check:<area>` and
+   `test:<area>` tasks. A TypeScript project that does not test with `bun test` replaces
+   `test:typescript`. Turn shell scripts into file tasks in `mise-tasks/`, unless tests
+   cover them.
+6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,
+   `mise run setup` and `mise run format --all`. Commit the reformat alone, and add its
+   hash to `.git-blame-ignore-revs`.
+7. Fix what `mise run check` reports, then commit. A step that needs a secret, such as
+   an Ansible vault password, fails in CI too.
 
 ## Development
 
