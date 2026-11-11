@@ -83,7 +83,7 @@ breaking change, and say what projects must do in the release notes.
 | Task                    | Covers                                                                      |
 | ----------------------- | --------------------------------------------------------------------------- |
 | `mise run check`        | hk on every file, `shared-agents` included                                  |
-| `mise run test`         | The pytest tests: check scripts, file ownership, rendered files, worktree   |
+| `mise run test`         | The pytest tests: check scripts (also on Python 3.11), ownership, renders   |
 | `mise run e2e:render`   | Renders every feature combination, then runs `setup`, `check`, `test`       |
 | `mise run e2e:update`   | Renders `HEAD~1`, adds project edits, updates to the working tree, checks   |
 | `mise run e2e:conflict` | Changes one line in a merged file on both sides, expects the update to stop |
