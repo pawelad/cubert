@@ -26,6 +26,9 @@ rules:
   comments:
     min-spaces-from-content: 1
 
+  # dprint sets comment indentation, and it indents the CI project jobs marker.
+  comments-indentation: "disable"
+
   # ansible-lint expects `{{ var }}` with inner spaces.
   braces:
     max-spaces-inside: 1
