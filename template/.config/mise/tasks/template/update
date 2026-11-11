@@ -16,6 +16,7 @@ main() {
     args+=(--vcs-ref "$usage_vcs_ref")
   fi
   # Copier commits in temporary repos. Global hk hooks would run there and drop mise.lock.
+  # Its "Make sure Git >= 2.24" warning is harmless on Git 2.55+ (copier-org/copier#2759).
   HK=0 copier "${args[@]}"
 
   # Copier documents no exit code for conflicts, so look for the markers it writes.
