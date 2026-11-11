@@ -1,7 +1,8 @@
 [project]
 name = "[[ project_name ]]"
 version = "0.1.0"
-description = "[[ description ]]"
+# Escaped, so a quote or backslash in the answer keeps the TOML valid.
+description = "[[ description | replace('\\', '\\\\') | replace('"', '\\"') ]]"
 requires-python = ">=3.14"
 dependencies = []
 
