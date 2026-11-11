@@ -31,7 +31,7 @@ steps {
       ["SHELLCHECK_OPTS"] = "--exclude=SC1090 --exclude=SC2046 --exclude=SC2086 --exclude=SC2129"
     }
   }
-  // detect-private-key finds private keys only. This also finds tokens and passwords.
+  // Finds private keys, tokens and passwords.
   ["betterleaks"] = Builtins.betterleaks
   ["check-added-large-files"] = (Builtins.check_added_large_files) {
     exclude = List("**/*.lock")
@@ -45,7 +45,6 @@ steps {
     check = ".config/hk/checks/check_comment_length.py {{files}}"
   }
   ["destroyed-symlinks"] = Builtins.destroyed_symlinks
-  ["detect-private-key"] = Builtins.detect_private_key
   ["docs-no-todo"] = new Step {
     glob = List("docs/**/*.md")
     check = """
@@ -159,6 +158,8 @@ steps {
   // root `typos.toml`, which layers on it. The builtin has no config option.
   ["typos"] = (Builtins.typos) {
     exclude = frozen
+    // A fixer would rewrite a false positive in code without asking.
+    fix = null
     check_diff = new CommandSpec {
       command = """
         status=0
@@ -168,10 +169,6 @@ steps {
         exit 1
         """
       effect = "read"
-    }
-    fix = new CommandSpec {
-      command = "typos --config .config/typos.toml --force-exclude --write-changes {{files}}"
-      effect = "write"
     }
   }
   ["yamllint"] = Builtins.yamllint
