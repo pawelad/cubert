@@ -161,7 +161,8 @@ The prose rules (American English, no em dashes, no emojis) check Markdown and t
 files in full. In code and config files they check comment lines only, and a fixer
 rewrites only a comment. A string, an identifier or a config value can name an external
 API or hold a fixture, so the rules leave it alone. Paths named `fixtures`, `testdata`,
-`__snapshots__`, `generated` and `vendor` are skipped. Skip another path with
+`__snapshots__`, `generated` and `vendor` are skipped, by the smart-quotes fixer too.
+Skip another path with
 `steps { ["no-british-english"] { exclude = List("docs/legacy/**") } }`.
 
 Three hk steps cover what the formatters and linters miss:

@@ -73,7 +73,10 @@ steps {
     exclude = List("**/migrations/**")
     check = ".config/hk/checks/check_file_length.py {{files}}"
   }
-  ["fix-smart-quotes"] = Builtins.fix_smart_quotes
+  // Its fixer would rewrite verbatim external text, such as recorded API responses.
+  ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {
+    exclude = frozen
+  }
   ["forbid-submodules"] = Builtins.forbid_submodules
   // Offline, so it checks relative links only. `mise run audit` checks the URLs. A root
   // `lychee.toml` layers on the shared config, which lychee would not load by itself.
