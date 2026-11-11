@@ -44,7 +44,7 @@ def run(command: list[str], cwd: Path, env: dict[str, str] | None = None) -> str
     result = subprocess.run(  # noqa: S603
         command,
         cwd=cwd,
-        env=env or project_env(),
+        env=project_env() if env is None else env,
         capture_output=True,
         text=True,
         check=False,

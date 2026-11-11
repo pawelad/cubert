@@ -8,24 +8,16 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
+from tests.support import ROOT, project_env, run
+
 MARKER = "cubert-worktree-setup-done"
 NEEDED_TOOLS = ("git", "mise", "copier", "wt")
 AGENT_DIRS = ("tmp", ".claude", ".codex")
-MISE_PROJECT_VARS = (
-    "MISE_PROJECT_ROOT",
-    "MISE_CONFIG_ROOT",
-    "MISE_ORIGINAL_CWD",
-    "MISE_TASK_NAME",
-    "MISE_TASK_DIR",
-    "MISE_TASK_FILE",
-)
 
 pytestmark = pytest.mark.skipif(
     any(shutil.which(tool) is None for tool in NEEDED_TOOLS),
@@ -44,23 +36,8 @@ class Project:
         return run(["git", *args], cwd or self.worktree, self.env)
 
 
-def run(command: list[str], cwd: Path, env: dict[str, str]) -> str:
-    """Run a command and return its output, stdout and stderr together."""
-    result = subprocess.run(  # noqa: S603
-        command,
-        cwd=cwd,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    output = result.stdout + result.stderr
-    assert result.returncode == 0, f"{command} failed:\n{output}"
-    return output
-
-
 def make_env(base: Path) -> dict[str, str]:
-    env = {k: v for k, v in os.environ.items() if k not in MISE_PROJECT_VARS}
+    env = project_env()
     env.update(
         {
             # No global hooks or identity: only the project's own hook may run.
@@ -70,7 +47,6 @@ def make_env(base: Path) -> dict[str, str]:
             "GIT_AUTHOR_EMAIL": "test@example.com",
             "GIT_COMMITTER_NAME": "test",
             "GIT_COMMITTER_EMAIL": "test@example.com",
-            "HK": "0",
             # The worktree is a new path, so mise would ask to trust it.
             "MISE_TRUSTED_CONFIG_PATHS": str(base),
         }
