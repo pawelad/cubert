@@ -277,6 +277,9 @@ Notes:
   pre-warms detached worktrees and finalizes them later with a plain `git checkout`.
 - The hook is a script in the hooks dir, not a config-based hook. GUI apps on macOS run
   Apple Git, which has no config-based hooks.
+- An existing project hook stays in place. `hooks:install` writes `post-checkout.cubert`
+  and prints the delegation command to add. `check:repo` accepts that command, with
+  optional `exec`, when the delegated copy is executable and current.
 - A real directory blocks its link. Move its contents to the primary checkout, then run
   `mise run worktree:setup --force`.
 

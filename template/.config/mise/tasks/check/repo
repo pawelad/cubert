@@ -16,8 +16,15 @@ if [ -n "$(git config --local --get core.hooksPath || true)" ]; then
 fi
 
 if [ -z "${CI:-}" ]; then
-  hook="$(git rev-parse --git-common-dir)/hooks/post-checkout"
-  if [ ! -x "$hook" ] || ! cmp -s "$hook" .config/git/post-checkout; then
+  hook="$(cd "$(git rev-parse --git-common-dir)" && pwd -P)/hooks/post-checkout"
+  chained=false
+  # Match the installer's delegation command; the delegated copy must stay current too.
+  if [ -x "$hook" ] && [ -x "$hook.cubert" ] && cmp -s "$hook.cubert" .config/git/post-checkout; then
+    if grep -F "\"$hook.cubert\" \"\$@\"" "$hook" | grep -qE '^[[:space:]]*(exec[[:space:]]+)?"'; then
+      chained=true
+    fi
+  fi
+  if [ "$chained" = false ] && { [ ! -x "$hook" ] || ! cmp -s "$hook" .config/git/post-checkout; }; then
     fail "the post-checkout worktree hook is missing or out of date at $hook." "mise run hooks:install"
   fi
 fi

@@ -4,12 +4,13 @@ set -euo pipefail
 
 # hk skips this when ~/.gitconfig already has global hk hooks.
 hk install --mise
-hooks_dir="$(git rev-parse --git-common-dir)/hooks"
+hooks_dir="$(cd "$(git rev-parse --git-common-dir)" && pwd -P)/hooks"
 mkdir -p "$hooks_dir"
 
-# A hook without our `worktree:setup` call belongs to the user, so leave it alone.
+# Only our header permits replacement; a project hook can call worktree:setup too.
 target="$hooks_dir/post-checkout"
-if [ -e "$target" ] && ! grep -q 'mise run worktree:setup' "$target"; then
+# shellcheck disable=SC2016
+if [ -e "$target" ] && ! head -n 2 "$target" | grep -qFx '# Template-owned. `mise run hooks:install` copies it to the git hooks dir.'; then
   target="$hooks_dir/post-checkout.cubert"
   echo "hooks:install: $hooks_dir/post-checkout exists and is not cubert's." >&2
   echo "hooks:install: add this line to it so new worktrees get set up: \"$target\" \"\$@\"" >&2
