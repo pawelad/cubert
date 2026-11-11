@@ -72,12 +72,13 @@ breaking change, and say what projects must do in the release notes.
 
 ## Tests
 
-| Task                  | Covers                                                                    |
-| --------------------- | ------------------------------------------------------------------------- |
-| `mise run check`      | hk on every file, `shared-agents` included                                |
-| `mise run test`       | The pytest tests for the check scripts (`test:scripts`)                   |
-| `mise run e2e:render` | Renders every feature combination, then runs `setup`, `check`, `test`     |
-| `mise run e2e:update` | Renders `HEAD~1`, adds project edits, updates to the working tree, checks |
+| Task                    | Covers                                                                      |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `mise run check`        | hk on every file, `shared-agents` included                                  |
+| `mise run test`         | The pytest tests for the check scripts (`test:scripts`)                     |
+| `mise run e2e:render`   | Renders every feature combination, then runs `setup`, `check`, `test`       |
+| `mise run e2e:update`   | Renders `HEAD~1`, adds project edits, updates to the working tree, checks   |
+| `mise run e2e:conflict` | Changes one line in a merged file on both sides, expects the update to stop |
 
 - Renders read the working tree, including uncommitted changes.
 - `e2e:render` runs 192 combinations, about 20 minutes with `--jobs 6`. Locally,
@@ -87,7 +88,7 @@ breaking change, and say what projects must do in the release notes.
   render with python on lists two directories.
 - Each render pins the newest tool releases, so upstream breakage shows up here first.
 - `e2e:update --from <ref>` tests the update from an older release.
-- CI runs `check`, `test`, `e2e:update` and the full render matrix.
+- CI runs `check`, `test`, `e2e:update`, `e2e:conflict` and the full render matrix.
 - The e2e tasks are not `test:*` tasks, so `mise run test` stays fast.
 
 The unit tests in `tests/` cover the template's check scripts, so projects do not test

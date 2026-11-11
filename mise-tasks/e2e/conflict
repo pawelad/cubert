@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+#MISE description="Render the template, edit a merged line that the template also changes, and expect template:update to stop"
+#USAGE flag "--out <dir>" help="Write the project here (default: a new temp dir)"
+set -euo pipefail
+
+out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-conflict.XXXXXX")}"
+src="$out/cubert"
+dest="$out/demo"
+rm -rf "$src" "$dest"
+
+# The nested mise runs must resolve the rendered project, not cubert.
+unset MISE_PROJECT_ROOT MISE_CONFIG_ROOT MISE_ORIGINAL_CWD MISE_TASK_NAME MISE_TASK_DIR MISE_TASK_FILE
+# Copier and the project commit in temporary repos, where global hk hooks would run.
+export HK=0
+
+step() { echo "e2e:conflict: $*"; }
+fail() {
+  echo "e2e:conflict: $*" >&2
+  exit 1
+}
+
+# A copy of the working tree, so the test does not depend on what HEAD~1 changed.
+step "snapshot the working tree into $src"
+mkdir -p "$src"
+git ls-files -z --cached --others --exclude-standard --deduplicate \
+  | tar --null -T - -cf - | tar -xf - -C "$src"
+git -C "$src" -c init.defaultBranch=main init --quiet
+git -C "$src" add --all
+git -C "$src" commit --quiet --no-verify -m "chore: base"
+base="$(git -C "$src" rev-parse HEAD)"
+
+step "render the base into $dest"
+copier copy --quiet --defaults --vcs-ref "$base" \
+  -d project_name="demo" -d description="A demo project." \
+  "$src" "$dest" >/dev/null
+
+# The same line changes in the template and in the project: the heading of a merged file.
+readme="$src/template/README.md.jinja"
+[ "$(head -n 1 "$readme")" = "# [[ project_name ]]" ] \
+  || fail "the first line of template/README.md.jinja changed. Update this task."
+{
+  echo "# [[ project_name ]] (template edit)"
+  tail -n +2 "$readme"
+} >"$readme.new"
+mv "$readme.new" "$readme"
+git -C "$src" commit --quiet --no-verify -am "docs: change the README heading"
+new="$(git -C "$src" rev-parse HEAD)"
+
+cd "$dest"
+git -c init.defaultBranch=main init --quiet
+mise trust --quiet --all
+if ! mise run setup >"$out/setup.log" 2>&1; then
+  fail "setup failed, see $out/setup.log"
+fi
+git add --all
+git commit --quiet --no-verify -m "chore: render cubert"
+{
+  echo "# demo (project edit)"
+  tail -n +2 README.md
+} >README.md.new
+mv README.md.new README.md
+git commit --quiet --no-verify -am "docs: change the README heading"
+
+step "run template:update --vcs-ref $(git -C "$src" rev-parse --short "$new")"
+code=0
+mise run template:update --vcs-ref "$new" >"$out/update.log" 2>&1 || code=$?
+
+[ "$code" -eq 1 ] || fail "expected exit 1, got $code. See $out/update.log."
+grep -Eq '(^|[[:space:]])README\.md$' "$out/update.log" \
+  || fail "the update did not list README.md. See $out/update.log."
+grep -q '^<<<<<<<' README.md || fail "README.md has no conflict markers."
+step "pass (project: $dest)"

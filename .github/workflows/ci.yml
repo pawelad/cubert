@@ -63,6 +63,9 @@ jobs:
       - name: "Test the update"
         run: "mise run e2e:update"
 
+      - name: "Test an update that conflicts"
+        run: "mise run e2e:conflict"
+
   render:
     name: "Render typescript ${{ matrix.typescript }}, ${{ matrix.openspec }}"
     runs-on: "ubuntu-24.04"
