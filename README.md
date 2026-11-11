@@ -13,6 +13,8 @@ so a fix lands once in cubert and reaches each project with `mise run template:u
   actionlint and zizmor.
 - Spell checking with typos, secret scanning with betterleaks and an offline link check
   with lychee, all in the git hooks.
+- `mise run audit` and a weekly CI job: known vulnerabilities in `uv.lock` and
+  `bun.lock` (osv-scanner) and online links. They need the network, so hooks skip them.
 - An `AGENTS.md` with shared rules for coding agents, and a section for project rules.
 - Worktree setup that runs once for `wt switch --create`, plain `git worktree add` and
   the agent apps built on it.

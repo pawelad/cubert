@@ -66,6 +66,9 @@ path, so `check/repo` is `check:repo`:
 | `install`            | Nothing. The project replaces it with its dependency installs        |
 | `check`              | Runs every `check:*` task                                            |
 | `check:repo`         | Runs hk on every file, plus the repository guards                    |
+| `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it    |
+| `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities             |
+| `audit:links`        | Checks every link in the Markdown files, URLs included               |
 | `test`               | Runs every `test:*` task                                             |
 | `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests |
 | `test:typescript`    | TypeScript option: runs `bun test` in each directory                 |
@@ -163,6 +166,15 @@ Three hk steps cover what the formatters and linters miss:
 `check:repo` fails when a local `core.hooksPath` is set. Git then ignores the global
 config-based hooks that `hk install --global` writes, with no error. Fix it with
 `git config --local --unset core.hooksPath`.
+
+## Audits
+
+`mise run audit` runs the checks that need the network: osv-scanner on `uv.lock` and
+`bun.lock`, and lychee on every URL. Hooks and `mise run check` skip them, so they stay
+fast and work offline. A new advisory then fails the audit and never an unrelated
+commit. CI runs the audit as its own job, on each push and pull request and once a week.
+Run it locally before a release or after a dependency change. osv-scanner is a tool of
+the `python` and `typescript` options.
 
 ## Formatting
 

@@ -40,6 +40,27 @@ jobs:
       - name: "Run the tests"
         run: "mise run test"
 
+  # Needs the network, so it is not part of `mise run check`. A new advisory fails this
+  # job and leaves the check job green.
+  audit:
+    name: "Audit"
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 20
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Set up mise"
+        uses: "./template/.github/actions/setup-mise"
+
+      - name: "Audit the dependencies and links"
+        env:
+          # lychee uses it for github.com links, to avoid rate limits.
+          GITHUB_TOKEN: "${{ github.token }}"
+        run: "mise run audit"
+
   update:
     name: "Update from the previous commit"
     runs-on: "ubuntu-24.04"

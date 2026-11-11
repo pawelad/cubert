@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#MISE description="Scan uv.lock and bun.lock for known vulnerabilities (needs the network)"
+set -euo pipefail
+
+args=()
+while IFS= read -r lock; do
+  args+=(--lockfile "$lock")
+done < <(git ls-files --cached --others --exclude-standard | grep -E '(^|/)(uv|bun)\.lock$' || true)
+
+if [ "${#args[@]}" -eq 0 ]; then
+  echo "audit:deps: no uv.lock or bun.lock, so nothing to scan."
+  exit 0
+fi
+if ! command -v osv-scanner >/dev/null; then
+  echo "audit:deps: osv-scanner is missing. Fix: mise use --pin osv-scanner" >&2
+  exit 1
+fi
+osv-scanner scan source "${args[@]}"
