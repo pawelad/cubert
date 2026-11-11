@@ -160,16 +160,9 @@ steps {
     exclude = frozen
     // A fixer would rewrite a false positive in code without asking.
     fix = null
-    check_diff = new CommandSpec {
-      command = """
-        status=0
-        output=$(typos --config .config/typos.toml --force-exclude --diff {{files}}) || status=$?
-        [ -z "$output" ] && exit "$status"
-        printf "%s" "$output"
-        exit 1
-        """
-      effect = "read"
-    }
+    // hk prints nothing from a check_diff in check mode, so the failure named no word.
+    check_diff = null
+    check = "typos --config .config/typos.toml --force-exclude --format brief {{files}}"
   }
   ["yamllint"] = Builtins.yamllint
   // Security audits for workflows and actions: injection, credentials, pinning.
