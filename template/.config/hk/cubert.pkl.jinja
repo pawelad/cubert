@@ -25,7 +25,11 @@ steps {
 [% if typescript %]
   // Biome formats JSON too, but dprint owns it: one tool per file type.
   ["biome"] = (builtins.biome) {
-    glob = List("**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs", "**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts", "**/*.css")
+    glob = List(
+      "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs",
+      "**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts",
+      "**/*.css"
+    )
   }
   // hk runs tsc once per nearest tsconfig.json, so a monorepo needs no directory list.
   ["tsc"] = (builtins.tsc) {
