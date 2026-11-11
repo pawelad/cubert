@@ -83,13 +83,13 @@ Copy from GitHub, not from a local clone. Copier records the source in
    ```
 
 3. Review `git diff`. Copier replaced each template-owned and merged file that existed,
-   such as `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.yamllint`,
-   `.config/wt.toml`, the CI workflow and `dependabot.yml`. Put the project's own
-   content back into each merged file, below the shared parts:
+   such as `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.config/wt.toml`,
+   the CI workflow and `dependabot.yml`. Put the project's own content back into each
+   merged file, below the shared parts:
    - CI jobs go below the project jobs marker in `ci.yml`.
    - `wt.toml` hooks become `.worktreeinclude`, `.worktreelinks` and the `install` task.
-   - An edit to `.yamllint` stays an edit of a template-owned file. An update merges it,
-     but keep it small.
+   - yamllint relaxations go in the project's `.yamllint`, which extends
+     `.config/yamllint.yaml`.
    - Delete an old config that a template file replaces, such as `.dclintrc` next to
      `.dclintrc.yaml`.
 4. Copier kept the project-owned files that already existed: `mise.toml`, `hk.pkl`,
@@ -102,13 +102,14 @@ Copy from GitHub, not from a local clone. Copier records the source in
        gh:pawelad/cubert /tmp/cubert-fresh
    ```
 
-   The project `hk.pkl` must amend `.config/hk/cubert.pkl`, and `dprint.json` must
-   extend `.config/dprint.json`. The `python` option expects `pyproject.toml` at the
-   root. A monorepo with Python in a subdirectory answers `false` and keeps its own ruff
-   and mypy steps in `hk.pkl`. Leave the tool list in `mise.toml` alone:
-   `mise run setup` adds the tools that cubert needs and raises an hk pin that is too
-   old. A changelog project copies the `cliff.toml` header and `postprocessors` from the
-   fresh copy, so `--prepend` still finds the header after the reformat.
+   The project `hk.pkl` must amend `.config/hk/cubert.pkl`, `dprint.json` must extend
+   `.config/dprint.json`, and `.yamllint` must extend `.config/yamllint.yaml`. The
+   `python` option expects `pyproject.toml` at the root. A monorepo with Python in a
+   subdirectory answers `false` and keeps its own ruff and mypy steps in `hk.pkl`. Leave
+   the tool list in `mise.toml` alone: `mise run setup` adds the tools that cubert needs
+   and raises an hk pin that is too old. A changelog project copies the `cliff.toml`
+   header and `postprocessors` from the fresh copy, so `--prepend` still finds the
+   header after the reformat.
 5. Move what cubert now owns out of the project files: the `postinstall` hook, the
    `[settings]` and `[env]` entries that `.config/mise/config.toml` already sets, and
    duplicate hk steps. Split a project `check` or `test` task into `check:<area>` and

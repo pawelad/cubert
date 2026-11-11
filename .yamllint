@@ -1,5 +1,5 @@
 ---
-extends: "template/.yamllint"
+extends: "template/.config/yamllint.yaml"
 
 ignore: |
   .mise/

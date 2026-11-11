@@ -69,6 +69,8 @@ YAML
 break_prose() { printf '# Notes\n\nThe colour is red.\n' >notes.md; }
 break_comment() { printf '# The colour is red.\n' >>settings.yaml; }
 break_dash() { printf '# One \xe2\x80\x94 two.\n' >>settings.yaml; }
+# Default yamllint allows a plain string, so this fails only with the shared rules.
+break_yaml() { printf 'plain: text\n' >>settings.yaml; }
 break_typo() { printf '# Notes\n\nWe recieve data.\n' >notes.md; } # spellchecker:disable-line
 break_link() { printf '[Gone](docs/gone.md)\n' >notes.md; }
 # Split, so that no scanner flags this script.

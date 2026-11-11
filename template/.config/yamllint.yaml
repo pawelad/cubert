@@ -1,0 +1,41 @@
+---
+extends: "default"
+
+ignore: |
+  .venv/
+  .mise/
+  tmp/
+  .copier-answers.yml
+  .openspec.yaml
+  openspec/schemas/
+
+rules:
+  line-length:
+    max: 88
+
+  # Quoting every string also catches unquoted Ansible `name` and `notify` values.
+  quoted-strings:
+    required: true
+    quote-type: "double"
+    check-keys: false
+
+  truthy:
+    level: "error"
+    check-keys: false
+
+  comments:
+    min-spaces-from-content: 1
+
+  # dprint sets comment indentation, and it indents the CI project jobs marker.
+  comments-indentation: "disable"
+
+  # ansible-lint expects `{{ var }}` with inner spaces.
+  braces:
+    max-spaces-inside: 1
+
+  brackets:
+    max-spaces-inside: 1
+
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true

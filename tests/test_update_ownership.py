@@ -42,13 +42,13 @@ def updated(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
     # Release 2 edits a template-owned and a project-owned file, and removes another.
     template = source / "template"
-    prepend(template / ".yamllint", "# release 2")
+    prepend(template / ".config/yamllint.yaml", "# release 2")
     prepend(template / "CONTRIBUTING.md", "<!-- release 2 -->")
     (template / ".shellcheckrc").unlink()
     release2 = commit_all(source, "chore: release 2")
 
     # The project edits the same spots, deletes two files and edits the removed one.
-    prepend(project / ".yamllint", "# local edit")
+    prepend(project / ".config/yamllint.yaml", "# local edit")
     prepend(project / "CONTRIBUTING.md", "<!-- local edit -->")
     (project / ".shellcheckrc").write_text("# local edit\n")
     (project / ".editorconfig").unlink()
@@ -63,7 +63,7 @@ def updated(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def test_edit_to_a_template_owned_file_conflicts_with_the_template(
     updated: Path,
 ) -> None:
-    text = (updated / ".yamllint").read_text()
+    text = (updated / ".config/yamllint.yaml").read_text()
 
     assert "<<<<<<<" in text
     assert "# release 2" in text

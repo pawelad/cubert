@@ -6,11 +6,11 @@ belongs to the template: change it in cubert, not here. Project setup lives in
 
 ## File ownership
 
-| Kind           | Files                                                                                                                                                                                                                                                                                                                                 | On `copier update`            |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Template-owned | `.config/`, `.editorconfig`, `.yamllint`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                                  | Takes the template's changes  |
-| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `.github/workflows/ci.yml`, `openspec/config.yaml`                                                                                                                                                                      | Merges your additions         |
-| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `biome.json`, `mise-tasks/`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<tofu_dir>/versions.tf`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
+| Kind           | Files                                                                                                                                                                                                                                                                                                                                              | On `copier update`            |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Template-owned | `.config/`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                                                            | Takes the template's changes  |
+| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `.github/workflows/ci.yml`, `openspec/config.yaml`                                                                                                                                                                                   | Merges your additions         |
+| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `.yamllint`, `biome.json`, `mise-tasks/`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<tofu_dir>/versions.tf`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
 
 Copier treats template-owned and merged files the same way: a 3-way merge of the
 template's change and your edit. The kinds differ in how you edit them. A change to a
@@ -20,12 +20,13 @@ it. Add to a merged file below the shared part, and the merge stays clean.
 Each project-owned file layers on its template-owned file, so a project change goes
 there:
 
-| Tool   | Template-owned                       | Project-owned | How the project file layers               |
-| ------ | ------------------------------------ | ------------- | ----------------------------------------- |
-| mise   | `.config/mise/config.toml`, `tasks/` | `mise.toml`   | mise loads both; `mise.toml` wins         |
-| hk     | `.config/hk/cubert.pkl`, `base.pkl`  | `hk.pkl`      | `hk.pkl` amends `cubert.pkl`              |
-| dprint | `.config/dprint.json`                | `dprint.json` | `dprint.json` extends it; excludes add up |
-| Biome  | `.config/biome.json`                 | `biome.json`  | `biome.json` extends it (`typescript`)    |
+| Tool     | Template-owned                       | Project-owned | How the project file layers               |
+| -------- | ------------------------------------ | ------------- | ----------------------------------------- |
+| mise     | `.config/mise/config.toml`, `tasks/` | `mise.toml`   | mise loads both; `mise.toml` wins         |
+| hk       | `.config/hk/cubert.pkl`, `base.pkl`  | `hk.pkl`      | `hk.pkl` amends `cubert.pkl`              |
+| dprint   | `.config/dprint.json`                | `dprint.json` | `dprint.json` extends it; excludes add up |
+| Biome    | `.config/biome.json`                 | `biome.json`  | `biome.json` extends it (`typescript`)    |
+| yamllint | `.config/yamllint.yaml`              | `.yamllint`   | `.yamllint` extends it; `ignore` replaces |
 
 What an update does to a missing or removed file:
 

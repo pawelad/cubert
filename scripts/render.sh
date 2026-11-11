@@ -69,6 +69,7 @@ run() {
   expect_hook_failure prose no-british-english
   expect_hook_failure comment no-british-english-comments
   expect_hook_failure dash no-em-dashes-comments
+  expect_hook_failure yaml yamllint
   expect_hook_failure typo typos
   expect_hook_failure link lychee
   expect_hook_failure secret betterleaks
