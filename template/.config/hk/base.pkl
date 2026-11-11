@@ -95,7 +95,7 @@ steps {
     check = "perl -CSD -ne 'if (/\(emoji)/) { print \"$ARGV:$.: $_\"; $bad = 1 } close ARGV if eof; END { exit($bad ? 1 : 0) }' {{files}}"
   }
   ["pins"] = new Step {
-    glob = List("mise.toml", ".github/**/*.yml", ".github/**/*.yaml")
+    glob = List("mise.toml")
     check = ".config/hk/checks/check_pins.py {{files}}"
   }
   ["pkl"] = Builtins.pkl
@@ -117,6 +117,8 @@ steps {
   }
   ["trailing-whitespace"] = Builtins.trailing_whitespace
   ["yamllint"] = Builtins.yamllint
+  // Security audits for workflows and actions: injection, credentials, pinning.
+  ["zizmor"] = Builtins.zizmor
 }
 
 // `check`, `fix` and `pre-commit` are implicit hooks built from `steps`.

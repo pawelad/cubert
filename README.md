@@ -9,8 +9,8 @@ so a fix lands once in cubert and reaches each project with `mise run template:u
   starts with the newest releases that are at least 7 days old.
 - [hk] git hooks: formatting, linting, pinned versions, prose rules and Conventional
   Commits.
-- [dprint] for Markdown, TOML, JSON and YAML, plus yamllint, shellcheck, shfmt and
-  actionlint.
+- [dprint] for Markdown, TOML, JSON and YAML, plus yamllint, shellcheck, shfmt,
+  actionlint and zizmor.
 - An `AGENTS.md` with shared rules for coding agents, and a section for project rules.
 - Worktree setup that runs once for `wt switch --create`, plain `git worktree add` and
   the agent apps built on it.

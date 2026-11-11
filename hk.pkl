@@ -12,9 +12,9 @@ steps {
   ["ruff-format"] = (builtins.ruff_format) {
     depends = "ruff"
   }
-  // The template's own workflows and actions are pinned too.
-  ["pins"] {
-    glob = List("mise.toml", ".github/**/*.yml", "template/.github/**/*.yml")
+  // The template's own workflows and actions get the same audits.
+  ["zizmor"] {
+    glob = List(".github/**/*.yml", "template/.github/**/*.yml")
   }
   // The template's shared rules must be the ones cubert's own agents follow.
   ["shared-agents"] = new Step {
