@@ -37,6 +37,15 @@ run = '''
 uv run pytest ${usage_files:-}
 '''
 
+[tasks."test:oldest-python"]
+description = "Run the shipped check script tests on Python 3.11, the oldest they declare"
+# Projects pin their own Python, and uv warns on each hook run below requires-python.
+run = """
+uv run --isolated --no-project --python 3.11 --with pytest pytest \
+  tests/test_check_comment_length.py tests/test_check_file_length.py \
+  tests/test_check_pins.py tests/test_check_required_tools.py
+"""
+
 [tasks.upgrade]
 description = "Upgrade cubert's tools and the template's dprint plugins"
 usage = 'arg "[tools]..." help="Tools to upgrade"'

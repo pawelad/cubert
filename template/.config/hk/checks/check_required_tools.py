@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.14"
+# requires-python = ">=3.11"
 # ///
 """Fail when `mise.toml` lacks a tool, or has one too old, for the shared hk steps.
 
