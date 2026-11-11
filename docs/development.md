@@ -75,7 +75,7 @@ breaking change, and say what projects must do in the release notes.
 | Task                  | Covers                                                                    |
 | --------------------- | ------------------------------------------------------------------------- |
 | `mise run check`      | hk on every file, `shared-agents` included                                |
-| `mise run test`       | The unit tests for the check scripts (`test:scripts`)                     |
+| `mise run test`       | The pytest tests for the check scripts (`test:scripts`)                   |
 | `mise run e2e:render` | Renders every feature combination, then runs `setup`, `check`, `test`     |
 | `mise run e2e:update` | Renders `HEAD~1`, adds project edits, updates to the working tree, checks |
 
@@ -101,7 +101,8 @@ them.
   schema from the new built-in one. Review the diff, then run the render tests.
 - The mise version for CI is the `version` input default in
   `template/.github/actions/setup-mise/action.yml`. Bump it by hand.
-- Dependabot bumps the Actions in cubert's workflows and in the template.
+- Dependabot bumps the Actions in cubert's workflows and in the template. It also bumps
+  pytest in `uv.lock`, which pins it for cubert's tests.
 
 ## Releases
 

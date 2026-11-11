@@ -21,3 +21,18 @@ updates:
     groups:
       actions:
         update-types: ["minor", "patch"]
+
+  # pytest, pinned by uv.lock for cubert's own tests.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "build(deps-dev)"
+    groups:
+      python:
+        update-types: ["minor", "patch"]

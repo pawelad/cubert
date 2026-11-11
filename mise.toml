@@ -21,10 +21,12 @@ zizmor = "1.32.0"
 
 [tasks."test:scripts"]
 description = "Run the unit tests for the check scripts"
-run = """
-uv run --no-project --python 3.14 python -m unittest discover \
-  --start-directory tests --top-level-directory .
-"""
+usage = 'arg "[files]..." help="Test files to run"'
+# mise passes usage args only as usage_* variables, and the list must split into words.
+run = '''
+# shellcheck disable=SC2086
+uv run pytest ${usage_files:-}
+'''
 
 [tasks.upgrade]
 description = "Upgrade cubert's tools and the template's dprint plugins"

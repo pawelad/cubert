@@ -1,0 +1,23 @@
+# Only pins pytest for cubert's tests. cubert is not a Python package.
+[project]
+name = "cubert"
+version = "0.0.0"
+description = "A Copier template for my projects: shared tooling, checks and agent rules."
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+# uv.lock pins it, so this file holds no version.
+dev = ["pytest"]
+
+[tool.uv]
+package = false
+# Matches the Dependabot cooldown. Installs from uv.lock are not filtered.
+exclude-newer = "7 days"
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+# tests/support.py imports by the `tests` package name.
+pythonpath = ["."]
+addopts = "--import-mode=importlib"

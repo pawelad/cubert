@@ -5,8 +5,9 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
-import unittest
 from pathlib import Path
+
+import pytest
 
 from tests.support import load_script
 
@@ -46,28 +47,23 @@ def as_forked(text: str) -> str:
     )
 
 
-class ReforkOpenspecTest(unittest.TestCase):
-    def test_unmatched_edit_fails_loudly(self) -> None:
-        with self.assertRaises(SystemExit):
-            refork.transform_schema("name: spec-driven\ndescription: x\n")
-
-    def test_proposal_template_drops_capabilities(self) -> None:
-        text = "## Why\n\nx\n\n## Capabilities\n\ny\n\n## Impact\n\nz\n"
-        self.assertEqual(
-            refork.transform_proposal_template(text), "## Why\n\nx\n\n## Impact\n\nz\n"
-        )
-
-    def test_pinned_upstream_matches_the_committed_fork(self) -> None:
-        upstream = upstream_schema_dir()
-        if upstream is None:
-            self.skipTest("the pinned OpenSpec is not installed")
-        schema = refork.transform_schema((upstream / "schema.yaml").read_text())
-        self.assertEqual(as_forked(schema), (FORK / "schema.yaml").read_text())
-        proposal = refork.transform_proposal_template(
-            (upstream / "templates/proposal.md").read_text()
-        )
-        self.assertEqual(proposal, (FORK / "templates/proposal.md").read_text())
+def test_unmatched_edit_fails_loudly() -> None:
+    with pytest.raises(SystemExit):
+        refork.transform_schema("name: spec-driven\ndescription: x\n")
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_proposal_template_drops_capabilities() -> None:
+    text = "## Why\n\nx\n\n## Capabilities\n\ny\n\n## Impact\n\nz\n"
+    assert refork.transform_proposal_template(text) == "## Why\n\nx\n\n## Impact\n\nz\n"
+
+
+def test_pinned_upstream_matches_the_committed_fork() -> None:
+    upstream = upstream_schema_dir()
+    if upstream is None:
+        pytest.skip("the pinned OpenSpec is not installed")
+    schema = refork.transform_schema((upstream / "schema.yaml").read_text())
+    assert as_forked(schema) == (FORK / "schema.yaml").read_text()
+    proposal = refork.transform_proposal_template(
+        (upstream / "templates/proposal.md").read_text()
+    )
+    assert proposal == (FORK / "templates/proposal.md").read_text()

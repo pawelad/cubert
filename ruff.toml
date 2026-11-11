@@ -46,8 +46,8 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-# The tests use unittest, and each test name states the behavior it asserts.
-"tests/**/*.py" = ["D1", "PT009", "PT027", "PLR2004", "S101"]
+# Each test name states the behavior it asserts.
+"tests/**/*.py" = ["D1", "PLR2004", "S101"]
 # Check scripts are CLIs that report on stdout.
 "{scripts,template/.config/hk/checks}/**/*.py" = ["T201"]
 
