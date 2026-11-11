@@ -70,6 +70,7 @@ def test_chained_post_checkout_hook_passes_repo_guard(
     env = project_env()
     env.pop("CI", None)
     env["PATH"] = f"{tools}{os.pathsep}{env['PATH']}"
+    (project / "mise.lock").write_text("lockfile_version = 3\n")
     hook = project / ".git/hooks/post-checkout"
     hook.write_text("#!/bin/sh\necho mine\n")
     hook.chmod(0o755)

@@ -141,6 +141,10 @@ steps {
     glob = List("mise.toml")
     check = ".config/hk/checks/check_pins.py {{files}}"
   }
+  ["lockfile"] = new Step {
+    glob = List("mise.lock")
+    check = ".config/hk/checks/check_lockfile.py"
+  }
   ["pkl"] = Builtins.pkl
   ["required-tools"] = new Step {
     glob = List("mise.toml", ".config/mise/required-tools")

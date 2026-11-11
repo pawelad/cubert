@@ -57,6 +57,9 @@ What an update does to a missing or removed file:
   allows, so cubert holds no tool versions. Add a tool with `mise use --pin <tool>`.
 - The `pins` check requires each request to match its version in `mise.lock`. A dotted
   prefix such as `node = "24.22"` fails when it locks `24.22.2`.
+- Commit `.mise/locks/` with `mise.lock`. The `lockfile` check verifies native npm and
+  Python dependency graphs and their digests, even when tools are already installed.
+  `check:repo` also verifies them after edits that change only a graph.
 
 ## Tasks
 

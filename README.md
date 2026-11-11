@@ -57,7 +57,7 @@ Copier asks these questions:
 | `changelog`                                                               | `false`           |
 
 `mise run setup` pins the seeded `latest` tool versions in `mise.toml`, so commit
-`mise.toml` and `mise.lock` after it.
+`mise.toml`, `mise.lock` and `.mise/locks/` after it.
 
 ## Update a project
 

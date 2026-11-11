@@ -43,7 +43,8 @@ description = "Run the shipped check script tests on Python 3.11, the oldest the
 run = """
 uv run --isolated --no-project --python 3.11 --with pytest pytest \
   tests/test_check_comment_length.py tests/test_check_file_length.py \
-  tests/test_check_pins.py tests/test_check_required_tools.py
+  tests/test_check_pins.py tests/test_check_required_tools.py \
+  tests/test_check_lockfile.py
 """
 
 [tasks.upgrade]

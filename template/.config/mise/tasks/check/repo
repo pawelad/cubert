@@ -44,5 +44,6 @@ while IFS= read -r nested; do
 done < <(grep -E '/AGENTS\.md$' <<<"$files" || true)
 
 # Report every failing step. The git hooks keep fail_fast for quick feedback.
+.config/hk/checks/check_lockfile.py || status=1
 hk check --all --no-fail-fast || status=1
 exit "$status"
