@@ -6,11 +6,11 @@ belongs to the template: change it in cubert, not here. Project setup lives in
 
 ## File ownership
 
-| Kind           | Files                                                                                                                                                                                                          | On `copier update`            |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Template-owned | `.config/`, `.editorconfig`, `.yamllint`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/pr-title.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/` | Replaced by the new version   |
-| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `.github/workflows/ci.yml`, `openspec/config.yaml`                                               | 3-way merge, conflicts inline |
-| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `mise-tasks/`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`                                                                       | Created once, never changed   |
+| Kind           | Files                                                                                                                                                                                                                                | On `copier update`            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| Template-owned | `.config/`, `.editorconfig`, `.yamllint`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/` | Replaced by the new version   |
+| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `.github/workflows/ci.yml`, `openspec/config.yaml`                                                                     | 3-way merge, conflicts inline |
+| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `mise-tasks/`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`                                                                                             | Created once, never changed   |
 
 Do not edit a template-owned file in a project: the next update conflicts with the edit.
 Each project-owned file layers on its template-owned file, so a project change goes
@@ -32,6 +32,10 @@ again.
 - A Python CLI is a mise `pypi:` tool, which mise installs with uv. Do not run `uvx` or
   `pipx` directly.
 - A project with `npm:` tools pins `node` in `mise.toml` too.
+- A GitHub Action is pinned to a commit SHA, with its version in a comment:
+  `uses: "actions/checkout@<sha>" # v7.0.1`. A tag can move, and a SHA cannot.
+  Dependabot updates both. zizmor enforces the pin and audits workflows for injection
+  and credential leaks.
 - A new project's `mise.toml` seeds `latest` (`lts` for Node). The first
   `mise run setup` pins each one to the newest release that `minimum_release_age`
   allows, so cubert holds no tool versions. Add a tool with `mise use --pin <tool>`.
@@ -45,20 +49,20 @@ that the task acts on (`kif:deploy`, `tofu:init`). A wildcard then selects one a
 The shared tasks are file tasks in `.config/mise/tasks/`. mise names each one from its
 path, so `check/repo` is `check:repo`:
 
-| Task              | Does                                                                |
-| ----------------- | ------------------------------------------------------------------- |
-| `setup`           | Installs tools and git hooks, sets the blame config, runs `install` |
-| `install`         | Nothing. The project replaces it with its dependency installs       |
-| `check`           | Runs every `check:*` task                                           |
-| `check:repo`      | Runs hk on every file, plus the repository guards                   |
-| `test`            | Runs every `test:*` task                                            |
-| `format`          | Runs the hk fixers on changed files (`--all` for every file)        |
-| `upgrade`         | Bumps the tools in `mise.toml` (`mise upgrade --bump`)              |
-| `hooks:install`   | Installs the hk hooks and the `post-checkout` worktree hook         |
-| `template:update` | Updates the template-owned and merged files from cubert             |
-| `template:check`  | Fails if a newer cubert version exists                              |
-| `worktree:setup`  | Sets up a new worktree once (see below)                             |
-| `worktree:clean`  | Empties the worktrunk trash                                         |
+| Task              | Does                                                                 |
+| ----------------- | -------------------------------------------------------------------- |
+| `setup`           | Adds and pins tools, installs them and the git hooks, runs `install` |
+| `install`         | Nothing. The project replaces it with its dependency installs        |
+| `check`           | Runs every `check:*` task                                            |
+| `check:repo`      | Runs hk on every file, plus the repository guards                    |
+| `test`            | Runs every `test:*` task                                             |
+| `format`          | Runs the hk fixers on changed files (`--all` for every file)         |
+| `upgrade`         | Bumps the tools in `mise.toml` (`mise upgrade --bump`)               |
+| `hooks:install`   | Installs the hk hooks and the `post-checkout` worktree hook          |
+| `template:update` | Updates the template-owned and merged files from cubert              |
+| `template:check`  | Fails if a newer cubert version exists                               |
+| `worktree:setup`  | Sets up a new worktree once (see below)                              |
+| `worktree:clean`  | Empties the worktrunk trash                                          |
 
 To add a project check, add a `check:<area>` task. `check` runs it with no other change.
 To add a test suite, add a `test:<area>` task. `test` runs it, and so does CI. Let it
@@ -168,9 +172,9 @@ conflict markers. Resolve them, run `mise run setup` (the update can change tool
 hooks) and `mise run check`, then commit the result as one commit.
 
 An update cannot add a tool to the project-owned `mise.toml`.
-`.config/mise/required-tools` lists the tools that the shared steps and tasks call, and
-`check:repo` fails for each one that `mise.toml` lacks. Its error gives the
-`mise use --pin` command.
+`.config/mise/required-tools` lists the tools that the shared steps and tasks call.
+`mise run setup` adds each missing one to `mise.toml`, pinned. The `required-tools` hk
+step fails until it does.
 
 Run Copier only through this task. Copier commits in temporary repos, and global hk
 hooks there drop `mise.lock` from the update. The task runs Copier with `HK=0`.

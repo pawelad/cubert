@@ -29,16 +29,18 @@ def missing(required: str, config: str) -> list[str]:
     ]
 
 
-def main() -> int:
-    """Print each required tool that `mise.toml` lacks."""
+def main(args: list[str]) -> int:
+    """Print each required tool that `mise.toml` lacks. `--names` prints only names."""
     tools = missing(REQUIRED.read_text(), CONFIG.read_text())
+    if args == ["--names"]:
+        print("\n".join(tools))
+        return 0
     for tool in tools:
-        print(
-            f"{CONFIG}: {tool} is missing, and the shared steps need it."
-            f" Fix: mise use --pin {tool}"
-        )
+        print(f"{CONFIG}: {tool} is missing, and the shared steps need it.")
+    if tools:
+        print("Fix: mise run setup")
     return 1 if tools else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

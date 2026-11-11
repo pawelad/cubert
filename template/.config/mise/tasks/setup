@@ -17,6 +17,14 @@ if [ -n "$unpinned" ]; then
   mise use --path mise.toml --pin $unpinned
 fi
 
+# A template update can add a required tool, but cannot add it to mise.toml.
+missing="$(.config/hk/checks/check_required_tools.py --names)"
+if [ -n "$missing" ]; then
+  echo "setup: adding required tools $(echo "$missing" | tr '\n' ' ')"
+  # shellcheck disable=SC2086
+  mise use --path mise.toml --pin $missing
+fi
+
 mise install
 git config blame.ignoreRevsFile .git-blame-ignore-revs
 if [ -z "${CI:-}" ]; then
