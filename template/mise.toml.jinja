@@ -5,9 +5,11 @@
 # `minimum_release_age` allows. Add a tool that way, or with `mise use --pin <tool>`.
 [tools]
 actionlint = "latest"
+betterleaks = "latest"
 dprint = "latest"
 hk = "latest"
 jq = "latest"
+lychee = "latest"
 [% if docker or typescript or openspec != 'none' %]
 # npm: tools run on this Node, so CI and every machine use the same one.
 node = "lts"
@@ -15,6 +17,7 @@ node = "lts"
 pkl = "latest"
 shellcheck = "latest"
 shfmt = "latest"
+typos = "latest"
 uv = "latest"
 worktrunk = "latest"
 yamllint = "latest"

@@ -11,6 +11,8 @@ so a fix lands once in cubert and reaches each project with `mise run template:u
   Commits.
 - [dprint] for Markdown, TOML, JSON and YAML, plus yamllint, shellcheck, shfmt,
   actionlint and zizmor.
+- Spell checking with typos, secret scanning with betterleaks and an offline link check
+  with lychee, all in the git hooks.
 - An `AGENTS.md` with shared rules for coding agents, and a section for project rules.
 - Worktree setup that runs once for `wt switch --create`, plain `git worktree add` and
   the agent apps built on it.

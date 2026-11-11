@@ -149,6 +149,17 @@ API or hold a fixture, so the rules leave it alone. Paths named `fixtures`, `tes
 `__snapshots__`, `generated` and `vendor` are skipped. Skip another path with
 `steps { ["no-british-english"] { exclude = List("docs/legacy/**") } }`.
 
+Three hk steps cover what the formatters and linters miss:
+
+- `typos` checks spelling in text files, and the prose rules keep American English. A
+  project adds words in a root `typos.toml`, which layers on `.config/typos.toml`. A
+  line that ends in a `spellchecker:disable-line` comment is skipped.
+- `betterleaks` scans for tokens, passwords and keys. A false positive gets a
+  `betterleaks:allow` comment on the line, or a fingerprint in `.betterleaksignore`.
+- `lychee` runs with `--offline`, so it checks relative links in Markdown only. A
+  project excludes paths or URLs in a root `lychee.toml`, which layers on
+  `.config/lychee.toml`.
+
 `check:repo` fails when a local `core.hooksPath` is set. Git then ignores the global
 config-based hooks that `hk install --global` writes, with no error. Fix it with
 `git config --local --unset core.hooksPath`.

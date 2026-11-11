@@ -16,14 +16,14 @@ described in [template/docs/conventions.md](../template/docs/conventions.md).
 
 cubert follows its own template, at the working tree and not at a release:
 
-- `.config/hk`, `.config/mise/config.toml`, `.config/wt.toml`, `.editorconfig` and
-  `.shellcheckrc` link into `template/`.
+- `.config/hk`, `.config/lychee.toml`, `.config/typos.toml`, `.config/mise/config.toml`,
+  `.config/wt.toml`, `.editorconfig` and `.shellcheckrc` link into `template/`.
 - `.config/mise/tasks/` links each shared task that cubert can run. Tasks with a
   conditional name stay out: mise would load them under that name.
 - `.github/workflows/pr-title.yml` is a copy, not a link, because GitHub ignores a
   symlinked workflow. `test_cubert_workflows.py` fails when the copy drifts.
-- `hk.pkl`, `dprint.json` and `.yamllint` layer on the template's files, as a project's
-  files do.
+- `hk.pkl`, `dprint.json`, `.yamllint` and `lychee.toml` layer on the template's files,
+  as a project's files do.
 
 A new shared task needs a link here too. Run `mise run setup` after you clone cubert.
 

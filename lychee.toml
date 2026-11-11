@@ -1,0 +1,3 @@
+# A root lychee.toml layers on .config/lychee.toml.
+# Template links resolve in a render, and e2e:render checks them there.
+exclude_path = ["template/"]

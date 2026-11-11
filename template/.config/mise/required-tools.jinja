@@ -3,15 +3,18 @@
 # not configure a tool, or configures one below its minimum. hk needs a minimum: an
 # older hk cannot load the shared config.
 actionlint
+betterleaks
 dprint
 hk>=2.11.1
 jq
+lychee
 [% if docker or typescript or openspec != 'none' %]
 node
 [% endif %]
 pkl
 shellcheck
 shfmt
+typos
 uv
 worktrunk
 yamllint
