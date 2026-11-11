@@ -21,7 +21,8 @@ cubert follows its own template, at the working tree and not at a release:
 - `.config/mise/tasks/` links each shared task that cubert can run. Tasks with a
   conditional name stay out: mise would load them under that name.
 - `.github/workflows/pr-title.yml` is a copy, not a link, because GitHub ignores a
-  symlinked workflow. `test_cubert_workflows.py` fails when the copy drifts.
+  symlinked workflow. `.github/CODEOWNERS` and `.gitignore` are copies of rendered
+  files. `test_cubert_copies.py` fails when a copy drifts.
 - `hk.pkl`, `dprint.json`, `.yamllint` and `lychee.toml` layer on the template's files,
   as a project's files do.
 - `cliff.toml` and `CHANGELOG.md` are project-owned copies. cubert's `cliff.toml` hides
@@ -113,8 +114,8 @@ them. Five more tests read the template itself:
   `_skip_if_exists` list or `template/` disagree.
 - `test_update_ownership.py` renders two releases and checks what an update does to an
   edited, deleted and removed file of each kind.
-- `test_cubert_workflows.py` fails when cubert's workflow copy differs from the
-  template's.
+- `test_cubert_copies.py` fails when cubert's copies of the PR title workflow,
+  `CODEOWNERS` or `.gitignore` drift from the template's.
 - `test_render.py` renders a project with awkward answers and parses the output.
 - `test_worktree_setup.py` renders a project and runs `git worktree add`. It skips when
   `git`, `mise`, `copier` or `wt` is missing.
