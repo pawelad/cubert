@@ -39,6 +39,9 @@ _skip_if_exists:
   - "cliff.toml"
   - "CHANGELOG.md"
   - "[[ tofu_dir ]]/versions.tf"
+  - "[[ ansible_dir ]]/.gitkeep"
+  - "openspec/changes/.gitkeep"
+  - "openspec/specs/.gitkeep"
 
 _message_after_copy: |
   Next steps in [[ _copier_conf.dst_path ]]:

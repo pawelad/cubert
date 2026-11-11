@@ -1,4 +1,8 @@
-"""Check that the ownership table, `_skip_if_exists` and `template/` agree."""
+"""Check that the ownership table, `_skip_if_exists` and `template/` agree.
+
+copier.yml only records project-owned files, so the table alone separates
+template-owned from merged files. This test cannot check that split.
+"""
 
 from __future__ import annotations
 
@@ -52,7 +56,10 @@ def skip_if_exists() -> list[str]:
         if line.startswith("_skip_if_exists:"):
             in_list = True
         elif in_list and (match := re.match(r'\s+- "(.+)"', line)):
-            entries.append(match.group(1).replace("[[ tofu_dir ]]", "<tofu_dir>"))
+            entry = match.group(1)
+            for name in ("tofu_dir", "ansible_dir"):
+                entry = entry.replace(f"[[ {name} ]]", f"<{name}>")
+            entries.append(entry)
         elif in_list and line.strip() and not line.lstrip().startswith("#"):
             break
     return entries
