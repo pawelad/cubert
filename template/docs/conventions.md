@@ -73,6 +73,7 @@ path, so `check/repo` is `check:repo`:
 | `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests |
 | `test:typescript`    | TypeScript option: runs `bun test` in each directory                 |
 | `typescript:install` | TypeScript option: runs `bun install` in each directory              |
+| `release:preview`    | Changelog option: prints the entries since the last release tag      |
 | `format`             | Runs the hk fixers on changed files (`--all` for every file)         |
 | `upgrade`            | Bumps the tools in `mise.toml` (`mise upgrade --bump`)               |
 | `hooks:install`      | Installs the hk hooks and the `post-checkout` worktree hook          |
@@ -103,6 +104,11 @@ The `typescript` option asks for `typescript_dirs`: the directories that hold a
 gets the same list. `test:typescript` runs `bun test` and passes when it finds no tests.
 Given file paths, it runs only the directories that hold them. A test file that imports
 `bun:test` needs `bun add --dev @types/bun` for `tsc`.
+
+The `changelog` option adds git-cliff, `cliff.toml`, `CHANGELOG.md` and
+`release:preview`. git-cliff pipes its output through dprint, so the changelog keeps the
+88-column limit. Keep the `cliff.toml` header as dprint wraps it. `--prepend` keeps one
+header only when the file starts with the exact header text.
 
 ### Project tasks
 

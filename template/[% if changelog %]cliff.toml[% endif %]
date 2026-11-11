@@ -25,6 +25,10 @@ body = """
 """
 trim = true
 footer = ""
+# dprint wraps Markdown at 88 columns. Formatting here keeps every output in that form.
+postprocessors = [
+  { pattern = ".*", replace_command = "dprint fmt --stdin CHANGELOG.md" },
+]
 # A release with only skipped commits still needs a section for its GitHub Release.
 render_always = true
 
