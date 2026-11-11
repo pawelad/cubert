@@ -56,8 +56,9 @@ a `.md.jinja` file as dprint would format its render, at 88 columns.
 Each template file is one of three kinds. The table in
 [conventions.md](../template/docs/conventions.md#file-ownership) lists them.
 
-- **Template-owned**: a plain file under `template/`. Copier replaces it on update. Keep
-  it under `template/.config/` unless a tool needs it elsewhere.
+- **Template-owned**: a plain file under `template/`. Copier merges the template's
+  change into it, and a project edit conflicts. Keep it under `template/.config/` unless
+  a tool needs it elsewhere.
 - **Merged**: also a plain file. Copier merges the project's edits on update. Keep the
   shared part short and stable, so the merge rarely conflicts.
 - **Project-owned**: listed in `_skip_if_exists`. Copier creates it once.
@@ -98,10 +99,12 @@ breaking change, and say what projects must do in the release notes.
 - The e2e tasks are not `test:*` tasks, so `mise run test` stays fast.
 
 The unit tests in `tests/` cover the template's check scripts, so projects do not test
-them. Four more tests read the template itself:
+them. Five more tests read the template itself:
 
 - `test_file_ownership.py` fails when the ownership table in `conventions.md`, the
   `_skip_if_exists` list or `template/` disagree.
+- `test_update_ownership.py` renders two releases and checks what an update does to an
+  edited, deleted and removed file of each kind.
 - `test_cubert_workflows.py` fails when cubert's workflow copy differs from the
   template's.
 - `test_render.py` renders a project with awkward answers and parses the output.

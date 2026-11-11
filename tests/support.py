@@ -86,15 +86,31 @@ def snapshot_template(dest: Path) -> str:
     return run(["git", "rev-parse", "HEAD"], dest).strip()
 
 
+def commit_all(repo: Path, message: str) -> str:
+    """Commit everything in `repo` without hooks and return the commit."""
+    run(["git", "add", "--all"], repo)
+    run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "--quiet",
+         "--no-verify", "-m", message],
+        repo,
+    )  # fmt: skip
+    return run(["git", "rev-parse", "HEAD"], repo).strip()
+
+
+def copy_project(source: Path, ref: str, project: Path, **answers: str) -> None:
+    """Render the template at `ref` from the repository `source` into `project`."""
+    data = {"project_name": "demo", "description": "A demo project.", **answers}
+    command = ["copier", "copy", "--quiet", "--defaults", "--vcs-ref", ref]
+    for key, value in data.items():
+        command += ["-d", f"{key}={value}"]
+    run([*command, str(source), str(project)], source.parent)
+
+
 def render_template(tmp_path: Path, **answers: str) -> Path:
     """Render the working tree of cubert into `tmp_path/project` and return it."""
     source = tmp_path / "cubert"
     source.mkdir()
     ref = snapshot_template(source)
     project = tmp_path / "project"
-    data = {"project_name": "demo", "description": "A demo project.", **answers}
-    command = ["copier", "copy", "--quiet", "--defaults", "--vcs-ref", ref]
-    for key, value in data.items():
-        command += ["-d", f"{key}={value}"]
-    run([*command, str(source), str(project)], tmp_path)
+    copy_project(source, ref, project, **answers)
     return project
