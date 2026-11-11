@@ -94,7 +94,9 @@ Copy from GitHub, not from a local clone. Copier records the source in
    The project `hk.pkl` must amend `.config/hk/cubert.pkl`, and `dprint.json` must
    extend `.config/dprint.json`. The `python` option expects `pyproject.toml` at the
    root. A monorepo with Python in a subdirectory answers `false` and keeps its own ruff
-   and mypy steps in `hk.pkl`.
+   and mypy steps in `hk.pkl`. Leave the tool list in `mise.toml` alone:
+   `mise run setup` adds the tools that cubert needs and raises an hk pin that is too
+   old.
 5. Move tool config that cubert now owns out of the project files. Turn shell scripts
    into file tasks in `mise-tasks/`.
 6. Run `mise trust`, `mise run setup`, then `mise run format --all`. Commit the reformat
