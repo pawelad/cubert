@@ -7,7 +7,7 @@ dependencies = []
 
 [dependency-groups]
 # uv.lock pins it, so cubert holds no version.
-dev = ["mypy"]
+dev = ["mypy", "pytest"]
 
 [tool.uv]
 # Matches the Dependabot cooldown. Installs from uv.lock are not filtered.
@@ -60,6 +60,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
+  "D1", # Missing docstring: a test name states the behavior it asserts
   "PLR2004", # Magic value used in comparison
   "S101", # Use of `assert` detected
 ]
@@ -69,3 +70,10 @@ convention = "google"
 
 [tool.mypy]
 strict = true
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+# importlib mode lets test files share a name across directories without __init__.py.
+addopts = "--import-mode=importlib"
+pythonpath = ["."]

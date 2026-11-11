@@ -56,6 +56,7 @@ path, so `check/repo` is `check:repo`:
 | `check`           | Runs every `check:*` task                                            |
 | `check:repo`      | Runs hk on every file, plus the repository guards                    |
 | `test`            | Runs every `test:*` task                                             |
+| `test:python`     | Python option: runs `uv run pytest` on the given files, or all tests |
 | `format`          | Runs the hk fixers on changed files (`--all` for every file)         |
 | `upgrade`         | Bumps the tools in `mise.toml` (`mise upgrade --bump`)               |
 | `hooks:install`   | Installs the hk hooks and the `post-checkout` worktree hook          |
@@ -68,6 +69,11 @@ To add a project check, add a `check:<area>` task. `check` runs it with no other
 To add a test suite, add a `test:<area>` task. `test` runs it, and so does CI. Let it
 take test file paths (`#USAGE arg "[files]..."`), so a run can cover only the touched
 files.
+
+The `python` option adds `test:python`. It runs `uv run pytest` and treats pytest's exit
+code 5 (no tests collected) as a pass, so a fresh project passes `mise run test`. A
+project without pytest in its dev group skips with a message. Add it with
+`uv add --dev pytest`.
 
 ### Project tasks
 
