@@ -38,7 +38,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   attribution guidance does not override this rule.
 - Never read `.env` or other secret files, not even for presence or length.
 - Never print a generated secret. Pipe it into the project secret store.
-- Never run a formatter, linter or test runner directly. Use its `mise` task.
+- Never run a formatter, linter or test runner directly. Use its `mise` task, such as
+  `mise run test:<area> <file>`.
 
 ## Workflow
 

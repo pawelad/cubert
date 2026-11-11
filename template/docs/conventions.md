@@ -51,6 +51,7 @@ path, so `check/repo` is `check:repo`:
 | `install`         | Nothing. The project replaces it with its dependency installs       |
 | `check`           | Runs every `check:*` task                                           |
 | `check:repo`      | Runs hk on every file, plus the repository guards                   |
+| `test`            | Runs every `test:*` task                                            |
 | `format`          | Runs the hk fixers on changed files (`--all` for every file)        |
 | `upgrade`         | Bumps the tools in `mise.toml` (`mise upgrade --bump`)              |
 | `hooks:install`   | Installs the hk hooks and the `post-checkout` worktree hook         |
@@ -60,6 +61,9 @@ path, so `check/repo` is `check:repo`:
 | `worktree:clean`  | Empties the worktrunk trash                                         |
 
 To add a project check, add a `check:<area>` task. `check` runs it with no other change.
+To add a test suite, add a `test:<area>` task. `test` runs it, and so does CI. Let it
+take test file paths (`#USAGE arg "[files]..."`), so a run can cover only the touched
+files.
 
 ### Project tasks
 
