@@ -79,14 +79,27 @@ run() {
   if [ "$ansible" = true ]; then expect_hook_failure ansible "ansible-syntax-check"; fi
 }
 
-rm -rf "$dest"
 # Not `if (run)`: bash turns `set -e` off inside a condition, so only the last command
 # could fail the render. A background subshell keeps it on.
-(run) >"$log" 2>&1 &
-if wait "$!"; then
-  echo "pass $name"
+attempt() {
+  rm -rf "$dest"
+  (run) >"$log" 2>&1 &
+  status=0
+  wait "$!" || status=$?
+}
+attempt
+retry=""
+# mise lock downloads every platform's artifact to verify it. A few of 192 renders lose
+# one such download at random, and pass when run again.
+if [ "$status" -ne 0 ] && grep -q 'lock-time provenance verification failed' "$log"; then
+  mv "$log" "$log.first"
+  attempt
+  retry=" (after a mise lock retry, first log: $log.first)"
+fi
+if [ "$status" -eq 0 ]; then
+  echo "pass $name$retry"
 else
-  echo "FAIL $name (log: $log)"
+  echo "FAIL $name$retry (log: $log)"
   # CI keeps no files from the run, so show the end of the log there.
   if [ -n "${CI:-}" ]; then tail -n 40 "$log" | sed "s/^/  $name: /"; fi
   exit 1

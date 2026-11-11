@@ -102,6 +102,8 @@ breaking change, and say what projects must do in the release notes.
 - Each render pins the newest tool releases, so upstream breakage shows up here first.
 - Parallel renders can exceed GitHub's limit for calls without a token. Set the mise
   credential command from [conventions.md](../template/docs/conventions.md#tools) first.
+- A render that fails on a `mise lock` provenance download runs once more, and says so.
+  The first log stays next to it as `<name>.log.first`.
 - `e2e:update --from <ref>` tests the update from an older release.
 - `e2e:adopt` follows the README's adoption steps for two layouts. The infra one has an
   OpenTofu S3 backend and an Ansible project collection, and runs with no cloud login.
