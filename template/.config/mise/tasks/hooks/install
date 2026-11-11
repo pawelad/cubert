@@ -6,5 +6,13 @@ set -euo pipefail
 hk install --mise
 hooks_dir="$(git rev-parse --git-common-dir)/hooks"
 mkdir -p "$hooks_dir"
-cp .config/git/post-checkout "$hooks_dir/post-checkout"
-chmod +x "$hooks_dir/post-checkout"
+
+# A hook without our `worktree:setup` call belongs to the user, so leave it alone.
+target="$hooks_dir/post-checkout"
+if [ -e "$target" ] && ! grep -q 'mise run worktree:setup' "$target"; then
+  target="$hooks_dir/post-checkout.cubert"
+  echo "hooks:install: $hooks_dir/post-checkout exists and is not cubert's." >&2
+  echo "hooks:install: add this line to it so new worktrees get set up: \"$target\" \"\$@\"" >&2
+fi
+cp .config/git/post-checkout "$target"
+chmod +x "$target"
