@@ -142,6 +142,13 @@ enabled features). `hk.pkl` amends `cubert.pkl`:
 
 The hk package version is pinned only in `base.pkl`.
 
+The prose rules (American English, no em dashes, no emojis) check Markdown and text
+files in full. In code and config files they check comment lines only, and a fixer
+rewrites only a comment. A string, an identifier or a config value can name an external
+API or hold a fixture, so the rules leave it alone. Paths named `fixtures`, `testdata`,
+`__snapshots__`, `generated` and `vendor` are skipped. Skip another path with
+`steps { ["no-british-english"] { exclude = List("docs/legacy/**") } }`.
+
 `check:repo` fails when a local `core.hooksPath` is set. Git then ignores the global
 config-based hooks that `hk install --global` writes, with no error. Fix it with
 `git config --local --unset core.hooksPath`.

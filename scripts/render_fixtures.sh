@@ -3,6 +3,15 @@
 # Small projects and known errors for each render.
 # hk skips a step when no file matches its glob, so a bare render proves nothing.
 
+# Prose rules must leave values alone: an external API can use a British spelling in a
+# field name or send an em dash. Both files pass, and so does a fixtures dir.
+prose_fixture() {
+  mkdir -p fixtures
+  printf '{\n  "colour": "red \xe2\x80\x94 dark"\n}\n' >data.json
+  printf -- '---\ncolour: "grey \xe2\x80\x94 dark"\n' >settings.yaml
+  printf '# Legacy\n\nThe colour is grey.\n' >fixtures/legacy.md
+}
+
 python_fixture() {
   mkdir -p tests
   printf '"""Demo module."""\n\n\ndef add(a: int, b: int) -> int:\n    """Return the sum of two numbers."""\n    return a + b\n' >demo.py
@@ -57,6 +66,9 @@ YAML
 }
 
 # Each case writes one known error. A check that stays green on it is not running.
+break_prose() { printf '# Notes\n\nThe colour is red.\n' >notes.md; }
+break_comment() { printf '# The colour is red.\n' >>settings.yaml; }
+break_dash() { printf '# One \xe2\x80\x94 two.\n' >>settings.yaml; }
 break_python() { printf 'x: int = "text"\n' >>demo.py; }
 break_typescript() {
   local dir

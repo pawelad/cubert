@@ -38,6 +38,7 @@ run() {
   git -c init.defaultBranch=main init --quiet
   git add --all
   mise trust --quiet --all
+  prose_fixture
   if [ "$python" = true ]; then python_fixture; fi
   if [ "$typescript" = true ]; then typescript_fixture; fi
   if [ "$docker" = true ]; then docker_fixture; fi
@@ -61,6 +62,9 @@ run() {
   fi
 
   git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify -m "chore: render"
+  expect_hook_failure prose no-british-english
+  expect_hook_failure comment no-british-english-comments
+  expect_hook_failure dash no-em-dashes-comments
   if [ "$python" = true ]; then expect_hook_failure python mypy; fi
   if [ "$typescript" = true ]; then expect_hook_failure typescript "tsc"; fi
   if [ "$docker" = true ]; then expect_hook_failure docker "hadolint"; fi

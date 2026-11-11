@@ -12,10 +12,17 @@ local emDash = "\u{2014}"
 local britishEnglish = "(organi|customi|optimi|minimi|maximi|initiali|reali|normali|seriali|recogni|authori|categori|prioriti|summari|synchroni|standardi|personali|randomi|saniti|tokeni|finali|locali|capitali|speciali|generali|visuali|moderni|publici|emphasi)s(e|es|ed|er|ers|ing|ation|ations)|analys[e]([^s]|$)|analys(ed|er|ing)|favo[u]rite|colo[u]r|behavio[u]r|labo[u]r|hono[u]r|neighbo[u]r|humo[u]r|rumo[u]r|flavo[u]r|endeavo[u]r|harbo[u]r|vapo[u]r|armo[u]r|odo[u]r|savio[u]r|lice[n]ce|defe[n]ce|offe[n]ce|prete[n]ce|practis(e|ed|es|ing)|cent[r]e|met[r]e|lit[r]e|theat[r]e|fib[r]e|calib[r]e|arte[f]act|specialit(y|ies)|enquir(y|ies|e|ed|ing)|whils[t]|amongs[t]|learn[t]|agein[g]|cheq[u]e|alumini[u]m|manoeuv[r]|marvello[u]s|jewelle[r]y|skilfu[l]|instalmen[t]|enrolmen[t]|scepti[c]|gre[y]"
 local emoji = "[\\x{1F300}-\\x{1FAFF}\\x{2600}-\\x{27BF}]"
 
-local textFiles = List("*.md", "*.py", "*.sh", "*.ts", "*.tsx", "*.js", "*.mjs", "*.toml", "*.yaml", "*.yml", "*.json", "*.pkl", "*.tf", "*.j2", "*.css", "*.html", "*.txt")
+// Prose rules apply to prose in full, and to comments in code. They skip string values,
+// identifiers and config values: those can name an external API or a fixture.
+local proseFiles = List("*.md", "*.txt")
 local codeFiles = List("*.py", "*.sh", "*.ts", "*.tsx", "*.js", "*.mjs", "*.toml", "*.yaml", "*.yml", "*.pkl", "*.tf", "*.j2", "*.sql")
-// Archived changes keep their text as written, and the schema fork keeps upstream text.
-local frozen = List("openspec/changes/archive/**", "openspec/schemas/**")
+local commentFiles = codeFiles + List("*.css")
+// A line that starts with a comment marker. Trailing comments and docstrings are skipped:
+// a regex cannot tell them from a `#` or `"""` inside a string.
+local commentLine = "^[[:space:]]*(#|//|--|/\\*|\\*)"
+// Archived changes keep their text as written, the schema fork keeps upstream text, and
+// the rest is text that another program wrote or that must match an external system.
+local frozen = List("openspec/changes/archive/**", "openspec/schemas/**", "**/fixtures/**", "**/testdata/**", "**/__snapshots__/**", "**/generated/**", "**/vendor/**")
 
 steps {
   ["actionlint"] = (Builtins.actionlint) {
@@ -69,9 +76,14 @@ steps {
   ["mixed-line-ending"] = Builtins.mixed_line_ending
   ["newlines"] = Builtins.newlines
   ["no-british-english"] = new Step {
-    glob = textFiles
+    glob = proseFiles
     exclude = frozen
     check = "grep -inHE '\(britishEnglish)' {{files}} && exit 1 || exit 0"
+  }
+  ["no-british-english-comments"] = new Step {
+    glob = commentFiles
+    exclude = frozen
+    check = "grep -inHE '\(commentLine).*(\(britishEnglish))' {{files}} && exit 1 || exit 0"
   }
   ["no-dividers"] = new Step {
     glob = codeFiles
@@ -84,15 +96,27 @@ steps {
       """
   }
   ["no-em-dashes"] = new Step {
-    glob = textFiles
+    glob = proseFiles
     exclude = frozen
     check = "grep -nH -- '\(emDash)' {{files}} && exit 1 || exit 0"
     fix = "perl -pi -e 's/\(emDash)/-/g' {{files}}"
   }
+  // The fixer rewrites comment lines only, so a string in code stays as written.
+  ["no-em-dashes-comments"] = new Step {
+    glob = commentFiles
+    exclude = frozen
+    check = "grep -nHE '\(commentLine).*\(emDash)' {{files}} && exit 1 || exit 0"
+    fix = "perl -pi -e 's/\(emDash)/-/g if m{\(commentLine)}' {{files}}"
+  }
   ["no-emojis"] = new Step {
-    glob = textFiles
+    glob = proseFiles
     exclude = frozen
     check = "perl -CSD -ne 'if (/\(emoji)/) { print \"$ARGV:$.: $_\"; $bad = 1 } close ARGV if eof; END { exit($bad ? 1 : 0) }' {{files}}"
+  }
+  ["no-emojis-comments"] = new Step {
+    glob = commentFiles
+    exclude = frozen
+    check = "perl -CSD -ne 'if (m{\(commentLine)} && /\(emoji)/) { print \"$ARGV:$.: $_\"; $bad = 1 } close ARGV if eof; END { exit($bad ? 1 : 0) }' {{files}}"
   }
   ["pins"] = new Step {
     glob = List("mise.toml")
