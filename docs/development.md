@@ -75,7 +75,7 @@ breaking change, and say what projects must do in the release notes.
 | Task                    | Covers                                                                      |
 | ----------------------- | --------------------------------------------------------------------------- |
 | `mise run check`        | hk on every file, `shared-agents` included                                  |
-| `mise run test`         | The pytest tests for the check scripts (`test:scripts`)                     |
+| `mise run test`         | The pytest tests: check scripts, file ownership, worktree setup             |
 | `mise run e2e:render`   | Renders every feature combination, then runs `setup`, `check`, `test`       |
 | `mise run e2e:update`   | Renders `HEAD~1`, adds project edits, updates to the working tree, checks   |
 | `mise run e2e:conflict` | Changes one line in a merged file on both sides, expects the update to stop |
@@ -92,7 +92,12 @@ breaking change, and say what projects must do in the release notes.
 - The e2e tasks are not `test:*` tasks, so `mise run test` stays fast.
 
 The unit tests in `tests/` cover the template's check scripts, so projects do not test
-them.
+them. Two more tests read the template itself:
+
+- `test_file_ownership.py` fails when the ownership table in `conventions.md`, the
+  `_skip_if_exists` list or `template/` disagree.
+- `test_worktree_setup.py` renders a project and runs `git worktree add`. It skips when
+  `git`, `mise`, `copier` or `wt` is missing.
 
 ## Upgrades
 

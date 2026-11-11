@@ -1,0 +1,170 @@
+"""Check that a plain `git worktree add` runs worktree:setup through post-checkout.
+
+The test renders a project, installs its post-checkout hook and adds a worktree with
+git alone, as Superset, Jean, herdr and Orca do. It does not use worktrunk's hooks.
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+from dataclasses import dataclass
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+MARKER = "cubert-worktree-setup-done"
+NEEDED_TOOLS = ("git", "mise", "copier", "wt")
+AGENT_DIRS = ("tmp", ".claude", ".codex")
+MISE_PROJECT_VARS = (
+    "MISE_PROJECT_ROOT",
+    "MISE_CONFIG_ROOT",
+    "MISE_ORIGINAL_CWD",
+    "MISE_TASK_NAME",
+    "MISE_TASK_DIR",
+    "MISE_TASK_FILE",
+)
+
+pytestmark = pytest.mark.skipif(
+    any(shutil.which(tool) is None for tool in NEEDED_TOOLS),
+    reason=f"needs {', '.join(NEEDED_TOOLS)} on PATH",
+)
+
+
+@dataclass
+class Project:
+    primary: Path
+    worktree: Path
+    env: dict[str, str]
+    hook_output: str
+
+    def git(self, *args: str, cwd: Path | None = None) -> str:
+        return run(["git", *args], cwd or self.worktree, self.env)
+
+
+def run(command: list[str], cwd: Path, env: dict[str, str]) -> str:
+    """Run a command and return its output, stdout and stderr together."""
+    result = subprocess.run(  # noqa: S603
+        command,
+        cwd=cwd,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    output = result.stdout + result.stderr
+    assert result.returncode == 0, f"{command} failed:\n{output}"
+    return output
+
+
+def make_env(base: Path) -> dict[str, str]:
+    env = {k: v for k, v in os.environ.items() if k not in MISE_PROJECT_VARS}
+    env.update(
+        {
+            # No global hooks or identity: only the project's own hook may run.
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_SYSTEM": os.devnull,
+            "GIT_AUTHOR_NAME": "test",
+            "GIT_AUTHOR_EMAIL": "test@example.com",
+            "GIT_COMMITTER_NAME": "test",
+            "GIT_COMMITTER_EMAIL": "test@example.com",
+            "HK": "0",
+            # The worktree is a new path, so mise would ask to trust it.
+            "MISE_TRUSTED_CONFIG_PATHS": str(base),
+        }
+    )
+    return env
+
+
+@pytest.fixture(scope="module")
+def project(tmp_path_factory: pytest.TempPathFactory) -> Project:
+    base = tmp_path_factory.mktemp("worktree").resolve()
+    env = make_env(base)
+    primary = base / "demo"
+    worktree = base / "demo-feature"
+    run(
+        [
+            "copier",
+            "copy",
+            "--quiet",
+            "--defaults",
+            "--vcs-ref",
+            "HEAD",
+            "-d",
+            "project_name=demo",
+            "-d",
+            "description=A demo project.",
+            str(ROOT),
+            str(primary),
+        ],
+        base,
+        env,
+    )
+    # No tools, so mise has nothing to install when the hook runs it.
+    (primary / "mise.toml").write_text("")
+    (primary / ".worktreelinks").write_text("secrets/token\n")
+    run(["git", "init", "--quiet", "--initial-branch", "main"], primary, env)
+    run(["git", "add", "--all"], primary, env)
+    commit = ["git", "commit", "--quiet", "--no-verify", "-m", "chore: render"]
+    run(commit, primary, env)
+
+    # Untracked files that only the primary checkout has.
+    (primary / ".env").write_text("DEMO=1\n")
+    for name in AGENT_DIRS:
+        (primary / name).mkdir()
+    (primary / "secrets").mkdir()
+    (primary / "secrets/token").write_text("secret\n")
+
+    hooks = primary / ".git/hooks"
+    hooks.mkdir(exist_ok=True)
+    shutil.copy(primary / ".config/git/post-checkout", hooks / "post-checkout")
+    (hooks / "post-checkout").chmod(0o755)
+
+    add = ["git", "worktree", "add", "-b", "feature", str(worktree)]
+    output = run(add, primary, env)
+    return Project(primary, worktree, env, output)
+
+
+def test_hook_runs_worktree_setup(project: Project) -> None:
+    git_dir = Path(project.git("rev-parse", "--absolute-git-dir").strip())
+    assert (git_dir / MARKER).is_file(), project.hook_output
+
+
+@pytest.mark.parametrize("name", AGENT_DIRS)
+def test_agent_dirs_link_to_primary(project: Project, name: str) -> None:
+    link = project.worktree / name
+    assert link.is_symlink()
+    assert link.resolve() == (project.primary / name).resolve()
+
+
+def test_agent_dir_missing_in_primary_is_not_linked(project: Project) -> None:
+    assert not (project.worktree / ".gemini").exists()
+
+
+def test_worktreelinks_path_links_to_primary(project: Project) -> None:
+    link = project.worktree / "secrets/token"
+    assert link.is_symlink()
+    assert link.resolve() == (project.primary / "secrets/token").resolve()
+
+
+def test_worktreeinclude_file_is_copied(project: Project) -> None:
+    copy = project.worktree / ".env"
+    assert copy.is_file()
+    assert not copy.is_symlink()
+    assert copy.read_text() == "DEMO=1\n"
+
+
+def test_second_checkout_does_nothing(project: Project) -> None:
+    (project.primary / ".gemini").mkdir()
+    (project.worktree / ".env").unlink()
+    git_dir = Path(project.git("rev-parse", "--absolute-git-dir").strip())
+    marker_time = (git_dir / MARKER).stat().st_mtime_ns
+
+    project.git("checkout", "--quiet", "--detach")
+    project.git("checkout", "--quiet", "feature")
+
+    assert not (project.worktree / ".gemini").exists()
+    assert not (project.worktree / ".env").exists()
+    assert (git_dir / MARKER).stat().st_mtime_ns == marker_time
