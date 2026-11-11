@@ -55,7 +55,10 @@ run() {
 }
 
 rm -rf "$dest"
-if (run) >"$log" 2>&1; then
+# Not `if (run)`: bash turns `set -e` off inside a condition, so only the last command
+# could fail the render. A background subshell keeps it on.
+(run) >"$log" 2>&1 &
+if wait "$!"; then
   echo "pass $name"
 else
   echo "FAIL $name (log: $log)"
