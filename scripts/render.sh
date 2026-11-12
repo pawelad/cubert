@@ -68,6 +68,7 @@ run() {
   git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify -m "chore: render"
   if [ "$changelog" = true ]; then changelog_release; fi
   if [ "$typescript" = true ]; then expect_test_script; fi
+  if [ "$python" = true ]; then expect_stale_uv_lock; fi
   expect_format_despite_failure
   expect_hook_failure prose no-british-english
   expect_hook_failure comment no-british-english-comments

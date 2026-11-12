@@ -198,6 +198,18 @@ expect_test_script() {
   git checkout --quiet -- "$dir/package.json"
 }
 
+# CI must reject a uv.lock that no longer matches pyproject.toml. Install fails first.
+expect_stale_uv_lock() {
+  local log
+  sed -i.bak 's/^version = "0.1.0"$/version = "0.2.0"/' pyproject.toml && rm pyproject.toml.bak
+  if log="$(CI=true mise run ci:check 2>&1)" || ! grep -q 'needs to be updated' <<<"$log"; then
+    echo "$log"
+    echo "render: ci:check accepted a stale uv.lock" >&2
+    return 1
+  fi
+  git checkout --quiet -- pyproject.toml
+}
+
 # One failing check step must not stop the fixers that run after it.
 expect_format_despite_failure() {
   break_prose

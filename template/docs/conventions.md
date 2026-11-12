@@ -237,6 +237,8 @@ how many CI minutes a project spends, so each project sets its own.
   `[tasks."ci:check"] run = "mise run check:repo"`. Include `mise run install` in an
   override when its checks need project dependencies. `mise run ci:check` runs the same
   job locally.
+- `ci:check` sets `UV_LOCKED=1`, so a stale `uv.lock` fails CI. Bun installs with
+  `--frozen-lockfile` everywhere. An override sets `UV_LOCKED=1` itself.
 
 ## Audits
 
