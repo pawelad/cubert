@@ -22,13 +22,12 @@ PINNED = re.compile(r"v?\d+(\.\d+)+([-+.][0-9A-Za-z.+-]*)?")
 
 def _mise_failures(path: Path) -> list[str]:
     tools = tomllib.loads(path.read_text()).get("tools", {})
-    failures = []
+    failures: list[str] = []
     lock_path = path.with_name("mise.lock")
-    locked = (
-        tomllib.loads(lock_path.read_text()).get("tools", {})
-        if lock_path.is_file()
-        else {}
-    )
+    if tools and not lock_path.is_file():
+        # Without this, every pinned tool would report a mismatch with no lock to fix.
+        return [f"{lock_path}: missing, so no pin can be verified. Fix: mise lock"]
+    locked = tomllib.loads(lock_path.read_text()).get("tools", {}) if tools else {}
     for name, spec in tools.items():
         versions = spec if isinstance(spec, list) else [spec]
         for version in versions:

@@ -9,6 +9,8 @@ from tests.support import load_script
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import pytest
+
 check_pins = load_script("template/.config/hk/checks/check_pins.py")
 
 
@@ -55,7 +57,19 @@ def test_partial_request_does_not_match_its_resolved_patch(tmp_path: Path) -> No
 def test_exact_request_without_a_lock_entry_fails(tmp_path: Path) -> None:
     config = tmp_path / "mise.toml"
     config.write_text('[tools]\nnode = "24.22.2"\n')
+    (tmp_path / "mise.lock").write_text('[[tools.hk]]\nversion = "2.11.1"\n')
     assert check_pins.main([str(config)]) == 1
+
+
+def test_missing_lockfile_fails_once_with_its_fix(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = tmp_path / "mise.toml"
+    config.write_text('[tools]\nnode = "24.22.2"\nhk = "2.11.1"\n')
+    assert check_pins.main([str(config)]) == 1
+    assert capsys.readouterr().out.splitlines() == [
+        f"{tmp_path / 'mise.lock'}: missing, so no pin can be verified. Fix: mise lock"
+    ]
 
 
 def test_version_prefix_can_differ_from_the_locked_spelling(tmp_path: Path) -> None:
