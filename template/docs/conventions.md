@@ -42,7 +42,9 @@ What an update does to a missing or removed file:
   `pipx` directly.
 - Python CLI tools select a private Python 3.14 runtime through their `python` option.
   mise installs it before the tools and limits their graphs to that Python line. The
-  application's `.python-version` stays independent.
+  application's `.python-version` stays independent. This Python line is the one version
+  cubert holds: CLI wheels lag a new line. A cubert release moves it in
+  `.config/mise/required-tools`, and `setup` then updates each tool's option.
 - A project with `npm:` tools pins `node` in `mise.toml` too.
 - The `typescript` option seeds `bun`, `biome` and `npm:typescript` (the `tsc`
   compiler). Bun runs the tests and installs packages. The project does not list
@@ -57,7 +59,8 @@ What an update does to a missing or removed file:
   ignores this setting in a project's config. `audit:links` uses the `gh` token too.
 - A new project's `mise.toml` seeds `latest` (`lts` for Node). The first
   `mise run setup` pins each one to the newest release that `minimum_release_age`
-  allows, so cubert holds no tool versions. Add a tool with `mise use --pin <tool>`.
+  allows, so cubert holds no tool versions except that Python line. Add a tool with
+  `mise use --pin <tool>`.
 - The `pins` check requires each request to match its version in `mise.lock`. A dotted
   prefix such as `node = "24.22"` fails when it locks `24.22.2`.
 - Commit `.mise/locks/` with `mise.lock`. The `lockfile` check verifies native npm and
