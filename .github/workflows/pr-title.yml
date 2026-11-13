@@ -16,7 +16,15 @@ jobs:
     name: "Conventional PR title"
     runs-on: "ubuntu-24.04"
     timeout-minutes: 1
+    # Checkout reads cliff.toml and the scope check script.
+    permissions:
+      contents: "read"
     steps:
+      - name: "Checkout code"
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+        with:
+          persist-credentials: false
+
       - name: "Check the title"
         env:
           TITLE: "${{ github.event.pull_request.title }}"
@@ -27,3 +35,4 @@ jobs:
             echo "::error::Use a Conventional Commit title, kebab-case scope: $TITLE"
             exit 1
           fi
+          python3 .config/hk/checks/check_commit_scope.py --subject "$TITLE"

@@ -200,6 +200,10 @@ hooks {
       ["commit-scope"] = new Step {
         check = "if head -n 1 {{commit_msg_file}} | grep -qE '^[a-z]+\\([^)]*[^a-z0-9)-]'; then echo 'Commit scopes must be kebab-case.' >&2; exit 1; fi"
       }
+      // A changelog line must name an area from cliff.toml, when the project lists areas.
+      ["changelog-scope"] = new Step {
+        check = ".config/hk/checks/check_commit_scope.py --file {{commit_msg_file}}"
+      }
       // Git strips `#` lines after this hook runs, so they are skipped here.
       ["commit-msg-wording"] = new Step {
         check = "! grep -v '^#' {{commit_msg_file}} | grep -niE -e '\(emDash)' -e '\(britishEnglish)'"

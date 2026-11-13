@@ -147,6 +147,14 @@ The `changelog` option adds git-cliff, `cliff.toml`, `CHANGELOG.md` and
 88-column limit. Keep the `cliff.toml` header as dprint wraps it. `--prepend` keeps one
 header only when the file starts with the exact header text.
 
+`areas` in `cliff.toml` lists the scopes that users see, such as `map` or `spots`, in
+display order. Each changelog group then lists its entries by area, and the rest under
+Other. With areas, the `changelog-scope` commit hook and the PR title job reject a
+`feat`, `fix`, `perf` or breaking commit without an area scope or a tooling scope. A
+breaking commit has a `!` or a `BREAKING CHANGE:` footer, of any type. The tooling
+scopes are the ones that the `commit_parsers` skip. An empty list, the default, checks
+nothing.
+
 ### Project tasks
 
 - A short task is a TOML task in `mise.toml`.
