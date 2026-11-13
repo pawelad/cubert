@@ -42,7 +42,7 @@ escapes in most files. `copier.yml` sets these delimiters in `_envops`.
 - Put each `[% %]` tag on its own line. `trim_blocks` and `lstrip_blocks` then remove
   the line from the output.
 - A file that exists only for a feature has a conditional name:
-  `[% if changelog %]cliff.toml[% endif %]`. An empty name skips the file.
+  `[% if changelog %]CHANGELOG.md[% endif %]`. An empty name skips the file.
 - A conditional directory goes in `_exclude` in `copier.yml`. dprint cannot exclude a
   path that holds `[ ]`, so directory names stay plain.
 

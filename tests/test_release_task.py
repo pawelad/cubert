@@ -149,14 +149,9 @@ def test_second_release_keeps_one_header_and_lists_only_new_commits(
     project: Path,
 ) -> None:
     assert release(project, "0.1.0").returncode == 0
-    git(
-        project,
-        "commit",
-        "--quiet",
-        "--allow-empty",
-        "-m",
-        "fix: repair the second thing",
-    )
+    git(project, "commit", "--quiet", "--allow-empty", "-m", "fix: repair a thing")
+    commit = git(project, "rev-parse", "HEAD")
+    git(project, "commit", "--quiet", "--allow-empty", "-m", "feat: add a PR (#7)")
     git(project, "push", "--quiet", "origin", "main")
 
     result = release(project, "0.2.0")
@@ -166,8 +161,10 @@ def test_second_release_keeps_one_header_and_lists_only_new_commits(
     assert changelog.count("# Changelog") == 1
     assert changelog.index("## [0.2.0]") < changelog.index("## [0.1.0]")
     message = git(project, "tag", "--list", "v0.2.0", "--format=%(contents)")
-    assert message.startswith("### Bug Fixes")
-    assert "Repair the second thing" in message
+    assert message.startswith("### Features")
+    repo = "https://github.com/pawelad/demo"
+    assert f"- Add a PR ([#7]({repo}/pull/7))" in message
+    assert f"- Repair a thing\n  ([{commit[:7]}]({repo}/commit/{commit}))" in message
     assert "Add the first feature" not in message
 
 

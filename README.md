@@ -110,8 +110,9 @@ Copy from GitHub, not from a local clone. Copier records the source in
    subdirectory answers `false` and keeps its own ruff and mypy steps in `hk.pkl`. Leave
    the tool list in `mise.toml` alone: `mise run setup` adds the tools that cubert needs
    and raises an hk pin that is too old. A changelog project copies the `cliff.toml`
-   header and `postprocessors` from the fresh copy, so `--prepend` still finds the
-   header after the reformat.
+   header, `postprocessors`, `link_parsers` and the `entry` macro from the fresh copy.
+   `--prepend` then still finds the header after the reformat, and entries link their
+   PRs.
 5. Move what cubert now owns out of the project files: the `postinstall` hook, the
    `[settings]` and `[env]` entries that `.config/mise/config.toml` already sets, and
    duplicate hk steps. Split a project `check` or `test` task into `check:<area>` and

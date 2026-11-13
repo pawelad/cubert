@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 check = load_script("template/.config/hk/checks/check_commit_scope.py")
-CLIFF = (ROOT / "template/[% if changelog %]cliff.toml[% endif %]").read_text()
+CLIFF = (ROOT / "template/[% if changelog %]cliff.toml[% endif %].jinja").read_text()
 
 
 def cliff_with_areas(tmp_path: Path, areas: str) -> Path:

@@ -7,7 +7,19 @@ Commit history by [git-cliff](https://git-cliff.org) - do not hand-edit past ent
 """
 # `areas` lists the changelog scopes in display order. With areas, each group lists its
 # entries by area, and `.config/hk/checks/check_commit_scope.py` requires an area scope.
+# A squash merge ends its subject with `(#N)`. The entry links that PR, or the commit.
 body = """
+{% macro entry(commit, repo) %}\
+    {% if commit.links | length > 0 %}\
+        {% set pr = commit.links | first %}\
+        {{ commit.message | trim_end_matches(pat=" (" ~ pr.text ~ ")") | upper_first }} \
+            ([{{ pr.text }}]({{ pr.href }}))\
+    {% else %}\
+        {{ commit.message | upper_first }} \
+            ([{{ commit.id | truncate(length=7, end="") }}]({{ repo }}/commit/{{ commit.id }}))\
+    {% endif %}\
+{% endmacro %}\
+{% set repo = "https://github.com/pawelad/cubert" %}\
 {% set areas = [] %}\
 {% if version %}\
     ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
@@ -24,7 +36,7 @@ body = """
         {% if area_commits | length > 0 %}
             #### {{ area | upper_first }}
             {% for commit in area_commits %}
-                - {{ commit.message | upper_first }} ({{ commit.id | truncate(length=7, end="") }})\
+                - {{ self::entry(commit=commit, repo=repo) }}\
             {% endfor %}
         {% endif %}\
     {% endfor %}\
@@ -36,7 +48,7 @@ body = """
         {% if areas | length > 0 %}#### Other{% endif %}
         {% for commit in other %}
             - {% if commit.scope %}_({{ commit.scope }})_ {% endif %}\
-                {{ commit.message | upper_first }} ({{ commit.id | truncate(length=7, end="") }})\
+                {{ self::entry(commit=commit, repo=repo) }}\
         {% endfor %}
     {% endif %}\
 {% endfor %}\n
@@ -57,6 +69,10 @@ split_commits = false
 protect_breaking_commits = true
 filter_commits = false
 tag_pattern = "v[0-9]*"
+# Only the subject: a squash body lists the PR's commits, which can name other PRs.
+link_parsers = [
+  { pattern = "^[^\\n]* \\(#(\\d+)\\)(\\n|$)", href = "https://github.com/pawelad/cubert/pull/$1", text = "#$1" },
+]
 sort_commits = "oldest"
 
 # The changelog lists what shipped. The HTML comments set the group order.

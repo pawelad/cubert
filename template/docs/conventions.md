@@ -160,6 +160,10 @@ its argument, and reads it from the matching `usage_` variable:
   such as `v1.2.0`. It replaces the GitHub Release that `release` creates by default.
   Define it when a tag workflow deploys and publishes, and point it at that run.
 
+Each entry links its pull request when the subject ends in `(#N)`, as a GitHub squash
+merge writes it. Otherwise it links the commit. `cliff.toml` holds the repository URL
+from the `github_owner` and `project_name` answers.
+
 git-cliff pipes its output through dprint, so the changelog keeps the 88-column limit.
 Keep the `cliff.toml` header as dprint wraps it. `--prepend` keeps one header only when
 the file starts with the exact header text.
