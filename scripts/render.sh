@@ -70,6 +70,7 @@ run() {
   if [ "$typescript" = true ]; then expect_test_script; fi
   if [ "$python" = true ]; then expect_stale_uv_lock; fi
   expect_format_despite_failure
+  expect_clean
   expect_hook_failure prose no-british-english
   expect_hook_failure comment no-british-english-comments
   expect_hook_failure dash no-em-dashes-comments

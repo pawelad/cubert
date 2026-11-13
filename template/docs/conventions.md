@@ -99,6 +99,7 @@ path, so `check/repo` is `check:repo`:
 | `typescript:install` | TypeScript option: runs `bun install` in each directory                 |
 | `release:preview`    | Changelog option: prints the entries since the last release tag         |
 | `format`             | Runs the hk fixers on changed files (`--all` for every file)            |
+| `clean`              | Runs every `<area>:clean` task, `worktree:clean` among them             |
 | `upgrade`            | Bumps the tools in `mise.toml` (`mise upgrade --bump`)                  |
 | `hooks:install`      | Installs the hk hooks and the `post-checkout` worktree hook             |
 | `template:update`    | Updates the template-owned and merged files from cubert                 |

@@ -241,6 +241,18 @@ expect_hook_failure() {
   git reset --quiet --hard HEAD
 }
 
+# `clean` must run each project <area>:clean task.
+expect_clean() {
+  printf '\n[tasks."demo:clean"]\nrun = "touch .cleaned"\n' >>mise.toml
+  mise run clean >/dev/null
+  if [ ! -e .cleaned ]; then
+    echo "render: clean did not run demo:clean" >&2
+    return 1
+  fi
+  git checkout --quiet -- mise.toml
+  rm .cleaned
+}
+
 # Cut two releases as the docs describe, so a header or format drift fails the render.
 changelog_release() {
   local commit=(git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify)
