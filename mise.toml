@@ -24,10 +24,6 @@ zizmor = "1.32.0"
 osv-scanner = "2.7.0"
 git-cliff = "2.14.2"
 
-[tasks."release:preview"]
-description = "Print the changelog entries that HEAD adds since the last release tag"
-run = "RUST_LOG=warn git-cliff --unreleased --strip header"
-
 [tasks."test:scripts"]
 description = "Run the unit tests for the check scripts"
 usage = 'arg "[files]..." help="Test files to run"'

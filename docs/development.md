@@ -149,15 +149,13 @@ tag, so a tag is a release. git-cliff generates the release notes from the commi
 
 1. Run `mise run check`, `mise run test`, `mise run e2e:render --all` and
    `mise run e2e:update --from <previous tag>`.
-2. Run `mise run release:preview` and read the entries.
-3. Add the notes to `CHANGELOG.md`:
-   - The first release appends `## [0.1.0] - <date>` and `Initial release.` below the
-     header.
-   - A later release runs `git-cliff --tag vX.Y.Z --unreleased --prepend CHANGELOG.md`.
-4. Below the new entries, name each step a project must take by hand.
-5. Commit with `chore(release): vX.Y.Z`. git-cliff skips that commit.
-6. Copy the new section, without its heading, to `tmp/release-notes.md`. Tag with it:
-   `git tag -a vX.Y.Z -F tmp/release-notes.md`. Then push the commit and the tag.
+2. Run `mise run release:preview` and read the entries. Push `main` and wait for CI.
+3. Run `mise run release X.Y.Z`. It writes the `CHANGELOG.md` section with git-cliff,
+   commits `chore(release): vX.Y.Z` and tags it with the section as the message. It
+   needs a passing CI run on `main`, then asks before it pushes and publishes the GitHub
+   Release.
+4. Add each step that a project must take by hand to the GitHub Release, with
+   `gh release edit vX.Y.Z --notes-file <file>`.
 
 git-cliff pipes its output through dprint, so the changelog keeps the 88-column limit.
 The `cliff.toml` header is wrapped the same way, so `--prepend` finds it and keeps one.

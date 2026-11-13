@@ -1,0 +1,1 @@
+../../../../template/.config/mise/tasks/release/[% if changelog %]_default[% endif %]

@@ -253,19 +253,30 @@ expect_clean() {
   rm .cleaned
 }
 
-# Cut two releases as the docs describe, so a header or format drift fails the render.
+# Cut two releases with the release task, so a header or format drift fails the render.
 changelog_release() {
-  local commit=(git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify)
-  printf '\n## [0.1.0] - 2026-01-01\n\nInitial release.\n' >>CHANGELOG.md
-  "${commit[@]}" -am "chore(release): v0.1.0"
-  git tag v0.1.0
-  "${commit[@]}" --allow-empty -m "feat: add a feature with a subject long enough that dprint must wrap the entry"
+  local base origin
+  # The release task commits and tags, and a CI runner has no git identity.
+  export GIT_AUTHOR_NAME=render GIT_AUTHOR_EMAIL=render@example.com
+  export GIT_COMMITTER_NAME=render GIT_COMMITTER_EMAIL=render@example.com
+  base="$(git rev-parse HEAD)"
+  origin="$(mktemp -d)/origin.git"
+  git init --quiet --bare --initial-branch=main "$origin"
+  git remote add origin "$origin"
+  git push --quiet origin main
+  mise run release 0.1.0 --no-push
+  git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify \
+    --allow-empty -m "feat: add a feature with a subject long enough that dprint must wrap the entry"
   mise run release:preview | grep -q '^## \[Unreleased\]'
-  RUST_LOG=warn mise x -- git-cliff --tag v0.2.0 --unreleased --prepend CHANGELOG.md
+  git push --quiet origin main
+  mise run release 0.2.0 --no-push
   if [ "$(grep -c '^# Changelog' CHANGELOG.md)" -ne 1 ]; then
     echo "render: the second release wrote a second changelog header" >&2
     return 1
   fi
   mise x -- dprint check CHANGELOG.md
-  git reset --quiet --hard HEAD
+  git tag --list 'v0.2.0' --format='%(contents)' | grep -q 'dprint must wrap'
+  git tag --delete v0.1.0 v0.2.0 >/dev/null
+  git remote remove origin
+  git reset --quiet --hard "$base"
 }

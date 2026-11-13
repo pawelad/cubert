@@ -80,32 +80,33 @@ that the task acts on (`kif:deploy`, `tofu:init`). A wildcard then selects one a
 The shared tasks are file tasks in `.config/mise/tasks/`. mise names each one from its
 path, so `check/repo` is `check:repo`:
 
-| Task                 | Does                                                                    |
-| -------------------- | ----------------------------------------------------------------------- |
-| `setup`              | Adds and pins tools, installs them and the git hooks, runs `install`    |
-| `install`            | Nothing. The project replaces it with its dependency installs           |
-| `check`              | Runs every `check:*` task                                               |
-| `check:repo`         | Runs hk on every file, plus the repository guards                       |
-| `check:opentofu`     | OpenTofu option: runs `tofu validate`, with no backend or credentials   |
-| `tofu:lock`          | OpenTofu option: locks the providers for macOS and Linux (`--upgrade`)  |
-| `ci:check`           | Runs `install`, `check`, then `test`: the CI check job                  |
-| `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it       |
-| `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities                |
-| `audit:links`        | Checks every link in the Markdown files, URLs included                  |
-| `skills:update`      | OpenSpec option: updates the installed agent skills (`openspec update`) |
-| `test`               | Runs every `test:*` task                                                |
-| `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests    |
-| `test:typescript`    | TypeScript option: runs each directory's test script, or `bun test`     |
-| `typescript:install` | TypeScript option: runs `bun install` in each directory                 |
-| `release:preview`    | Changelog option: prints the entries since the last release tag         |
-| `format`             | Runs the hk fixers on changed files (`--all` for every file)            |
-| `clean`              | Runs every `<area>:clean` task, `worktree:clean` among them             |
-| `upgrade`            | Bumps the tools in `mise.toml` (`mise upgrade --bump`)                  |
-| `hooks:install`      | Installs the hk hooks and the `post-checkout` worktree hook             |
-| `template:update`    | Updates the template-owned and merged files from cubert                 |
-| `template:check`     | Fails if a newer cubert version exists                                  |
-| `worktree:setup`     | Sets up a new worktree once (see below)                                 |
-| `worktree:clean`     | Empties the worktrunk trash                                             |
+| Task                 | Does                                                                     |
+| -------------------- | ------------------------------------------------------------------------ |
+| `setup`              | Adds and pins tools, installs them and the git hooks, runs `install`     |
+| `install`            | Nothing. The project replaces it with its dependency installs            |
+| `check`              | Runs every `check:*` task                                                |
+| `check:repo`         | Runs hk on every file, plus the repository guards                        |
+| `check:opentofu`     | OpenTofu option: runs `tofu validate`, with no backend or credentials    |
+| `tofu:lock`          | OpenTofu option: locks the providers for macOS and Linux (`--upgrade`)   |
+| `ci:check`           | Runs `install`, `check`, then `test`: the CI check job                   |
+| `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it        |
+| `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities                 |
+| `audit:links`        | Checks every link in the Markdown files, URLs included                   |
+| `skills:update`      | OpenSpec option: updates the installed agent skills (`openspec update`)  |
+| `test`               | Runs every `test:*` task                                                 |
+| `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests     |
+| `test:typescript`    | TypeScript option: runs each directory's test script, or `bun test`      |
+| `typescript:install` | TypeScript option: runs `bun install` in each directory                  |
+| `release`            | Changelog option: changelog, commit and tag, then push after you confirm |
+| `release:preview`    | Changelog option: prints the entries since the last release tag          |
+| `format`             | Runs the hk fixers on changed files (`--all` for every file)             |
+| `clean`              | Runs every `<area>:clean` task, `worktree:clean` among them              |
+| `upgrade`            | Bumps the tools in `mise.toml` (`mise upgrade --bump`)                   |
+| `hooks:install`      | Installs the hk hooks and the `post-checkout` worktree hook              |
+| `template:update`    | Updates the template-owned and merged files from cubert                  |
+| `template:check`     | Fails if a newer cubert version exists                                   |
+| `worktree:setup`     | Sets up a new worktree once (see below)                                  |
+| `worktree:clean`     | Empties the worktrunk trash                                              |
 
 To add a project check, add a `check:<area>` task. `check` runs it with no other change.
 To add a test suite, add a `test:<area>` task. `test` runs it, and so does CI. Let it
@@ -142,10 +143,13 @@ finds no tests. Given file paths, it runs only the directories that hold them. L
 configured package fails with a message. A test file that imports `bun:test` needs
 `bun add --dev @types/bun` for `tsc`.
 
-The `changelog` option adds git-cliff, `cliff.toml`, `CHANGELOG.md` and
-`release:preview`. git-cliff pipes its output through dprint, so the changelog keeps the
-88-column limit. Keep the `cliff.toml` header as dprint wraps it. `--prepend` keeps one
-header only when the file starts with the exact header text.
+The `changelog` option adds git-cliff, `cliff.toml`, `CHANGELOG.md`, `release` and
+`release:preview`. `release X.Y.Z` runs from a clean `main` that matches `origin/main`.
+It needs `gh` with a login and a passing CI run on that commit. `--no-push` skips both
+and keeps the commit and tag local. A project with more release steps, such as version
+files or a deploy, replaces the task. git-cliff pipes its output through dprint, so the
+changelog keeps the 88-column limit. Keep the `cliff.toml` header as dprint wraps it.
+`--prepend` keeps one header only when the file starts with the exact header text.
 
 `areas` in `cliff.toml` lists the scopes that users see, such as `map` or `spots`, in
 display order. Each changelog group then lists its entries by area, and the rest under
