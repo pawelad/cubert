@@ -8,12 +8,13 @@ from __future__ import annotations
 
 import os
 import shutil
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
-from tests.support import project_env, run, snapshot_template
+from tests.support import ROOT, project_env, run, snapshot_template
 
 MARKER = "cubert-worktree-setup-done"
 NEEDED_TOOLS = ("git", "mise", "copier", "wt")
@@ -80,8 +81,10 @@ def project(tmp_path_factory: pytest.TempPathFactory) -> Project:
         base,
         env,
     )
-    # No tools, so mise has nothing to install when the hook runs it.
-    (primary / "mise.toml").write_text("")
+    # Only worktrunk, which cubert already installed: the hook calls `wt`, and CI has no
+    # `wt` outside mise.
+    worktrunk = tomllib.loads((ROOT / "mise.toml").read_text())["tools"]["worktrunk"]
+    (primary / "mise.toml").write_text(f'[tools]\nworktrunk = "{worktrunk}"\n')
     (primary / ".worktreelinks").write_text("secrets/token\n")
     run(["git", "init", "--quiet", "--initial-branch", "main"], primary, env)
     run(["git", "add", "--all"], primary, env)
