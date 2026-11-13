@@ -12,9 +12,10 @@ steps {
   ["ruff-format"] = (builtins.ruff_format) {
     depends = "ruff"
   }
-  // The template's own workflows and actions get the same audits.
+  // The template's own workflows get the same audits. A `.github/**` glob would also
+  // pass zizmor.yml, which zizmor warns it cannot read as a workflow.
   ["zizmor"] {
-    glob = List(".github/**/*.yml", "template/.github/**/*.yml")
+    glob = super.glob + List("template/.github/workflows/*.yml")
   }
   // The template's shared rules must be the ones cubert's own agents follow.
   ["shared-agents"] = new Step {
