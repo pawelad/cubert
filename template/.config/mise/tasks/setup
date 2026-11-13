@@ -2,6 +2,12 @@
 #MISE description="Set up a checkout: pin and install tools, git hooks, blame config, then install"
 set -euo pipefail
 
+# The check scripts below run on uv, so an adopted mise.toml without uv needs it first.
+if ! mise config get --file mise.toml tools.uv >/dev/null 2>&1; then
+  echo "setup: adding uv, which the setup checks run on"
+  mise use --path mise.toml --pin uv
+fi
+
 # A new project's mise.toml seeds `latest`. `mise use --pin` respects minimum_release_age.
 unpinned="$(.config/hk/checks/check_required_tools.py --unpinned)"
 if [ -n "$unpinned" ]; then
