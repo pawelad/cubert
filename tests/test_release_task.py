@@ -75,7 +75,7 @@ def release(
     *,
     push: bool = False,
     ci: str = "passed",
-    confirm: bool = False,
+    answer: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     tools = project.parent / "bin"
     tools.mkdir(exist_ok=True)
@@ -98,7 +98,7 @@ def release(
         MISE_LOCKFILE="false",
         MISE_AUTO_INSTALL="false",
     )
-    if not confirm:
+    if answer is None:
         return subprocess.run(  # noqa: S603
             ["bash", TASK],  # noqa: S607
             cwd=project,
@@ -110,7 +110,7 @@ def release(
         )
     # The task asks only on a terminal, so a pty answers its prompt.
     main, terminal = pty.openpty()
-    os.write(main, b"y\n")
+    os.write(main, f"{answer}\n".encode())
     try:
         return subprocess.run(  # noqa: S603
             ["bash", TASK],  # noqa: S607
@@ -267,7 +267,7 @@ def test_confirmed_push_publishes_with_the_hook_in_place_of_the_github_release(
     if hooks:
         add_hooks(project, publish='echo "$usage_tag" > ../published')
 
-    result = release(project, "0.1.0", push=True, confirm=True)
+    result = release(project, "0.1.0", push=True, answer="y")
 
     assert result.returncode == 0, result.stderr
     assert "v0.1.0" in git(project, "ls-remote", "--tags", "origin")
@@ -277,6 +277,18 @@ def test_confirmed_push_publishes_with_the_hook_in_place_of_the_github_release(
     assert published.exists() == hooks
     if hooks:
         assert published.read_text() == "v0.1.0\n"
+
+
+@pytest.mark.parametrize(
+    ("answer", "pushed"), [("Y", True), ("yes", True), ("n", False)]
+)
+def test_prompt_accepts_y_or_yes_in_any_case(
+    project: Path, answer: str, pushed: bool
+) -> None:
+    result = release(project, "0.1.0", push=True, answer=answer)
+
+    assert result.returncode == 0, result.stderr
+    assert ("v0.1.0" in git(project, "ls-remote", "--tags", "origin")) == pushed
 
 
 @pytest.mark.parametrize("hooks", [False, True])
@@ -297,7 +309,7 @@ def test_local_release_names_the_publish_step_that_a_push_would_run(
 def test_failing_publish_hook_names_the_retry(project: Path) -> None:
     add_hooks(project, publish="exit 3")
 
-    result = release(project, "0.1.0", push=True, confirm=True)
+    result = release(project, "0.1.0", push=True, answer="y")
 
     assert result.returncode == 1
     assert "pushed v0.1.0, but release:publish failed" in result.stderr

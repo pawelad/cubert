@@ -88,10 +88,13 @@ if [ "$push" = false ]; then
 fi
 answer=""
 if [ -t 0 ]; then read -r -p "Push main and ${tag}, then run: ${publish}? [y/N] " answer; fi
-if [ "$answer" != y ]; then
-  echo "release: ${tag} stays local. Publish it with: ${pushed}"
-  exit 0
-fi
+case "$answer" in
+  [yY] | [yY][eE][sS]) ;;
+  *)
+    echo "release: ${tag} stays local. Publish it with: ${pushed}"
+    exit 0
+    ;;
+esac
 
 # Another session can move main while you review the release.
 [ "$(git branch --show-current)" = main ] && [ "$(git rev-parse HEAD)" = "$(git rev-parse "${tag}^{commit}")" ] \
