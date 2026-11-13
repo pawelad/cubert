@@ -146,7 +146,9 @@ configured package fails with a message. A test file that imports `bun:test` nee
 The `changelog` option adds git-cliff, `cliff.toml`, `CHANGELOG.md`, `release` and
 `release:preview`. `release X.Y.Z` runs from a clean `main` that matches `origin/main`.
 It needs `gh` with a login and a passing CI run on that commit. `--no-push` skips both
-and keeps the commit and tag local.
+and keeps the commit and tag local. The first release has no earlier version to compare
+with, so its section reads "Initial release." Each later section lists the commits since
+the previous tag.
 
 A project adds release steps with two optional tasks in `mise.toml`. Each task declares
 its argument, and reads it from the matching `usage_` variable:

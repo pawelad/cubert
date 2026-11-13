@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import pty
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -125,18 +126,22 @@ def release(
         os.close(main)
 
 
-def test_first_release_writes_the_section_commits_and_tags(project: Path) -> None:
+def test_first_release_is_an_initial_release_section_commit_and_tag(
+    project: Path,
+) -> None:
     result = release(project, "v0.1.0")
 
     assert result.returncode == 0, result.stderr
     changelog = (project / "CHANGELOG.md").read_text()
     assert changelog.count("# Changelog") == 1
-    assert "## [0.1.0] - " in changelog
-    assert "- Add the first feature (" in changelog
+    section = (
+        r"entries\.\n\n## \[0\.1\.0\] - \d{4}-\d{2}-\d{2}\n\nInitial release\.\n\Z"
+    )
+    assert re.search(section, changelog)
+    assert "Add the first feature" not in changelog
     assert git(project, "log", "-1", "--format=%s") == "chore(release): v0.1.0"
     message = git(project, "tag", "--list", "v0.1.0", "--format=%(contents)")
-    assert message.startswith("### Features")
-    assert "Add the first feature" in message
+    assert message.strip() == "Initial release."
     assert not (project.parent / "gh-calls").exists()
 
 
@@ -161,6 +166,7 @@ def test_second_release_keeps_one_header_and_lists_only_new_commits(
     assert changelog.count("# Changelog") == 1
     assert changelog.index("## [0.2.0]") < changelog.index("## [0.1.0]")
     message = git(project, "tag", "--list", "v0.2.0", "--format=%(contents)")
+    assert message.startswith("### Bug Fixes")
     assert "Repair the second thing" in message
     assert "Add the first feature" not in message
 

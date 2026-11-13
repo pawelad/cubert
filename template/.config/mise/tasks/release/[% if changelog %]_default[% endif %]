@@ -56,8 +56,18 @@ if has_task release:bump; then
   [ -z "$untracked" ] || fail "release:bump created untracked files. Track them, revert with git restore ., then retry:"$'\n'"${untracked}"
 fi
 
-# With no earlier tag, the first release lists the whole history.
-RUST_LOG=warn git-cliff --tag "$tag" --unreleased --prepend CHANGELOG.md
+if [ -n "$latest" ]; then
+  RUST_LOG=warn git-cliff --tag "$tag" --unreleased --prepend CHANGELOG.md
+else
+  # Nobody had an earlier version, and the history before it is mostly scaffolding.
+  section="## [${version}] - $(date -u +%Y-%m-%d)"
+  awk -v section="$section" '
+    /^## / && !done { print section "\n\nInitial release.\n"; done = 1 }
+    { print }
+    END { if (!done) print "\n" section "\n\nInitial release." }
+  ' CHANGELOG.md >CHANGELOG.md.new
+  mv CHANGELOG.md.new CHANGELOG.md
+fi
 notes="$(awk -v heading="## [${version}]" '
   /^## / { if (found) exit; if (index($0, heading) == 1) found = 1; next }
   found { print }
