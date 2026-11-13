@@ -2,10 +2,10 @@
 # into template/. A task with logic goes in mise-tasks/ as a file task.
 
 [tools]
-actionlint = "1.7.12"
 betterleaks = "1.9.0"
 dprint = "0.64.3"
 hk = "2.11.1"
+jactionlint = "2.5.0"
 jq = "1.8.2"
 lychee = "0.24.2"
 # npm: tools run on this Node, so CI and every machine use the same one.

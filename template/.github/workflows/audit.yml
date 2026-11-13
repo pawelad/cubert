@@ -21,4 +21,4 @@ concurrency:
 
 jobs:
   audit:
-    uses: "./.github/workflows/cubert-audit.yml"
+    uses: "$/.github/workflows/cubert-audit.yml"

@@ -52,7 +52,11 @@ What an update does to a missing or removed file:
 - A GitHub Action is pinned to a commit SHA, with its version in a comment:
   `uses: "actions/checkout@<sha>" # v7.0.1`. A tag can move, and a SHA cannot.
   Dependabot updates both. zizmor enforces the pin and audits workflows for injection
-  and credential leaks.
+  and credential leaks. jactionlint checks workflow syntax, with its `correctness`
+  profile, so the two tools never report the same finding.
+- An action or reusable workflow in the same repository uses `$/`, such as
+  `uses: "$/.github/actions/setup-mise"`. Unlike `./`, it always loads the running
+  commit, never a file that an earlier step wrote.
 - mise calls the GitHub API to resolve and lock tools. GitHub limits calls without a
   token. With `gh` logged in, run
   `mise settings set github.credential_command "gh auth token"` once per machine. mise

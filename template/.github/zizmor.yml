@@ -1,6 +1,4 @@
 ---
 # Template-owned: edit in cubert, not in a project.
-rules:
-  # actionlint 1.7.12 rejects the `$/` self-repository syntax. Enable once it passes.
-  self-repository:
-    disable: true
+# Every audit runs. A rule goes here only with the reason it is off.
+rules: {}

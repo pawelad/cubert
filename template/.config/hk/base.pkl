@@ -26,7 +26,12 @@ local commentLine = "^[[:space:]]*(#|//|--|/\\*|\\*)"
 local frozen = List("**/openspec/changes/archive/**", "**/openspec/schemas/**", "**/fixtures/**", "**/testdata/**", "**/__snapshots__/**", "**/generated/**", "**/vendor/**")
 
 steps {
-  ["actionlint"] = (Builtins.actionlint) {
+  // `correctness` runs actionlint's checks only: zizmor owns the security rules.
+  // TODO: revisit dropping zizmor for the jactionlint default profile once jactionlint matures.
+  ["jactionlint"] = (Builtins.jactionlint) {
+    check { command { argv = List("jactionlint", "--profile", "correctness", "--format", "gcc", "{{files}}") } }
+    check_diff { command { argv = List("hk", "util", "sarif-diff", "--", "jactionlint", "--profile", "correctness", "--format", "sarif", "{{files}}") } }
+    fix { command { argv = List("jactionlint", "--profile", "correctness", "--fix", "{{files}}") } }
     env {
       ["SHELLCHECK_OPTS"] = "--exclude=SC1090 --exclude=SC2046 --exclude=SC2086 --exclude=SC2129"
     }

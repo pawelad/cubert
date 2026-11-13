@@ -78,6 +78,7 @@ run() {
   expect_hook_failure typo typos
   expect_hook_failure link lychee
   expect_hook_failure secret betterleaks
+  expect_hook_failure workflow jactionlint
   if [ "$python" = true ]; then expect_hook_failure python mypy; fi
   if [ "$typescript" = true ]; then expect_hook_failure typescript "tsc"; fi
   if [ "$docker" = true ]; then expect_hook_failure docker "hadolint"; fi

@@ -10,7 +10,7 @@ so a fix lands once in cubert and reaches each project with `mise run template:u
 - [hk] git hooks: formatting, linting, pinned versions, prose rules and Conventional
   Commits.
 - [dprint] for Markdown, TOML, JSON and YAML, plus yamllint, shellcheck, shfmt,
-  actionlint and zizmor.
+  jactionlint and zizmor.
 - Spell checking with typos, secret scanning with betterleaks and an offline link check
   with lychee, all in the git hooks.
 - `mise run audit` and a weekly CI job: known vulnerabilities in `uv.lock` and

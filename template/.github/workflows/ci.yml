@@ -18,4 +18,4 @@ concurrency:
 
 jobs:
   check:
-    uses: "./.github/workflows/cubert-check.yml"
+    uses: "$/.github/workflows/cubert-check.yml"

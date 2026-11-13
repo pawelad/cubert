@@ -20,7 +20,7 @@ jobs:
           persist-credentials: false
 
       - name: "Set up mise"
-        uses: "./.github/actions/setup-mise"
+        uses: "$/.github/actions/setup-mise"
 
       - name: "Audit the dependencies and links"
         env:

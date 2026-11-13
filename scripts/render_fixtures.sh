@@ -178,6 +178,10 @@ break_typescript() {
   printf 'export const bad: number = "text";\n' >"$dir/src/bad.ts"
 }
 break_docker() { printf 'FROM debian\n' >Dockerfile; }
+break_workflow() {
+  printf 'on:\n  push:\n    branch: main\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: "true"\n' \
+    >.github/workflows/broken.yml
+}
 break_opentofu() { printf 'output "greeting" {\nvalue = "hello"\n}\n' >"$tofu_dir/main.tf"; }
 # Only the role changes, and the playbook that includes it stays as it is.
 break_ansible() {

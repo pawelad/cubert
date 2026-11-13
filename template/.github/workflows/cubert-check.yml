@@ -20,7 +20,7 @@ jobs:
           persist-credentials: false
 
       - name: "Set up mise"
-        uses: "./.github/actions/setup-mise"
+        uses: "$/.github/actions/setup-mise"
 
       # A project replaces `ci:check` in mise.toml when other jobs run its slow suites.
       - name: "Run the checks and tests"
