@@ -116,7 +116,8 @@ Copy from GitHub, not from a local clone. Copier records the source in
    `[settings]` and `[env]` entries that `.config/mise/config.toml` already sets, and
    duplicate hk steps. Split a project `check` or `test` task into `check:<area>` and
    `test:<area>` tasks. Turn shell scripts into file tasks in `mise-tasks/`, unless
-   tests cover them.
+   tests cover them. A release script becomes the shared `release` task, with its
+   version edits in `release:bump` and any step after the push in `release:publish`.
 6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,
    `mise run setup` and `mise run format --all`. Commit the reformat alone, and add its
    hash to `.git-blame-ignore-revs`.

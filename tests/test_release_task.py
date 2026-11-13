@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import pty
 import shutil
 import subprocess
 from pathlib import Path
@@ -52,8 +53,28 @@ def git(cwd: Path, *args: str) -> str:
     return run(command, cwd).strip()
 
 
+def add_hooks(project: Path, **runs: str) -> None:
+    """Define each `release:<name>` hook task, with `version.txt` tracked and pushed."""
+    usage = {"bump": 'arg "<version>"', "publish": 'arg "<tag>"'}
+    config = project / "mise.toml"
+    for name, command in runs.items():
+        config.write_text(
+            f'{config.read_text()}\n[tasks."release:{name}"]\n'
+            f"usage = '{usage[name]}'\nrun = '{command}'\n"
+        )
+    (project / "version.txt").write_text("0.0.0\n")
+    git(project, "add", "--all")
+    git(project, "commit", "--quiet", "-m", "chore: add release hooks")
+    git(project, "push", "--quiet", "origin", "main")
+
+
 def release(
-    project: Path, version: str, *, push: bool = False, ci: str = "passed"
+    project: Path,
+    version: str,
+    *,
+    push: bool = False,
+    ci: str = "passed",
+    confirm: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     tools = project.parent / "bin"
     tools.mkdir(exist_ok=True)
@@ -70,16 +91,38 @@ def release(
         GIT_AUTHOR_EMAIL="test@example.com",
         GIT_COMMITTER_NAME="test",
         GIT_COMMITTER_EMAIL="test@example.com",
+        # The task lists the project tasks, and mise asks to trust a new path.
+        MISE_TRUSTED_CONFIG_PATHS=str(project.parent),
+        # A hook run would lock and install the render's unpinned tools.
+        MISE_LOCKFILE="false",
+        MISE_AUTO_INSTALL="false",
     )
-    return subprocess.run(  # noqa: S603
-        ["bash", TASK],  # noqa: S607
-        cwd=project,
-        env=env,
-        stdin=subprocess.DEVNULL,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    if not confirm:
+        return subprocess.run(  # noqa: S603
+            ["bash", TASK],  # noqa: S607
+            cwd=project,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    # The task asks only on a terminal, so a pty answers its prompt.
+    main, terminal = pty.openpty()
+    os.write(main, b"y\n")
+    try:
+        return subprocess.run(  # noqa: S603
+            ["bash", TASK],  # noqa: S607
+            cwd=project,
+            env=env,
+            stdin=terminal,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    finally:
+        os.close(terminal)
+        os.close(main)
 
 
 def test_first_release_writes_the_section_commits_and_tags(project: Path) -> None:
@@ -172,3 +215,88 @@ def test_push_without_a_terminal_stays_local(project: Path) -> None:
     assert "v0.1.0 stays local" in result.stdout
     assert git(project, "ls-remote", "--tags", "origin") == ""
     assert "run list" in (project.parent / "gh-calls").read_text()
+
+
+def test_bump_hook_gets_the_bare_version_and_shares_the_release_commit(
+    project: Path,
+) -> None:
+    add_hooks(project, bump='echo "$usage_version" > version.txt')
+
+    result = release(project, "v0.1.0")
+
+    assert result.returncode == 0, result.stderr
+    assert (project / "version.txt").read_text() == "0.1.0\n"
+    files = git(project, "show", "--name-only", "--format=", "HEAD").splitlines()
+    assert sorted(files) == ["CHANGELOG.md", "version.txt"]
+    assert git(project, "status", "--porcelain") == ""
+
+
+def test_bump_hook_that_creates_an_untracked_file_stops_the_release(
+    project: Path,
+) -> None:
+    add_hooks(project, bump="touch new-version-file")
+    head = git(project, "rev-parse", "HEAD")
+
+    result = release(project, "0.1.0")
+
+    assert result.returncode == 1
+    assert "release:bump created untracked files" in result.stderr
+    assert "new-version-file" in result.stderr
+    assert git(project, "rev-parse", "HEAD") == head
+    assert git(project, "tag", "--list") == ""
+
+
+def test_failing_bump_hook_stops_the_release(project: Path) -> None:
+    add_hooks(project, bump="exit 3")
+    head = git(project, "rev-parse", "HEAD")
+
+    result = release(project, "0.1.0")
+
+    assert result.returncode == 1
+    assert "release:bump failed" in result.stderr
+    assert git(project, "rev-parse", "HEAD") == head
+
+
+@pytest.mark.parametrize("hooks", [False, True])
+def test_confirmed_push_publishes_with_the_hook_in_place_of_the_github_release(
+    project: Path, hooks: bool
+) -> None:
+    if hooks:
+        add_hooks(project, publish='echo "$usage_tag" > ../published')
+
+    result = release(project, "0.1.0", push=True, confirm=True)
+
+    assert result.returncode == 0, result.stderr
+    assert "v0.1.0" in git(project, "ls-remote", "--tags", "origin")
+    calls = (project.parent / "gh-calls").read_text()
+    assert ("release create v0.1.0" in calls) != hooks
+    published = project.parent / "published"
+    assert published.exists() == hooks
+    if hooks:
+        assert published.read_text() == "v0.1.0\n"
+
+
+@pytest.mark.parametrize("hooks", [False, True])
+def test_local_release_names_the_publish_step_that_a_push_would_run(
+    project: Path, hooks: bool
+) -> None:
+    if hooks:
+        add_hooks(project, publish='echo "$usage_tag" > ../published')
+
+    result = release(project, "0.1.0")
+
+    assert result.returncode == 0, result.stderr
+    assert ("mise run release:publish v0.1.0" in result.stdout) == hooks
+    assert ("gh release create v0.1.0" in result.stdout) != hooks
+    assert not (project.parent / "published").exists()
+
+
+def test_failing_publish_hook_names_the_retry(project: Path) -> None:
+    add_hooks(project, publish="exit 3")
+
+    result = release(project, "0.1.0", push=True, confirm=True)
+
+    assert result.returncode == 1
+    assert "pushed v0.1.0, but release:publish failed" in result.stderr
+    assert "Retry: mise run release:publish v0.1.0" in result.stderr
+    assert "v0.1.0" in git(project, "ls-remote", "--tags", "origin")

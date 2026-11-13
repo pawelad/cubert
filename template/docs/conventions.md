@@ -146,10 +146,21 @@ configured package fails with a message. A test file that imports `bun:test` nee
 The `changelog` option adds git-cliff, `cliff.toml`, `CHANGELOG.md`, `release` and
 `release:preview`. `release X.Y.Z` runs from a clean `main` that matches `origin/main`.
 It needs `gh` with a login and a passing CI run on that commit. `--no-push` skips both
-and keeps the commit and tag local. A project with more release steps, such as version
-files or a deploy, replaces the task. git-cliff pipes its output through dprint, so the
-changelog keeps the 88-column limit. Keep the `cliff.toml` header as dprint wraps it.
-`--prepend` keeps one header only when the file starts with the exact header text.
+and keeps the commit and tag local.
+
+A project adds release steps with two optional tasks in `mise.toml`. Each task declares
+its argument, and reads it from the matching `usage_` variable:
+
+- `release:bump` (`arg "<version>"`, `$usage_version`) runs before the changelog, with
+  the version without the `v`. It edits the version files. The release commit takes
+  every tracked file that it changed. An untracked file stops the release.
+- `release:publish` (`arg "<tag>"`, `$usage_tag`) runs after the push, with the tag,
+  such as `v1.2.0`. It replaces the GitHub Release that `release` creates by default.
+  Define it when a tag workflow deploys and publishes, and point it at that run.
+
+git-cliff pipes its output through dprint, so the changelog keeps the 88-column limit.
+Keep the `cliff.toml` header as dprint wraps it. `--prepend` keeps one header only when
+the file starts with the exact header text.
 
 `areas` in `cliff.toml` lists the scopes that users see, such as `map` or `spots`, in
 display order. Each changelog group then lists its entries by area, and the rest under
