@@ -38,6 +38,8 @@ What an update does to a missing or removed file:
 
 - mise is the source of truth for tool versions, on every machine and in CI. CI installs
   tools with `mise install`, not with setup actions.
+- `min_version` in `.config/mise/config.toml` pins mise itself. CI installs exactly that
+  release. An older local mise stops and prints how to upgrade.
 - A Python CLI is a mise `pypi:` tool, which mise installs with uv. Do not run `uvx` or
   `pipx` directly.
 - Python CLI tools select a private Python 3.14 runtime through their `python` option.

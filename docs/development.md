@@ -137,8 +137,9 @@ them. Five more tests read the template itself:
   until they match.
 - After an OpenSpec bump, run `mise run openspec:refork`. It rebuilds the changes-only
   schema from the new built-in one. Review the diff, then run the render tests.
-- The mise version for CI is the `version` input default in
-  `template/.github/actions/setup-mise/action.yml`. Bump it by hand.
+- `min_version` in `template/.config/mise/config.toml` is the one mise pin. CI installs
+  exactly that release, and an older local mise stops. Bump it by hand, to a release
+  that Homebrew ships, so a Homebrew install can meet it.
 - Dependabot bumps the Actions in cubert's workflows and in the template. It also bumps
   pytest in `uv.lock`, which pins it for cubert's tests.
 

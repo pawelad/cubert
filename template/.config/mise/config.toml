@@ -3,6 +3,10 @@
 # No [tools] here: tools in this file get a second lockfile, and
 # `mise upgrade --bump` rewrites it.
 
+# The one mise pin: CI installs exactly this release, and an older local mise stops
+# with upgrade instructions. Bump it by hand, to a release that Homebrew ships.
+min_version = "2026.11.6"
+
 [settings]
 lockfile = true
 # Matches the Dependabot cooldown. Exact pins and mise.lock entries are not filtered.
