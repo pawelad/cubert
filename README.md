@@ -136,7 +136,7 @@ Developed and maintained by [Paweł Adamczak][author].
 Released under the [Mozilla Public License 2.0][license].
 
 [author]: https://pawelad.me/
-[copier]: https://copier.readthedocs.io/
+[copier]: https://copier.readthedocs.io/en/stable/
 [dprint]: https://dprint.dev/
 [hk]: https://hk.jdx.dev/
 [license]: ./LICENSE
