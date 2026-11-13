@@ -110,7 +110,7 @@ if [ "$status" -eq 0 ]; then
   echo "pass $name$retry"
 else
   echo "FAIL $name$retry (log: $log)"
-  # CI keeps no files from the run, so show the end of the log there.
+  # Show the failure immediately; CI also uploads the full logs as artifacts.
   if [ -n "${CI:-}" ]; then tail -n 40 "$log" | sed "s/^/  $name: /"; fi
   exit 1
 fi

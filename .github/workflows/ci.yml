@@ -85,10 +85,23 @@ jobs:
           git config --global user.email "ci@users.noreply.github.com"
 
       - name: "Test the update"
-        run: "mise run e2e:update"
+        run: |
+          mise run e2e:update --out "${RUNNER_TEMP}/update"
 
       - name: "Test an update that conflicts"
-        run: "mise run e2e:conflict"
+        run: |
+          mise run e2e:conflict --out "${RUNNER_TEMP}/conflict"
+
+      - name: "Preserve failure logs"
+        if: "failure()"
+        uses: "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9" # 7.0.2
+        with:
+          name: "update-logs"
+          path: |
+            ${{ runner.temp }}/update/*.log*
+            ${{ runner.temp }}/conflict/*.log*
+          if-no-files-found: "ignore"
+          retention-days: 3
 
   adopt:
     name: "Adopt in an existing repository"
@@ -105,7 +118,17 @@ jobs:
         uses: "./template/.github/actions/setup-mise"
 
       - name: "Adopt the template in each existing layout"
-        run: "mise run e2e:adopt"
+        run: |
+          mise run e2e:adopt --out "${RUNNER_TEMP}/adopt"
+
+      - name: "Preserve failure logs"
+        if: "failure()"
+        uses: "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9" # 7.0.2
+        with:
+          name: "adopt-logs"
+          path: "${{ runner.temp }}/adopt/*.log*"
+          if-no-files-found: "ignore"
+          retention-days: 3
 
   render:
     name: "Render typescript ${{ matrix.typescript }}, ${{ matrix.openspec }}"
@@ -132,3 +155,12 @@ jobs:
         run: |
           mise run e2e:render --jobs 4 --out "${RUNNER_TEMP}/renders" \
             --filter "s${TYPESCRIPT}_${OPENSPEC}\$"
+
+      - name: "Preserve failure logs"
+        if: "failure()"
+        uses: "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9" # 7.0.2
+        with:
+          name: "render-logs-${{ matrix.typescript }}-${{ matrix.openspec }}"
+          path: "${{ runner.temp }}/renders/*.log*"
+          if-no-files-found: "ignore"
+          retention-days: 3
