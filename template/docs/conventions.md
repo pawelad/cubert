@@ -302,8 +302,9 @@ newlines and line endings from `.editorconfig`.
 
 Every file type has the same maximum line length: 88 columns, the Black and ruff
 default. dprint wraps Markdown prose and formats the other files to it, and yamllint
-fails a longer YAML line. ruff uses its default, and `.editorconfig` sets
-`max_line_length` for editors. Set a new formatter to 88 too.
+fails a longer YAML line. Workflows and actions are exempt from yamllint's limit,
+because an action pin keeps its version comment on the same line. ruff uses its default,
+and `.editorconfig` sets `max_line_length` for editors. Set a new formatter to 88 too.
 
 A commit that only reformats code goes in `.git-blame-ignore-revs`. GitHub reads that
 file, and `mise run setup` sets `blame.ignoreRevsFile` for local blame.
