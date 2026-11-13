@@ -2,12 +2,6 @@
 #MISE description="Check every link in the Markdown files, URLs included (needs the network)"
 set -euo pipefail
 
-files=()
-while IFS= read -r file; do
-  files+=("$file")
-done < <(git ls-files --cached --others --exclude-standard -- '*.md')
-[ "${#files[@]}" -gt 0 ] || exit 0
-
 # A root lychee.toml layers on the shared config, as in the lychee hk step.
 config=(--config .config/lychee.toml)
 if [ -f lychee.toml ]; then config+=(--config lychee.toml); fi
@@ -15,4 +9,5 @@ if [ -f lychee.toml ]; then config+=(--config lychee.toml); fi
 if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null && token="$(gh auth token 2>/dev/null)"; then
   export GITHUB_TOKEN="$token"
 fi
-lychee --no-progress "${config[@]}" "${files[@]}"
+# lychee finds the files itself, so it skips gitignored and excluded paths without a warning.
+lychee --no-progress "${config[@]}" --hidden --extensions md .
