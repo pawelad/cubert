@@ -17,6 +17,10 @@ steps {
   ["zizmor"] {
     glob = super.glob + List("template/.github/workflows/*.yml")
   }
+  // lychee.toml excludes template/, and lychee warns on each excluded file that hk passes.
+  ["lychee"] {
+    exclude = super.exclude + List("template/**")
+  }
   // The template's shared rules must be the ones cubert's own agents follow.
   ["shared-agents"] = new Step {
     glob = List("AGENTS.md", "copier.yml", "template/AGENTS.md.jinja", "tests/cubert-answers.yml")
