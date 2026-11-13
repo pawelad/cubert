@@ -57,9 +57,9 @@ jobs:
       - name: "Set up mise"
         uses: "$/template/.github/actions/setup-mise"
 
-      - name: "Audit the dependencies and links"
+      - name: "Audit the dependencies, actions and links"
         env:
-          # lychee uses it for github.com links, to avoid rate limits.
+          # zizmor needs it for its online audits. lychee uses it to avoid rate limits.
           GITHUB_TOKEN: "${{ github.token }}"
         run: "mise run audit"
 

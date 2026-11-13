@@ -60,7 +60,8 @@ What an update does to a missing or removed file:
 - mise calls the GitHub API to resolve and lock tools. GitHub limits calls without a
   token. With `gh` logged in, run
   `mise settings set github.credential_command "gh auth token"` once per machine. mise
-  ignores this setting in a project's config. `audit:links` uses the `gh` token too.
+  ignores this setting in a project's config. `audit:actions` and `audit:links` use the
+  `gh` token too.
 - A new project's `mise.toml` seeds `latest` (`lts` for Node). The first
   `mise run setup` pins each one to the newest release that `minimum_release_age`
   allows, so cubert holds no tool versions except that Python line. Add a tool with
@@ -90,6 +91,7 @@ path, so `check/repo` is `check:repo`:
 | `tofu:lock`          | OpenTofu option: locks the providers for macOS and Linux (`--upgrade`)   |
 | `ci:check`           | Runs `install`, `check`, then `test`: the CI check job                   |
 | `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it        |
+| `audit:actions`      | Runs zizmor's online audits, such as actions with known vulnerabilities  |
 | `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities                 |
 | `audit:links`        | Checks every link in the Markdown files, URLs included                   |
 | `skills:update`      | OpenSpec option: updates the installed agent skills (`openspec update`)  |
@@ -280,11 +282,13 @@ how many CI minutes a project spends, so each project sets its own.
 ## Audits
 
 `mise run audit` runs the checks that need the network: osv-scanner on `uv.lock` and
-`bun.lock`, and lychee on every URL. Hooks and `mise run check` skip them, so they stay
-fast and work offline. A new advisory then fails the audit and never an unrelated
-commit. CI runs it from `audit.yml`, on each push and pull request and once a week. Run
-it locally before a release or after a dependency change. osv-scanner is a tool of the
-`python` and `typescript` options.
+`bun.lock`, zizmor's online audits, and lychee on every URL. The zizmor hk step runs
+offline, so only the audit finds actions with known vulnerabilities, impostor commits
+and version comments that do not match the pinned SHA. Hooks and `mise run check` skip
+them, so they stay fast and work offline. A new advisory then fails the audit and never
+an unrelated commit. CI runs it from `audit.yml`, on each push and pull request and once
+a week. Run it locally before a release or after a dependency change. osv-scanner is a
+tool of the `python` and `typescript` options.
 
 ## Formatting
 
