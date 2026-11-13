@@ -26,6 +26,16 @@ if [ $((${#ones} % 2)) -eq 1 ]; then license="ARR"; fi
 # shellcheck source=scripts/render_fixtures.sh
 source "$root/scripts/render_fixtures.sh"
 
+# Parallel renders share one mise data dir. Concurrent installs of a new project's `lts`
+# and `latest` seeds race: npm tools then fail on "node@lts ... is not installed".
+setup_one_at_a_time() {
+  local lock="$out/.setup.lock" status=0
+  until mkdir "$lock" 2>/dev/null; do sleep 1; done
+  mise run setup || status=$?
+  rmdir "$lock"
+  return "$status"
+}
+
 run() {
   copier copy --quiet --defaults --vcs-ref HEAD \
     -d project_name="demo" -d description="A demo project." -d license="$license" \
@@ -44,7 +54,7 @@ run() {
   if [ "$opentofu" = true ]; then opentofu_fixture; fi
   if [ "$ansible" = true ]; then ansible_fixture; fi
   if [ "$openspec" != none ]; then openspec_fixture; fi
-  mise run setup
+  setup_one_at_a_time
   if [ "$typescript" = true ]; then typescript_dependency_fixture; fi
   git add --all
   # A runner starts without application dependencies, unlike a checkout after setup.
