@@ -60,6 +60,10 @@ Copier asks these questions:
 `mise run setup` pins the seeded `latest` tool versions in `mise.toml`, so commit
 `mise.toml`, `mise.lock` and `.mise/locks/` after it.
 
+Feature directories stay inside the project. Their names use ASCII letters, numbers,
+periods, underscores, hyphens and slashes. The first path component cannot start with a
+hyphen. Copier rejects unsupported paths before rendering.
+
 ## Update a project
 
 ```console

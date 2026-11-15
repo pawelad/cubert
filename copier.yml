@@ -99,6 +99,23 @@ typescript_dirs:
   help: "Directories with package.json and tsconfig.json, one tsc check each"
   default: ["."]
   when: "[[ typescript ]]"
+  validator: |
+    [% if typescript_dirs is string or typescript_dirs is mapping
+          or typescript_dirs is not sequence or not typescript_dirs %]
+    Enter a nonempty list of relative directories, such as ["apps/web"].
+    [% else %]
+    [% for dir in typescript_dirs %]
+    [% if dir is not string or not dir %]
+    Each directory must be a nonempty string.
+    [% elif dir.startswith('/') or '..' in dir.split('/') %]
+    Directories must stay inside the project.
+    [% elif dir | regex_search('^([.]/+)*-') %]
+    The first path component cannot start with a hyphen.
+    [% elif dir | regex_search('[^A-Za-z0-9._/-]') %]
+    Use ASCII letters, numbers, periods, underscores, hyphens and slashes in paths.
+    [% endif %]
+    [% endfor %]
+    [% endif %]
 
 docker:
   type: "bool"
@@ -115,6 +132,12 @@ tofu_dir:
   help: "OpenTofu directory"
   default: "opentofu"
   when: "[[ opentofu ]]"
+  validator: |
+    [% if not tofu_dir or tofu_dir.startswith('/') or '..' in tofu_dir.split('/')
+          or tofu_dir | regex_search('[^A-Za-z0-9._/-]|^([.]/+)*-') %]
+    Use a relative project path with ASCII letters, numbers, periods, underscores,
+    hyphens and slashes. The first path component cannot start with a hyphen.
+    [% endif %]
 
 ansible:
   type: "bool"
@@ -126,6 +149,13 @@ ansible_dir:
   help: "Ansible directory"
   default: "ansible"
   when: "[[ ansible ]]"
+  validator: |
+    [% if not ansible_dir or ansible_dir.startswith('/')
+          or '..' in ansible_dir.split('/')
+          or ansible_dir | regex_search('[^A-Za-z0-9._/-]|^([.]/+)*-') %]
+    Use a relative project path with ASCII letters, numbers, periods, underscores,
+    hyphens and slashes. The first path component cannot start with a hyphen.
+    [% endif %]
 
 openspec:
   type: "str"

@@ -8,19 +8,33 @@ read -ra files <<<"${usage_files:-}"
 # The tag sits in a string, so shfmt and shellcheck can read this file as it is.
 read -ra dirs <<<"[[ typescript_dirs | join(' ') ]]"
 
+normalize_path() {
+  local part result="" parts=()
+  case "$1" in
+    /*)
+      printf '%s\n' "$1"
+      return
+      ;;
+  esac
+  IFS=/ read -ra parts <<<"$1"
+  for part in "${parts[@]}"; do
+    case "$part" in
+      "" | .) continue ;;
+    esac
+    result="${result:+$result/}$part"
+  done
+  printf '%s\n' "${result:-.}"
+}
+
 selected=0
 for dir in "${dirs[@]}"; do
-  # File arguments and configured directories must use the same relative spelling.
-  dir="${dir#./}"
-  dir="${dir%/}"
-  [ -n "$dir" ] || dir=.
+  # Equivalent relative spellings must select the same package and test files.
+  dir="$(normalize_path "$dir")"
   [ -f "$dir/package.json" ] || continue
   # bun test takes paths relative to its own directory, so keep the files of this one.
   args=()
   for file in "${files[@]+"${files[@]}"}"; do
-    case "$file" in
-      ./*) file="${file#./}" ;;
-    esac
+    file="$(normalize_path "$file")"
     # Jinja reads a double bracket as a variable tag, so match with case.
     if [ "$dir" = "." ]; then
       args+=("./$file")
@@ -37,9 +51,9 @@ for dir in "${dirs[@]}"; do
   selected=$((selected + ${#args[@]}))
   # A package that tests with Jest or Vitest names its runner in its test script.
   if jq -e '.scripts.test' "$dir/package.json" >/dev/null; then
-    (cd "$dir" && bun run test "${args[@]+"${args[@]}"}")
+    (cd -- "$dir" && bun run test "${args[@]+"${args[@]}"}")
   else
-    (cd "$dir" && bun test --pass-with-no-tests "${args[@]+"${args[@]}"}")
+    (cd -- "$dir" && bun test --pass-with-no-tests "${args[@]+"${args[@]}"}")
   fi
 done
 

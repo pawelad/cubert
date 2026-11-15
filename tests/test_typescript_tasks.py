@@ -13,7 +13,56 @@ from tests.support import project_env, render_template
 
 
 @pytest.mark.parametrize(
-    "directory", ["apps/web", "./apps/web", "apps/web/", ".", "./"]
+    "directories",
+    [
+        "apps/web",
+        [],
+        {},
+        [None],
+        [123],
+        [""],
+        ["apps/my web"],
+        ["apps/$web"],
+        ['apps/"web"'],
+        ["apps/`web`"],
+        ["/apps/web"],
+        ["apps/../web"],
+        ["apps/web\nother"],
+        ["-rf"],
+        ["./-rf"],
+        ["././-rf"],
+        [".//-rf"],
+        ["././/-rf"],
+    ],
+)
+def test_unsupported_package_directories_fail_before_render(
+    tmp_path: Path, directories: object
+) -> None:
+    with pytest.raises(
+        AssertionError, match=r"Validation error for question.*typescript_dirs"
+    ):
+        render_template(
+            tmp_path,
+            typescript="true",
+            typescript_dirs=json.dumps(directories),
+            openspec="none",
+        )
+
+
+@pytest.mark.parametrize(
+    "directory",
+    [
+        "apps/web",
+        "./apps/web",
+        "apps/web/",
+        ".",
+        "./",
+        "apps/-x",
+        "././apps/web",
+        "apps/./web",
+        "apps//web",
+        "apps/web//",
+    ],
 )
 @pytest.mark.parametrize("script", [False, True])
 def test_selected_file_runs_in_its_package(
@@ -35,8 +84,11 @@ def test_selected_file_runs_in_its_package(
     (tools / "bun").chmod(0o755)
     calls = tmp_path / "bun-calls"
     env = project_env()
+    normalized = Path(directory).as_posix()
     relative = (
-        "example.test.ts" if directory in {".", "./"} else "apps/web/example.test.ts"
+        "example.test.ts"
+        if normalized in {"", "."}
+        else f"{normalized}/example.test.ts"
     )
     env.update(
         PATH=f"{tools}{os.pathsep}{env['PATH']}",
@@ -57,6 +109,22 @@ def test_selected_file_runs_in_its_package(
     called_directory, command = calls.read_text().splitlines()
     assert Path(called_directory).resolve() == package.resolve()
     prefix = "run test" if script else "test --pass-with-no-tests"
+    assert command == f"{prefix} ./example.test.ts"
+
+    # File selections can use redundant separators and dot components too.
+    calls.unlink()
+    env["usage_files"] = f"././{relative.replace('/', '//')}"
+    result = subprocess.run(
+        ["bash", ".config/mise/tasks/test/typescript"],  # noqa: S607
+        cwd=project,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    called_directory, command = calls.read_text().splitlines()
+    assert Path(called_directory).resolve() == package.resolve()
     assert command == f"{prefix} ./example.test.ts"
 
     env["usage_files"] = "unconfigured/example.test.ts"

@@ -10,5 +10,5 @@ read -ra dirs <<<"[[ typescript_dirs | join(' ') ]]"
 for dir in "${dirs[@]}"; do
   # A fresh project has no package.json yet.
   [ -f "$dir/package.json" ] || continue
-  bun install --frozen-lockfile --minimum-release-age=604800 --cwd "$dir"
+  bun install --frozen-lockfile --minimum-release-age=604800 --cwd "./$dir"
 done

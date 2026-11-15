@@ -19,6 +19,45 @@ pytestmark = pytest.mark.skipif(
 TRICKY = 'A "quoted" project with a \\ backslash.'
 
 
+@pytest.mark.parametrize(
+    ("feature", "question"), [("opentofu", "tofu_dir"), ("ansible", "ansible_dir")]
+)
+@pytest.mark.parametrize(
+    "directory",
+    [
+        "",
+        "../outside",
+        "/absolute",
+        "my infra",
+        'infra/"quoted"',
+        "-rf",
+        "./-rf",
+        "././-rf",
+        ".//-rf",
+        "././/-rf",
+    ],
+)
+def test_unsupported_feature_directory_fails_before_render(
+    tmp_path: Path, feature: str, question: str, directory: str
+) -> None:
+    with pytest.raises(AssertionError, match="Validation error for question"):
+        render_template(tmp_path, **{feature: "true", question: directory})
+
+
+@pytest.mark.parametrize("feature", ["opentofu", "ansible"])
+@pytest.mark.parametrize("directory", ["src/infra-tools", "apps/-x"])
+def test_nested_feature_directory_is_used_by_its_install_task(
+    tmp_path: Path, feature: str, directory: str
+) -> None:
+    question = "tofu_dir" if feature == "opentofu" else "ansible_dir"
+    task = "tofu:init" if feature == "opentofu" else "ansible:install"
+    project = render_template(tmp_path, **{feature: "true", question: directory})
+    config = tomllib.loads((project / "mise.toml").read_text())
+
+    assert (project / directory).is_dir()
+    assert config["tasks"][task]["dir"] == directory
+
+
 def test_description_with_quotes_renders_valid_pyproject(tmp_path: Path) -> None:
     project = render_template(tmp_path, python="true", description=TRICKY)
 
