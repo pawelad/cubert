@@ -81,12 +81,22 @@ steps {
       "collections/**/*.yml", "collections/**/*.yaml"
     )
     check = """
-      bad=0
-      for f in playbooks/*.yml playbooks/*.yaml; do
-        [ -e "$f" ] || continue
-        ansible-playbook --syntax-check "$f" || bad=1
-      done
-      exit "$bad"
+      if [ -d playbooks ]; then
+        # Task includes and variable files are not playbook entrypoints.
+        find playbooks -type d \\( -name tasks -o -name handlers -o -name vars \\
+          -o -name group_vars -o -name host_vars -o -name roles -o -name templates \\
+          -o -name files \\) -prune -o -type f \\( -name '*.yml' -o -name '*.yaml' \\) \\
+          -exec ansible-playbook --syntax-check {} +
+      fi
+      """
+  }
+  ["ansible-template"] = new Step {
+    dir = "[[ ansible_dir ]]"
+    glob = List("**/*.j2")
+    check = """
+      rules="$(git rev-parse --show-toplevel)/.config/hk/ansible_rules"
+      ansible-lint --offline --rules-dir "$rules" --enable-list cubert-jinja \\
+        --tags cubert-jinja {{files}}
       """
   }
 [% endif %]

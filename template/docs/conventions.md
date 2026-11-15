@@ -132,6 +132,16 @@ existing project's own `tofu:init` task must create `TF_PLUGIN_CACHE_DIR` too.
 `.config/mise/config.toml` sets `TF_PLUGIN_CACHE_DIR`, so each worktree reuses the
 providers that another one downloaded.
 
+Ansible syntax checks discover nested playbooks. They exclude directories named `tasks`,
+`handlers`, `vars`, `group_vars`, `host_vars`, `roles`, `templates` and `files`. Those
+directories hold task fragments, variables and assets rather than playbook entrypoints.
+Keep playbook entrypoints outside them.
+
+The `ansible-template` hook parses changed `.j2` files with a custom ansible-lint rule.
+It uses the existing Jinja installation, Ansible's configured extensions and `#jinja2:`
+delimiter overrides. It does not render values or resolve filters, so syntax checks need
+no runtime variables. A passing parse does not prove that a deployment will succeed.
+
 The `python` option adds `test:python`. It runs `uv run pytest` and treats pytest's exit
 code 5 (no tests collected) as a pass, so a fresh project passes `mise run test`. A
 project without pytest in its dev group skips with a message. Add it with

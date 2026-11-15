@@ -70,16 +70,34 @@ opentofu_fixture() {
 }
 
 ansible_fixture() {
-  mkdir -p "$ansible_dir/playbooks" "$ansible_dir/roles/demo/tasks"
+  mkdir -p "$ansible_dir/playbooks/nested" "$ansible_dir/playbooks/tasks" \
+    "$ansible_dir/playbooks/group_vars" "$ansible_dir/roles/demo/tasks" \
+    "$ansible_dir/roles/demo/templates"
   # Playbooks in playbooks/ do not find roles/ on their own.
-  printf '[defaults]\nroles_path = roles\n' >"$ansible_dir/ansible.cfg"
-  cat >"$ansible_dir/playbooks/site.yml" <<'YAML'
+  printf '[defaults]\nroles_path = roles\njinja2_extensions = jinja2.ext.do\n' >"$ansible_dir/ansible.cfg"
+  printf -- '---\nprofile: "production"\n' >"$ansible_dir/.ansible-lint"
+  cat >"$ansible_dir/playbooks/nested/site.yml" <<'YAML'
 ---
 - name: "Configure the demo hosts"
   hosts: "all"
   roles:
     - role: "demo"
+  tasks:
+    - name: "Include the shared tasks"
+      ansible.builtin.import_tasks: "../tasks/common.yml"
 YAML
+  cat >"$ansible_dir/playbooks/tasks/common.yml" <<'YAML'
+---
+- name: "Say hello from an included task"
+  ansible.builtin.debug:
+    msg: "hello"
+YAML
+  printf -- '---\ngreeting: "hello"\n' >"$ansible_dir/playbooks/group_vars/all.yml"
+  # Parsing must not resolve variables or filters that the project supplies at runtime.
+  printf '{%% do values.append(greeting) %%}\n{{ greeting | demo.custom_filter }}\n' \
+    >"$ansible_dir/roles/demo/templates/config.j2"
+  printf "#jinja2:variable_start_string:'[[', variable_end_string:']]'\n[[ greeting ]]\n" \
+    >"$ansible_dir/roles/demo/templates/custom.j2"
   cat >"$ansible_dir/roles/demo/tasks/main.yml" <<'YAML'
 ---
 - name: "Say hello"
@@ -188,6 +206,16 @@ break_ansible() {
   printf -- '- name: "Say hello"\n  ansible.builtin.no_such_module:\n    msg: "hello"\n' \
     >"$ansible_dir/roles/demo/tasks/main.yml"
 }
+break_ansible_template_expression() {
+  printf '{{ greeting\n' >"$ansible_dir/roles/demo/templates/config.j2"
+}
+break_ansible_template_statement() {
+  printf '{%% if %%}\n' >"$ansible_dir/roles/demo/templates/config.j2"
+}
+break_ansible_template_custom() {
+  printf "#jinja2:variable_start_string:'[[', variable_end_string:']]'\n[[ greeting\n" \
+    >"$ansible_dir/roles/demo/templates/custom.j2"
+}
 
 # A package test script must replace bun test, so a failing one fails the task.
 expect_test_script() {
@@ -230,12 +258,17 @@ expect_format_despite_failure() {
 # Stage one error, expect the pre-commit step to fail on it, then undo it. The staged
 # file selects the step, as in a real commit, and --check stops fixers from repairing it.
 expect_hook_failure() {
-  local feature="$1" step="$2" log
+  local feature="$1" step="$2" expected="${3:-}" log
   "break_$feature"
   git add --all
   if log="$(mise x -- hk run pre-commit --check --step "$step" 2>&1)"; then
     echo "$log"
     echo "render: $step passed on a known $feature error" >&2
+    return 1
+  fi
+  if [ -n "$expected" ] && ! grep -qF -- "$expected" <<<"$log"; then
+    echo "$log"
+    echo "render: $step failed without the expected diagnostic: $expected" >&2
     return 1
   fi
   git reset --quiet --hard HEAD

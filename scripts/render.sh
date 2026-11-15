@@ -94,7 +94,12 @@ run() {
   if [ "$typescript" = true ]; then expect_hook_failure typescript "tsc"; fi
   if [ "$docker" = true ]; then expect_hook_failure docker "hadolint"; fi
   if [ "$opentofu" = true ]; then expect_hook_failure opentofu "tofu-fmt"; fi
-  if [ "$ansible" = true ]; then expect_hook_failure ansible "ansible-syntax-check"; fi
+  if [ "$ansible" = true ]; then
+    expect_hook_failure ansible "ansible-syntax-check"
+    expect_hook_failure ansible_template_expression "ansible-template" "cubert-jinja:"
+    expect_hook_failure ansible_template_statement "ansible-template" "cubert-jinja:"
+    expect_hook_failure ansible_template_custom "ansible-template" "cubert-jinja:"
+  fi
   if [ "$openspec" = spec-driven ]; then
     expect_hook_failure openspec_warning openspec
     expect_openspec_info
