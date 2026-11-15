@@ -73,7 +73,7 @@ run() {
   fi
 
   # The lockfile scan needs the network, so it runs here and not in check.
-  if [ "$python" = true ] || [ "$typescript" = true ]; then mise run audit:deps; fi
+  mise run audit:deps
 
   git -c user.name=render -c user.email=render@example.com commit --quiet --no-verify -m "chore: render"
   if [ "$changelog" = true ]; then changelog_release; fi

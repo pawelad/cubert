@@ -289,8 +289,9 @@ offline, so only the audit finds actions with known vulnerabilities, impostor co
 and version comments that do not match the pinned SHA. Hooks and `mise run check` skip
 them, so they stay fast and work offline. A new advisory then fails the audit and never
 an unrelated commit. CI runs it from `audit.yml`, on each push and pull request and once
-a week. Run it locally before a release or after a dependency change. osv-scanner is a
-tool of the `python` and `typescript` options.
+a week. Run it locally before a release or after a dependency change. Every project gets
+osv-scanner, because the Python tools also have `uv.lock` files in `.mise/locks/`. The
+scan includes those files and application lockfiles, including nested backends.
 
 ## Formatting
 
