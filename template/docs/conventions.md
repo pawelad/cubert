@@ -242,7 +242,9 @@ enabled features). `hk.pkl` amends `cubert.pkl`:
   import named `Builtins`, and `base.pkl` already has one.
 - hk 2.11.1 rejects a `Group` in `steps`. Give each step its own `dir` instead.
 
-The hk package version is pinned only in `base.pkl`.
+In Cubert, change the hk package pins in `template/.config/hk/base.pkl` and
+`template/.config/hk/cubert.pkl.jinja` together. Projects receive those files as
+`.config/hk/base.pkl` and `.config/hk/cubert.pkl`.
 
 The prose rules (American English, no em dashes, no emojis) check Markdown and text
 files in full. In code and config files they check comment lines only, and a fixer
