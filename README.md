@@ -93,7 +93,11 @@ Copy from GitHub, not from a local clone. Copier records the source in
    the shared parts:
    - Copier keeps an existing `ci.yml` and `audit.yml`, because they are project-owned.
      Replace their check and audit jobs with calls to `cubert-check.yml` and
-     `cubert-audit.yml` (see [conventions.md](./template/docs/conventions.md#ci)).
+     `cubert-audit.yml` (see [conventions.md](./template/docs/conventions.md#ci)). Keep
+     application jobs, image scans and deployment gates. Override `ci:check` when those
+     jobs already run the application suites.
+   - Restore project privacy rules and commit policies in `AGENTS.md`. Reconcile them
+     with the shared defaults, which permit automatic commits for a single task.
    - `wt.toml` hooks become `.worktreeinclude`, `.worktreelinks` and the `install` task.
    - yamllint relaxations go in the project's `.yamllint`, which extends
      `.config/yamllint.yaml`.
@@ -124,11 +128,15 @@ Copy from GitHub, not from a local clone. Copier records the source in
    `test:<area>` tasks. Turn shell scripts into file tasks in `mise-tasks/`, unless
    tests cover them. A release script becomes the shared `release` task, with its
    version edits in `release:bump` and any step after the push in `release:publish`.
+   Keep install and type-check prerequisites, such as Expo route generation. OpenTofu
+   validation runs through `check:opentofu`; keep a project hook when validation must
+   also run before commits and pushes. Preserve credential isolation and state backups.
 6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,
    `mise run setup` and `mise run format --all`. Commit the reformat alone, and add its
    hash to `.git-blame-ignore-revs`.
-7. Fix what `mise run check` reports, then commit. A step that needs a secret, such as
-   an Ansible vault password, fails in CI too.
+7. Fix what `mise run ci:check` and `mise run audit` report, then commit. Exercise
+   application jobs and deployment gates before merging the adoption. A step that needs
+   a secret, such as an Ansible vault password, fails in CI too.
 
 ## Development
 

@@ -110,6 +110,9 @@ breaking change, and say what projects must do in the release notes.
 - `e2e:update --from <ref>` tests the update from an older release.
 - `e2e:adopt` follows the README's adoption steps for two layouts. The infra one has an
   OpenTofu S3 backend and an Ansible project collection, and runs with no cloud login.
+  Both layouts run `ci:check` and `audit:deps`. The backend layout must run its existing
+  test suite. Every render audits application and Python tool lockfiles too. These
+  fixtures do not replace a migration rehearsal with the real project's jobs.
 - CI runs `check`, `test`, `audit`, `e2e:update`, `e2e:conflict`, `e2e:adopt` and the
   full render matrix. A weekly run repeats `audit` and the render matrix, which catch
   new advisories and tool releases.

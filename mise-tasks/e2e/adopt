@@ -54,10 +54,15 @@ adopt() {
   mise run setup >"$out/$layout-setup.log" 2>&1 || fail "setup failed, see $out/$layout-setup.log"
   mise run format --all >"$out/$layout-format.log" 2>&1 || fail "format failed, see $out/$layout-format.log"
   git add --all
-  step "check"
-  mise run check >"$out/$layout-check.log" 2>&1 || {
+  step "check and test through the CI task"
+  mise run ci:check >"$out/$layout-check.log" 2>&1 || {
     tail -n 40 "$out/$layout-check.log" >&2
-    fail "check failed, see $out/$layout-check.log"
+    fail "ci:check failed, see $out/$layout-check.log"
+  }
+  step "audit the dependency lockfiles"
+  mise run audit:deps >"$out/$layout-audit.log" 2>&1 || {
+    tail -n 40 "$out/$layout-audit.log" >&2
+    fail "audit:deps failed, see $out/$layout-audit.log"
   }
 }
 
@@ -85,6 +90,10 @@ uv = "latest"
 [tasks.install]
 description = "Install project dependencies"
 run = "uv sync --project apps/backend"
+
+[tasks."test:backend"]
+description = "Run the backend tests"
+run = "uv run --project apps/backend pytest apps/backend/tests"
 TOML
   cat >apps/backend/pyproject.toml <<'TOML'
 [project]
@@ -94,7 +103,10 @@ requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
-dev = ["mypy", "ruff"]
+dev = ["mypy", "ruff", "pytest"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
 
 [tool.mypy]
 strict = true
@@ -103,6 +115,8 @@ strict = true
 select = ["E", "F", "I"]
 TOML
   printf 'def add(a: int, b: int) -> int:\n    return a + b\n' >apps/backend/app.py
+  printf 'from app import add\n\n\ndef test_add_sums_two_numbers() -> None:\n    assert add(1, 2) == 3\n' \
+    >apps/backend/tests/test_app.py
   printf '# backend\n' >README.md
   # The project's own CI and yamllint rules. Both are project-owned, so Copier keeps them.
   mkdir -p .github/workflows
@@ -161,6 +175,7 @@ PKL
   adopt -d python=false
   same apps/backend/pyproject.toml apps/backend/app.py .github/workflows/ci.yml
   grep -q 'uv sync --project apps/backend' mise.toml || fail "mise.toml lost the project's install task"
+  grep -q '1 passed' "$out/$layout-check.log" || fail "ci:check did not run the backend test"
 
   git -c user.name=adopt -c user.email=adopt@example.com commit --quiet --no-verify -m "chore: adopt cubert"
   break_backend() { printf 'x: int = "text"\n' >>apps/backend/app.py; }
