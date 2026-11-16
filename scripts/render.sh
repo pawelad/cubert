@@ -116,12 +116,15 @@ attempt() {
 }
 attempt
 retry=""
-# mise lock downloads every platform's artifact to verify it. A few of 192 renders lose
-# one such download at random, and pass when run again.
-if [ "$status" -ne 0 ] && grep -q 'lock-time provenance verification failed' "$log"; then
+# Cross-platform locking can hit GitHub's download limits. An immediate retry can
+# fail before setup when mise resolves the Python runtime for Copier.
+if [ "$status" -ne 0 ] && grep -qE \
+  'lock-time provenance verification failed|HTTP status client error \(403 Forbidden\).*https://github.com/[^/]+/[^/]+/releases/download/' "$log"; then
   mv "$log" "$log.first"
+  echo "retry $name after 60s: mise download failed (first log: $log.first)"
+  sleep 60
   attempt
-  retry=" (after a mise lock retry, first log: $log.first)"
+  retry=" (after a mise download retry, first log: $log.first)"
 fi
 if [ "$status" -eq 0 ]; then
   echo "pass $name$retry"
