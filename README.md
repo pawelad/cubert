@@ -1,6 +1,6 @@
 # cubert
 
-_Every project a clone. Unlike Cubert, they take updates._
+_Every project's a clone. Unlike Cubert, they take updates._
 
 A [Copier] template for my projects. It ships the tooling that every repository shares,
 so a fix lands once in cubert and reaches each project with `mise run template:update`.
