@@ -1,4 +1,5 @@
 # Changelog
 
-All notable changes to this project are documented here. Generated from Conventional
-Commit history by [git-cliff](https://git-cliff.org) - do not hand-edit past entries.
+All notable changes to this project are documented here.
+[git-cliff](https://git-cliff.org) generates them from the Conventional Commits history.
+Do not edit past entries by hand.

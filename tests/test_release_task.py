@@ -135,7 +135,7 @@ def test_first_release_is_an_initial_release_section_commit_and_tag(
     changelog = (project / "CHANGELOG.md").read_text()
     assert changelog.count("# Changelog") == 1
     section = (
-        r"entries\.\n\n## \[0\.1\.0\] - \d{4}-\d{2}-\d{2}\n\nInitial release\.\n\Z"
+        r"by hand\.\n\n## \[0\.1\.0\] - \d{4}-\d{2}-\d{2}\n\nInitial release\.\n\Z"
     )
     assert re.search(section, changelog)
     assert "Add the first feature" not in changelog
