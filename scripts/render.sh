@@ -20,8 +20,8 @@ opentofu_dir=opentofu ansible_dir=ansible
 if [ "$python" = true ]; then ts_dirs='["apps/web", "apps/api"]'; else ts_dirs='["."]'; fi
 # Alternate the license, so both texts render without doubling the matrix.
 ones="${flags//[^1]/}"
-license="MPL-2.0"
-if [ $((${#ones} % 2)) -eq 1 ]; then license="ARR"; fi
+license="MPL-2.0" year=()
+if [ $((${#ones} % 2)) -eq 1 ]; then license="ARR" year=(-d copyright_year=2026); fi
 
 # shellcheck source=scripts/render_fixtures.sh
 source "$root/scripts/render_fixtures.sh"
@@ -38,7 +38,7 @@ setup_one_at_a_time() {
 
 run() {
   copier copy --quiet --defaults --vcs-ref HEAD \
-    -d project_name="demo" -d description="A demo project." -d license="$license" \
+    -d project_name="demo" -d description="A demo project." -d license="$license" ${year[@]+"${year[@]}"} \
     -d python="$python" -d docker="$docker" -d opentofu="$opentofu" \
     -d ansible="$ansible" -d changelog="$changelog" -d openspec="$openspec" \
     -d typescript="$typescript" -d typescript_dirs="$ts_dirs" \

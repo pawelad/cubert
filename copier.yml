@@ -77,12 +77,16 @@ license:
     All rights reserved: "ARR"
   default: "MPL-2.0"
 
-# Stored in the answers file, so a later cubert release does not change the year.
+# Stored in the answers file, so a later cubert release does not change the year. No
+# default: a fixed one goes stale each January, and Copier's `now()` is deprecated.
 copyright_year:
   type: "str"
   help: "Copyright year, the year of first publication"
-  default: "2026"
   when: "[[ license == 'ARR' ]]"
+  validator: |
+    [% if not copyright_year | regex_search('^[0-9]{4}$') %]
+    Enter a year, such as 2026.
+    [% endif %]
 
 python:
   type: "bool"

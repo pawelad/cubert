@@ -48,7 +48,7 @@ Copier asks these questions:
 | `project_name`, `description`                                              | none              |
 | `github_owner`                                                             | `pawelad`         |
 | `license`: `MPL-2.0` or all rights reserved                                | `MPL-2.0`         |
-| `copyright_year`, for all rights reserved                                  | `2026`            |
+| `copyright_year`, for all rights reserved                                  | none              |
 | `python`, `docker`, `opentofu` (`opentofu_dir`), `ansible` (`ansible_dir`) | `false`           |
 | `typescript` (`typescript_dirs`, a list of directories with package.json)  | `false` (`["."]`) |
 | `openspec`: `none`, `changes-only` or `spec-driven`                        | `changes-only`    |
