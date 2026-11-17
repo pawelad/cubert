@@ -266,7 +266,9 @@ expect_hook_failure() {
     echo "render: $step passed on a known $feature error" >&2
     return 1
   fi
-  if [ -n "$expected" ] && ! grep -qF -- "$expected" <<<"$log"; then
+  # With a terminal, ansible-lint wraps rule names in color and hyperlink escapes.
+  if [ -n "$expected" ] \
+    && ! perl -pe 's/\e\][^\e]*\e\\//g; s/\e\[[0-9;]*m//g' <<<"$log" | grep -qF -- "$expected"; then
     echo "$log"
     echo "render: $step failed without the expected diagnostic: $expected" >&2
     return 1
