@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Adopt cubert in an existing repository as the README says, for a backend-subdir or an infra layout"
+#MISE description="Adopt cubert in an existing repository as docs/adoption.md says, for a backend-subdir or an infra layout"
 #USAGE flag "--layout <name>" default="all" help="backend-subdir, infra or all"
 #USAGE flag "--out <dir>" help="Write the projects here (default: a new temp dir)"
 # The layout functions are called by name, and after_copy is redefined per layout.
@@ -39,7 +39,7 @@ snapshot() {
 
 after_copy() { :; }
 
-# Steps 1 to 7 of "Adopt cubert in an existing repository" in the README.
+# Steps 1 to 7 of "Adopt cubert in an existing repository" in docs/adoption.md.
 adopt() {
   local answers=("$@") project="$PWD"
   step "copy the template over the existing files"
@@ -47,7 +47,7 @@ adopt() {
   (cd "$root" && copier copy --quiet --defaults --overwrite --vcs-ref "$base" \
     -d project_name="demo" -d description="An existing project." \
     "${answers[@]}" "$src" "$project" >/dev/null)
-  # README step 4: merge the project files that Copier kept.
+  # Adoption step 4: merge the project files that Copier kept.
   after_copy
   mise trust --quiet --all
   step "set up the tools"
@@ -77,7 +77,7 @@ commit_existing() {
 }
 
 # Python lives in apps/backend, so the python option stays off and hk.pkl keeps the
-# project's own ruff and mypy steps, with the template's hk.pkl layering as the README says.
+# project's own ruff and mypy steps, with the template's hk.pkl layering as docs/adoption.md says.
 backend_subdir() {
   dest="$out/backend-subdir"
   rm -rf "$dest"

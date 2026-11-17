@@ -1,27 +1,24 @@
 # cubert
 
+_Every project a clone. Unlike Cubert, they take updates._
+
 A [Copier] template for my projects. It ships the tooling that every repository shares,
 so a fix lands once in cubert and reaches each project with `mise run template:update`.
 
 ## What a project gets
 
-- [mise] for every tool version and task, on every machine and in CI. A new project
-  starts with the newest releases that are at least 7 days old.
-- [hk] git hooks: formatting, linting, pinned versions, prose rules and Conventional
-  Commits.
-- [dprint] for Markdown, TOML, JSON and YAML, plus yamllint, shellcheck, shfmt,
-  jactionlint and zizmor.
-- Spell checking with typos, secret scanning with betterleaks and an offline link check
-  with lychee, all in the git hooks.
-- `mise run audit` and a weekly CI job: known vulnerabilities in `uv.lock` and
-  `bun.lock` (osv-scanner), zizmor's online audits of the GitHub Actions, and online
-  links. They need the network, so hooks skip them.
-- An `AGENTS.md` with shared rules for coding agents, and a section for project rules.
-- Worktree setup that runs once for `wt switch --create`, plain `git worktree add` and
-  the agent apps built on it.
-- GitHub Actions CI, a PR title check and Dependabot.
-- Optional features: Python, TypeScript with Bun, Docker, OpenTofu, Ansible, OpenSpec
-  and a git-cliff changelog.
+| Area         | What it does                                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Tools, tasks | [mise] pins every tool and runs every task, locally and in CI. A new project starts with releases at least 7 days old.   |
+| Git hooks    | [hk] runs formatting, linting, pinned versions, prose rules and Conventional Commits.                                    |
+| Formatting   | [dprint] formats Markdown, TOML, JSON and YAML.                                                                          |
+| Linting      | [yamllint], [ShellCheck], [shfmt], [jactionlint] and [zizmor] check YAML, shell and GitHub Actions.                      |
+| Hygiene      | [typos] checks spelling, [betterleaks] scans for secrets and [lychee] checks links offline, all in the git hooks.        |
+| Audits       | `mise run audit` and a weekly CI job: [osv-scanner] for `uv.lock` and `bun.lock`, zizmor online audits and online links. |
+| Agents       | An `AGENTS.md` with shared rules for coding agents, and a section for project rules.                                     |
+| Worktrees    | Setup that runs once for [Worktrunk], plain `git worktree add` and the agent apps built on it.                           |
+| CI           | GitHub Actions CI, a PR title check and [Dependabot].                                                                    |
+| Optional     | [Python], TypeScript with [Bun], [Docker], [OpenTofu], [Ansible], [OpenSpec] and a [git-cliff] changelog.                |
 
 [`template/docs/conventions.md`](./template/docs/conventions.md) describes the shared
 tooling in detail. Every project gets that file as `docs/conventions.md`.
@@ -77,67 +74,8 @@ update as one commit.
 
 ## Adopt cubert in an existing repository
 
-Copy from GitHub, not from a local clone. Copier records the source in
-`.copier-answers.yml`, and a local path breaks updates on other machines.
-
-1. Start on a clean branch.
-2. Copy over the existing files, answering the questions for this project:
-
-   ```console
-   $ mise x pypi:copier -- copier copy --overwrite gh:pawelad/cubert .
-   ```
-
-3. Review `git diff`. Copier replaced each template-owned and merged file that existed,
-   such as `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.config/wt.toml`
-   and `dependabot.yml`. Put the project's own content back into each merged file, below
-   the shared parts:
-   - Copier keeps an existing `ci.yml` and `audit.yml`, because they are project-owned.
-     Replace their check and audit jobs with calls to `cubert-check.yml` and
-     `cubert-audit.yml` (see [conventions.md](./template/docs/conventions.md#ci)). Keep
-     application jobs, image scans and deployment gates. Override `ci:check` when those
-     jobs already run the application suites.
-   - Restore project privacy rules and commit policies in `AGENTS.md`. Reconcile them
-     with the shared defaults, which permit automatic commits for a single task.
-   - `wt.toml` hooks become `.worktreeinclude`, `.worktreelinks` and the `install` task.
-     Project commit guidance, such as area scopes, goes at the end of `template-append`.
-   - yamllint relaxations go in the project's `.yamllint`, which extends
-     `.config/yamllint.yaml`.
-   - Delete an old config that a template file replaces, such as `.dclintrc` next to
-     `.dclintrc.yaml`.
-4. Copier kept the project-owned files that already existed: `mise.toml`, `hk.pkl`,
-   `dprint.json`, `LICENSE` and the others in
-   [conventions.md](./template/docs/conventions.md#file-ownership). Render a fresh copy
-   and merge it into each one by hand:
-
-   ```console
-   $ mise x pypi:copier -- copier copy --defaults --data-file .copier-answers.yml \
-       gh:pawelad/cubert /tmp/cubert-fresh
-   ```
-
-   The project `hk.pkl` must amend `.config/hk/cubert.pkl`, `dprint.json` must extend
-   `.config/dprint.json`, and `.yamllint` must extend `.config/yamllint.yaml`. The
-   `python` option expects `pyproject.toml` at the root. A monorepo with Python in a
-   subdirectory answers `false` and keeps its own ruff and mypy steps in `hk.pkl`. Leave
-   the tool list in `mise.toml` alone: `mise run setup` adds the tools that cubert needs
-   and raises an hk pin that is too old. A changelog project copies the `cliff.toml`
-   header, `postprocessors`, `link_parsers` and the `entry` macro from the fresh copy.
-   `--prepend` then still finds the header after the reformat, and entries link their
-   PRs.
-5. Move what cubert now owns out of the project files: the `postinstall` hook, the
-   `[settings]` and `[env]` entries that `.config/mise/config.toml` already sets, and
-   duplicate hk steps. Split a project `check` or `test` task into `check:<area>` and
-   `test:<area>` tasks. Turn shell scripts into file tasks in `mise-tasks/`, unless
-   tests cover them. A release script becomes the shared `release` task, with its
-   version edits in `release:bump` and any step after the push in `release:publish`.
-   Keep install and type-check prerequisites, such as Expo route generation. OpenTofu
-   validation runs through `check:opentofu`; keep a project hook when validation must
-   also run before commits and pushes. Preserve credential isolation and state backups.
-6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,
-   `mise run setup` and `mise run format --all`. Commit the reformat alone, and add its
-   hash to `.git-blame-ignore-revs`.
-7. Fix what `mise run ci:check` and `mise run audit` report, then commit. Exercise
-   application jobs and deployment gates before merging the adoption. A step that needs
-   a secret, such as an Ansible vault password, fails in CI too.
+Copy over the existing files, then merge the project's content back by hand. See
+[docs/adoption.md](./docs/adoption.md) for the steps.
 
 ## Development
 
@@ -149,9 +87,27 @@ Developed and maintained by [Paweł Adamczak][author].
 
 Released under the [Mozilla Public License 2.0][license].
 
+[ansible]: https://docs.ansible.com/
 [author]: https://pawelad.me/
+[betterleaks]: https://github.com/betterleaks/betterleaks
+[bun]: https://bun.sh/
 [copier]: https://copier.readthedocs.io/en/stable/
+[dependabot]: https://docs.github.com/en/code-security/dependabot
+[docker]: https://www.docker.com/
 [dprint]: https://dprint.dev/
+[git-cliff]: https://git-cliff.org/
 [hk]: https://hk.jdx.dev/
+[jactionlint]: https://github.com/jdx/jactionlint
 [license]: ./LICENSE
+[lychee]: https://lychee.cli.rs/
 [mise]: https://mise.jdx.dev/
+[opentofu]: https://opentofu.org/
+[openspec]: https://github.com/Fission-AI/OpenSpec
+[osv-scanner]: https://google.github.io/osv-scanner/
+[python]: https://www.python.org/
+[shellcheck]: https://www.shellcheck.net/
+[shfmt]: https://github.com/mvdan/sh
+[typos]: https://github.com/crate-ci/typos
+[worktrunk]: https://worktrunk.dev/
+[yamllint]: https://yamllint.readthedocs.io/
+[zizmor]: https://docs.zizmor.sh/
