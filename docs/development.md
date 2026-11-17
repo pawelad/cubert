@@ -152,13 +152,15 @@ them. Five more tests read the template itself:
 cubert uses SemVer tags (`v0.1.0`). `template:update` updates a project to the latest
 tag, so a tag is a release. git-cliff generates the release notes from the commits.
 
-1. Run `mise run check`, `mise run test`, `mise run e2e:render --all` and
-   `mise run e2e:update --from <previous tag>`.
-2. Run `mise run release:preview` and read the entries. Push `main` and wait for CI.
+1. Push `main` and wait for CI. It runs the checks, the tests, the full render matrix
+   and the update, conflict and adoption tests. CI updates from the previous commit
+   only, so also run `mise run e2e:update --from <previous tag>`.
+2. Run `mise run release:preview` and read the entries.
 3. Run `mise run release X.Y.Z`. It writes the `CHANGELOG.md` section with git-cliff,
    commits `chore(release): vX.Y.Z` and tags it with the section as the message. It
    needs a passing CI run on `main`, then asks before it pushes and publishes the GitHub
-   Release.
+   Release. With no terminal, it keeps the commit and tag local and prints the publish
+   command.
 4. Add each step that a project must take by hand to the GitHub Release, with
    `gh release edit vX.Y.Z --notes-file <file>`.
 
