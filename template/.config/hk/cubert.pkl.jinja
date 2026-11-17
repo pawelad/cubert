@@ -61,7 +61,7 @@ steps {
 [% endif %]
 [% if opentofu %]
   ["tofu-fmt"] = (builtins.tofu) {
-    dir = "[[ tofu_dir ]]"
+    dir = "[[ opentofu_dir ]]"
   }
 [% endif %]
 [% if ansible %]

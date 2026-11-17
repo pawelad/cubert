@@ -15,7 +15,7 @@ log="$out/$name.log"
 bit() { [ "${flags:$1:1}" = "1" ] && echo true || echo false; }
 python="$(bit 1)" docker="$(bit 3)" opentofu="$(bit 5)" ansible="$(bit 7)" changelog="$(bit 9)"
 typescript="$(bit 11)"
-tofu_dir=opentofu ansible_dir=ansible
+opentofu_dir=opentofu ansible_dir=ansible
 # Alternate the directory list, so both the root and the monorepo shapes render.
 if [ "$python" = true ]; then ts_dirs='["apps/web", "apps/api"]'; else ts_dirs='["."]'; fi
 # Alternate the license, so both texts render without doubling the matrix.
@@ -61,11 +61,11 @@ run() {
   CI=true mise run ci:check
   if [ "$opentofu" = true ]; then
     # Setup and check must not touch the state backend or its data dir.
-    [ ! -e "$tofu_dir/.terraform" ] || {
+    [ ! -e "$opentofu_dir/.terraform" ] || {
       echo "render: setup or check ran tofu init" >&2
       exit 1
     }
-    [ -z "$(git status --porcelain --untracked-files=all "$tofu_dir/.terraform-validate")" ] \
+    [ -z "$(git status --porcelain --untracked-files=all "$opentofu_dir/.terraform-validate")" ] \
       || {
         echo "render: .terraform-validate is not ignored" >&2
         exit 1

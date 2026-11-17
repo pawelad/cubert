@@ -25,15 +25,15 @@ __pycache__/
 node_modules/
 [% endif %]
 [% if opentofu %]
-[[ tofu_dir ]]/.terraform/
-[[ tofu_dir ]]/.terraform-validate/
-[[ tofu_dir ]]/*.tfstate
-[[ tofu_dir ]]/*.tfstate.*
+[[ opentofu_dir ]]/.terraform/
+[[ opentofu_dir ]]/.terraform-validate/
+[[ opentofu_dir ]]/*.tfstate
+[[ opentofu_dir ]]/*.tfstate.*
 # Variables and saved plans can hold secrets, even when the state is encrypted.
-[[ tofu_dir ]]/*.tfvars
-[[ tofu_dir ]]/*.tfvars.json
-[[ tofu_dir ]]/*.tfplan
-[[ tofu_dir ]]/*.tofuplan
+[[ opentofu_dir ]]/*.tfvars
+[[ opentofu_dir ]]/*.tfvars.json
+[[ opentofu_dir ]]/*.tfplan
+[[ opentofu_dir ]]/*.tofuplan
 [% endif %]
 [% if ansible %]
 [[ ansible_dir ]]/.vault_pass

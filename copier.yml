@@ -41,7 +41,7 @@ _skip_if_exists:
   - ".python-version"
   - "cliff.toml"
   - "CHANGELOG.md"
-  - "[[ tofu_dir ]]/versions.tf"
+  - "[[ opentofu_dir ]]/versions.tf"
   - "[[ ansible_dir ]]/.gitkeep"
   - "openspec/changes/.gitkeep"
   - "openspec/specs/.gitkeep"
@@ -127,14 +127,15 @@ opentofu:
   help: "OpenTofu infrastructure (tofu fmt and validate, Dependabot opentofu)?"
   default: false
 
-tofu_dir:
+opentofu_dir:
   type: "str"
   help: "OpenTofu directory"
   default: "opentofu"
   when: "[[ opentofu ]]"
   validator: |
-    [% if not tofu_dir or tofu_dir.startswith('/') or '..' in tofu_dir.split('/')
-          or tofu_dir | regex_search('[^A-Za-z0-9._/-]|^([.]/+)*-') %]
+    [% if not opentofu_dir or opentofu_dir.startswith('/')
+          or '..' in opentofu_dir.split('/')
+          or opentofu_dir | regex_search('[^A-Za-z0-9._/-]|^([.]/+)*-') %]
     Use a relative project path with ASCII letters, numbers, periods, underscores,
     hyphens and slashes. The first path component cannot start with a hyphen.
     [% endif %]

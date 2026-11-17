@@ -23,7 +23,7 @@ def rendered_path(template_path: str) -> str:
     for raw in template_path.removeprefix("template/").split("/"):
         part = raw.removesuffix(".jinja")
         part = part.replace("[[ _copier_conf.answers_file ]]", ".copier-answers.yml")
-        part = part.replace("[[ tofu_dir ]]", "<tofu_dir>")
+        part = part.replace("[[ opentofu_dir ]]", "<opentofu_dir>")
         part = part.replace("[[ ansible_dir ]]", "<ansible_dir>")
         parts.append(CONDITIONAL.sub(r"\1", part))
     return "/".join(parts)
@@ -57,7 +57,7 @@ def skip_if_exists() -> list[str]:
             in_list = True
         elif in_list and (match := re.match(r'\s+- "(.+)"', line)):
             entry = match.group(1)
-            for name in ("tofu_dir", "ansible_dir"):
+            for name in ("opentofu_dir", "ansible_dir"):
                 entry = entry.replace(f"[[ {name} ]]", f"<{name}>")
             entries.append(entry)
         elif in_list and line.strip() and not line.lstrip().startswith("#"):

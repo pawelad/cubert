@@ -1,5 +1,5 @@
 # shellcheck shell=bash disable=SC2154
-# Sourced by render.sh, which sets ts_dirs, tofu_dir and ansible_dir.
+# Sourced by render.sh, which sets ts_dirs, opentofu_dir and ansible_dir.
 # Small projects and known errors for each render.
 # hk skips a step when no file matches its glob, so a bare render proves nothing.
 
@@ -66,7 +66,7 @@ typescript_dependency_fixture() {
 }
 
 opentofu_fixture() {
-  printf 'output "greeting" {\n  value = "hello"\n}\n' >"$tofu_dir/main.tf"
+  printf 'output "greeting" {\n  value = "hello"\n}\n' >"$opentofu_dir/main.tf"
 }
 
 ansible_fixture() {
@@ -200,7 +200,7 @@ break_workflow() {
   printf 'on:\n  push:\n    branch: main\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: "true"\n' \
     >.github/workflows/broken.yml
 }
-break_opentofu() { printf 'output "greeting" {\nvalue = "hello"\n}\n' >"$tofu_dir/main.tf"; }
+break_opentofu() { printf 'output "greeting" {\nvalue = "hello"\n}\n' >"$opentofu_dir/main.tf"; }
 # Only the role changes, and the playbook that includes it stays as it is.
 break_ansible() {
   printf -- '- name: "Say hello"\n  ansible.builtin.no_such_module:\n    msg: "hello"\n' \

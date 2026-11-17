@@ -43,16 +43,16 @@ $ git commit -m "chore: start from the cubert template"
 
 Copier asks these questions:
 
-| Question                                                                  | Default           |
-| ------------------------------------------------------------------------- | ----------------- |
-| `project_name`, `description`                                             | none              |
-| `github_owner`                                                            | `pawelad`         |
-| `license`: `MPL-2.0` or all rights reserved                               | `MPL-2.0`         |
-| `copyright_year`, for all rights reserved                                 | `2026`            |
-| `python`, `docker`, `opentofu` (`tofu_dir`), `ansible` (`ansible_dir`)    | `false`           |
-| `typescript` (`typescript_dirs`, a list of directories with package.json) | `false` (`["."]`) |
-| `openspec`: `none`, `changes-only` or `spec-driven`                       | `changes-only`    |
-| `changelog`                                                               | `false`           |
+| Question                                                                   | Default           |
+| -------------------------------------------------------------------------- | ----------------- |
+| `project_name`, `description`                                              | none              |
+| `github_owner`                                                             | `pawelad`         |
+| `license`: `MPL-2.0` or all rights reserved                                | `MPL-2.0`         |
+| `copyright_year`, for all rights reserved                                  | `2026`            |
+| `python`, `docker`, `opentofu` (`opentofu_dir`), `ansible` (`ansible_dir`) | `false`           |
+| `typescript` (`typescript_dirs`, a list of directories with package.json)  | `false` (`["."]`) |
+| `openspec`: `none`, `changes-only` or `spec-driven`                        | `changes-only`    |
+| `changelog`                                                                | `false`           |
 
 `mise run setup` pins the seeded `latest` tool versions in `mise.toml`, so commit
 `mise.toml`, `mise.lock` and `.mise/locks/` after it.

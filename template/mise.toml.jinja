@@ -77,7 +77,7 @@ run = [
 [tasks."tofu:init"]
 # Not part of `install`: it contacts the state backend and needs the operator's login.
 description = "Initialize the OpenTofu providers and state backend (needs credentials)"
-dir = "[[ tofu_dir ]]"
+dir = "[[ opentofu_dir ]]"
 run = '''
 if [ -n "${TF_PLUGIN_CACHE_DIR:-}" ]; then mkdir -p "$TF_PLUGIN_CACHE_DIR"; fi
 tofu init -input=false
