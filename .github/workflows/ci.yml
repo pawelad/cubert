@@ -4,6 +4,8 @@ name: "CI"
 on:
   push:
     branches: ["main"]
+    # A release commit only adds the CHANGELOG.md section, and its parent passed CI.
+    paths-ignore: ["CHANGELOG.md"]
   pull_request:
   workflow_dispatch:
   # New advisories and tool releases appear without a commit: audit and render weekly.
