@@ -186,3 +186,9 @@ author_url:
   type: "str"
   default: "https://pawelad.me/"
   when: false
+
+# CODEOWNERS needs a user: GitHub rejects an organization, such as an org github_owner.
+github_user:
+  type: "str"
+  default: "pawelad"
+  when: false

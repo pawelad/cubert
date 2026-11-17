@@ -36,4 +36,4 @@ def test_codeowners_matches_the_template() -> None:
     own = (ROOT / ".github/CODEOWNERS").read_text()
     shipped = (ROOT / "template/.github/CODEOWNERS.jinja").read_text()
 
-    assert own == shipped.replace("[[ github_owner ]]", "pawelad")
+    assert own == shipped.replace("[[ github_user ]]", "pawelad")
