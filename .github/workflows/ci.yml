@@ -132,8 +132,10 @@ jobs:
           if-no-files-found: "ignore"
           retention-days: 3
 
+  # Each job renders every other feature combination. The name shows the OpenSpec
+  # option and TypeScript, so the job list does not truncate what differs.
   render:
-    name: "Render typescript ${{ matrix.typescript }}, ${{ matrix.openspec }}"
+    name: "${{ matrix.openspec }}, ${{ matrix.typescript == '1' && 'TS' || 'no TS' }}"
     runs-on: "ubuntu-24.04"
     timeout-minutes: 45
     strategy:
