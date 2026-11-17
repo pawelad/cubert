@@ -71,6 +71,9 @@ Each template file is one of three kinds. The table in
 Moving a file to another kind breaks updates for existing projects. Treat it as a
 breaking change, and say what projects must do in the release notes.
 
+Copier cannot update a file into a directory of the same name, such as a `clean` task
+that becomes `clean/_default`. The update stops with `FileExistsError`. Pick a new path.
+
 ## Shared AGENTS.md block
 
 `AGENTS.md` here has the same shared block as a project's, between the
