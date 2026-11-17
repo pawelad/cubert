@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 #MISE description="Empty the worktrunk trash directory to free disk space"
-#MISE alias="wt:clean"
 set -euo pipefail
 
 trash="$(git rev-parse --git-common-dir)/wt/trash"

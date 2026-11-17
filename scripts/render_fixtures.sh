@@ -276,12 +276,12 @@ expect_hook_failure() {
   git reset --quiet --hard HEAD
 }
 
-# `clean` must run each project <area>:clean task.
+# `clean` must run each project clean:<area> task.
 expect_clean() {
-  printf '\n[tasks."demo:clean"]\nrun = "touch .cleaned"\n' >>mise.toml
+  printf '\n[tasks."clean:demo"]\nrun = "touch .cleaned"\n' >>mise.toml
   mise run clean >/dev/null
   if [ ! -e .cleaned ]; then
-    echo "render: clean did not run demo:clean" >&2
+    echo "render: clean did not run clean:demo" >&2
     return 1
   fi
   git checkout --quiet -- mise.toml

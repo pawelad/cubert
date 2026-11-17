@@ -80,6 +80,11 @@ What an update does to a missing or removed file:
 that the task acts on (`kif:deploy`, `opentofu:init`). A wildcard then selects one area:
 `mise run 'kif:*'`.
 
+Four tasks run a group: `check`, `test`, `audit` and `clean`. A task that one of them
+runs takes the verb first, with one area after it: `check:opentofu`, `test:backend`,
+`clean:worktree`. Every other task keeps `<area>:<verb>`. A deeper name, such as
+`check:tools:sync`, is not run.
+
 The shared tasks are file tasks in `.config/mise/tasks/`. mise names each one from its
 path, so `check/repo` is `check:repo`:
 
@@ -104,18 +109,18 @@ path, so `check/repo` is `check:repo`:
 | `release`            | Changelog option: changelog, commit and tag, then push after you confirm |
 | `release:preview`    | Changelog option: prints the entries since the last release tag          |
 | `format`             | Runs the hk fixers on changed files (`--all` for every file)             |
-| `clean`              | Runs every `<area>:clean` task, `worktree:clean` among them              |
+| `clean`              | Runs every `clean:*` task, `clean:worktree` among them                   |
+| `clean:worktree`     | Empties the worktrunk trash                                              |
 | `upgrade`            | Bumps the tools in `mise.toml` (`mise upgrade --bump`)                   |
 | `hooks:install`      | Installs the hk hooks and the `post-checkout` worktree hook              |
 | `template:update`    | Updates the template-owned and merged files from cubert                  |
 | `template:check`     | Fails if a newer cubert version exists                                   |
 | `worktree:setup`     | Sets up a new worktree once (see below)                                  |
-| `worktree:clean`     | Empties the worktrunk trash                                              |
 
 To add a project check, add a `check:<area>` task. `check` runs it with no other change.
-To add a test suite, add a `test:<area>` task. `test` runs it, and so does CI. Let it
-take test file paths (`#USAGE arg "[files]..."`), so a run can cover only the touched
-files.
+`clean:<area>` works the same way. To add a test suite, add a `test:<area>` task. `test`
+runs it, and so does CI. Let it take test file paths (`#USAGE arg "[files]..."`), so a
+run can cover only the touched files.
 
 The `opentofu` option adds `check:opentofu` and `opentofu:init`. Each `opentofu:` task
 also answers to `tofu:`, the CLI's name, such as `tofu:init`. `setup` and worktree setup
