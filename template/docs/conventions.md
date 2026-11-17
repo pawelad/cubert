@@ -77,7 +77,7 @@ What an update does to a missing or removed file:
 ## Tasks
 
 `mise tasks` lists every task. Names follow `<area>:<verb>`, where the area is the noun
-that the task acts on (`kif:deploy`, `tofu:init`). A wildcard then selects one area:
+that the task acts on (`kif:deploy`, `opentofu:init`). A wildcard then selects one area:
 `mise run 'kif:*'`.
 
 The shared tasks are file tasks in `.config/mise/tasks/`. mise names each one from its
@@ -90,7 +90,7 @@ path, so `check/repo` is `check:repo`:
 | `check`              | Runs every `check:*` task                                                |
 | `check:repo`         | Runs hk on every file, plus the repository guards                        |
 | `check:opentofu`     | OpenTofu option: runs `tofu validate`, with no backend or credentials    |
-| `tofu:lock`          | OpenTofu option: locks the providers for macOS and Linux (`--upgrade`)   |
+| `opentofu:lock`      | OpenTofu option: locks the providers for macOS and Linux (`--upgrade`)   |
 | `ci:check`           | Runs `install`, `check`, then `test`: the CI check job                   |
 | `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it        |
 | `audit:actions`      | Runs zizmor's online audits, such as actions with known vulnerabilities  |
@@ -117,20 +117,22 @@ To add a test suite, add a `test:<area>` task. `test` runs it, and so does CI. L
 take test file paths (`#USAGE arg "[files]..."`), so a run can cover only the touched
 files.
 
-The `opentofu` option adds `check:opentofu` and `tofu:init`. `setup` and worktree setup
-never run `tofu:init`, because it contacts the state backend and needs the operator's
-login. `check:opentofu` validates with `init -backend=false` in its own data directory
-(`.terraform-validate`), so it needs no credentials and leaves the real `.terraform`
-alone. Run `mise run tofu:init` once per checkout before a plan or apply.
+The `opentofu` option adds `check:opentofu` and `opentofu:init`. Each `opentofu:` task
+also answers to `tofu:`, the CLI's name, such as `tofu:init`. `setup` and worktree setup
+never run `opentofu:init`, because it contacts the state backend and needs the
+operator's login. `check:opentofu` validates with `init -backend=false` in its own data
+directory (`.terraform-validate`), so it needs no credentials and leaves the real
+`.terraform` alone. Run `mise run opentofu:init` once per checkout before a plan or
+apply.
 
 `check:opentofu` never changes `.terraform.lock.hcl`, and it fails when the lock file
-lacks a provider. `mise run tofu:lock` then adds the hashes for macOS and Linux, with no
-backend login. After a version constraint change, run `mise run tofu:lock --upgrade`.
-`tofu init` would lock only the local platform, and CI would change the file. The
-OpenTofu tasks create the configured provider cache before invoking OpenTofu. An
-existing project's own `tofu:init` task must create `TF_PLUGIN_CACHE_DIR` too.
-`.config/mise/config.toml` sets `TF_PLUGIN_CACHE_DIR`, so each worktree reuses the
-providers that another one downloaded.
+lacks a provider. `mise run opentofu:lock` then adds the hashes for macOS and Linux,
+with no backend login. After a version constraint change, run
+`mise run opentofu:lock --upgrade`. `tofu init` would lock only the local platform, and
+CI would change the file. The OpenTofu tasks create the configured provider cache before
+invoking OpenTofu. An existing project's own `opentofu:init` task must create
+`TF_PLUGIN_CACHE_DIR` too. `.config/mise/config.toml` sets `TF_PLUGIN_CACHE_DIR`, so
+each worktree reuses the providers that another one downloaded.
 
 OpenTofu hooks check formatting. Validation runs through `check:opentofu` during `check`
 and CI. Keep a project hook if validation must also run before commits or pushes.

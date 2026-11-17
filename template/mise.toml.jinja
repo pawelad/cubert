@@ -74,7 +74,8 @@ run = [
 [% endif %]
 [% if opentofu %]
 
-[tasks."tofu:init"]
+[tasks."opentofu:init"]
+alias = "tofu:init"
 # Not part of `install`: it contacts the state backend and needs the operator's login.
 description = "Initialize the OpenTofu providers and state backend (needs credentials)"
 dir = "[[ opentofu_dir ]]"

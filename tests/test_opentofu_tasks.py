@@ -12,10 +12,10 @@ import pytest
 from tests.support import project_env, render_template
 
 
-@pytest.mark.parametrize("task", ["check/opentofu", "tofu/lock", "tofu:init"])
+@pytest.mark.parametrize("task", ["check/opentofu", "opentofu/lock", "opentofu:init"])
 def test_task_creates_a_missing_provider_cache(tmp_path: Path, task: str) -> None:
     project = render_template(tmp_path, opentofu="true", openspec="none")
-    if task == "tofu:init":
+    if task == "opentofu:init":
         script = tomllib.loads((project / "mise.toml").read_text())["tasks"][task][
             "run"
         ]

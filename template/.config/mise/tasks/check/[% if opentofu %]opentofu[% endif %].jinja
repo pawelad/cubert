@@ -7,12 +7,12 @@ set -euo pipefail
 if [ -n "${TF_PLUGIN_CACHE_DIR:-}" ]; then mkdir -p "$TF_PLUGIN_CACHE_DIR"; fi
 
 # Validation needs the providers but not the state backend or its credentials. Its own
-# data dir keeps `-backend=false` from replacing the backend that `tofu:init` set up.
+# data dir keeps `-backend=false` from replacing the backend that `opentofu:init` set up.
 export TF_DATA_DIR=.terraform-validate
 # Read-only, so a check never rewrites the lock file for this machine's platform.
 if ! log="$(tofu init -backend=false -input=false -lockfile=readonly 2>&1)"; then
   echo "$log" >&2
-  echo "check:opentofu: if the lock file is stale, run mise run tofu:lock (--upgrade after a" >&2
+  echo "check:opentofu: if the lock file is stale, run mise run opentofu:lock (--upgrade after a" >&2
   echo "version change), then commit it." >&2
   exit 1
 fi

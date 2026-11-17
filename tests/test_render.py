@@ -50,7 +50,7 @@ def test_nested_feature_directory_is_used_by_its_install_task(
     tmp_path: Path, feature: str, directory: str
 ) -> None:
     question = "opentofu_dir" if feature == "opentofu" else "ansible_dir"
-    task = "tofu:init" if feature == "opentofu" else "ansible:install"
+    task = "opentofu:init" if feature == "opentofu" else "ansible:install"
     project = render_template(tmp_path, **{feature: "true", question: directory})
     config = tomllib.loads((project / "mise.toml").read_text())
 

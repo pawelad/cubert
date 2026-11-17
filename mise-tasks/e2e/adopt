@@ -208,7 +208,7 @@ infra() {
     >ansible/collections/ansible_collections/demo/util/roles/hello/tasks/main.yml
   printf -- '---\n- name: "Configure the demo hosts"\n  hosts: "all"\n  roles:\n    - role: "demo.util.hello"\n' \
     >ansible/playbooks/site.yml
-  # The existing project locked its providers for every platform, as tofu:lock does.
+  # The existing project locked its providers for every platform, as opentofu:lock does.
   (cd "$root" && mise x opentofu@latest -- tofu -chdir="$dest/opentofu" providers lock \
     -platform=darwin_arm64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 \
     >/dev/null)
@@ -236,9 +236,9 @@ infra() {
   if mise run check:opentofu >"$out/$layout-lock.log" 2>&1; then
     fail "check:opentofu passed with a stale lock file"
   fi
-  grep -q 'mise run tofu:lock' "$out/$layout-lock.log" || fail "check:opentofu did not name tofu:lock"
-  mise run tofu:lock --upgrade >>"$out/$layout-lock.log" 2>&1 || fail "tofu:lock failed, see $out/$layout-lock.log"
-  mise run check:opentofu >>"$out/$layout-lock.log" 2>&1 || fail "check:opentofu failed after tofu:lock"
+  grep -q 'mise run opentofu:lock' "$out/$layout-lock.log" || fail "check:opentofu did not name opentofu:lock"
+  mise run opentofu:lock --upgrade >>"$out/$layout-lock.log" 2>&1 || fail "opentofu:lock failed, see $out/$layout-lock.log"
+  mise run check:opentofu >>"$out/$layout-lock.log" 2>&1 || fail "check:opentofu failed after opentofu:lock"
   git reset --quiet --hard HEAD
   step "pass (project: $dest)"
 }
