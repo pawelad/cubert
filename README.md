@@ -99,6 +99,7 @@ Copy from GitHub, not from a local clone. Copier records the source in
    - Restore project privacy rules and commit policies in `AGENTS.md`. Reconcile them
      with the shared defaults, which permit automatic commits for a single task.
    - `wt.toml` hooks become `.worktreeinclude`, `.worktreelinks` and the `install` task.
+     Project commit guidance, such as area scopes, goes at the end of `template-append`.
    - yamllint relaxations go in the project's `.yamllint`, which extends
      `.config/yamllint.yaml`.
    - Delete an old config that a template file replaces, such as `.dclintrc` next to

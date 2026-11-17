@@ -71,6 +71,10 @@ def matches(entry: str, path: str) -> bool:
 
 
 def kinds_of(path: str, rows: dict[str, list[str]]) -> list[str]:
+    # An exact entry beats its directory: `.config/wt.toml` is merged inside `.config/`.
+    exact = [kind for kind, entries in rows.items() if path in entries]
+    if exact:
+        return exact
     return [
         kind
         for kind, entries in rows.items()

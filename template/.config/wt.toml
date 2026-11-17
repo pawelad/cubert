@@ -1,5 +1,5 @@
-# Template-owned: edit in cubert, not in a project.
-# Projects extend setup through .worktreeinclude, .worktreelinks and the `install` task.
+# Merged: add project lines below the shared ones, so updates merge cleanly.
+# Put setup steps in .worktreeinclude, .worktreelinks or the `install` task instead.
 
 [pre-start]
 setup = "mise run worktree:setup"
@@ -14,3 +14,5 @@ template-append = """
 - Use active voice, one idea per sentence, and American English.
 - No em dashes, no emojis, no Co-Authored-By trailers.
 """
+# Worktrunk reads commit guidance from this file only. Add project rules, such as the
+# changelog areas to scope with, at the end of template-append.

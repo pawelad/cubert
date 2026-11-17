@@ -8,8 +8,8 @@ belongs to the template: change it in cubert, not here. Project setup lives in
 
 | Kind           | Files                                                                                                                                                                                                                                                                                                                                                                                                         | On `copier update`            |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Template-owned | `.config/`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/cubert-check.yml`, `.github/workflows/cubert-audit.yml`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                                           | Takes the template's changes  |
-| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `openspec/config.yaml`                                                                                                                                                                                                                                                                          | Merges your additions         |
+| Template-owned | `.config/` except `wt.toml`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/cubert-check.yml`, `.github/workflows/cubert-audit.yml`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                          | Takes the template's changes  |
+| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.config/wt.toml`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `openspec/config.yaml`                                                                                                                                                                                                                                                       | Merges your additions         |
 | Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `.yamllint`, `biome.json`, `mise-tasks/`, `.github/workflows/ci.yml`, `.github/workflows/audit.yml`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<tofu_dir>/versions.tf`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
 
 Copier treats template-owned and merged files the same way: a 3-way merge of the
@@ -335,7 +335,9 @@ file, and `mise run setup` sets `blame.ignoreRevsFile` for local blame.
 
 Every way to create a worktree runs `mise run worktree:setup`:
 
-- `wt switch --create` runs it from the `[pre-start]` hook in `.config/wt.toml`.
+- `wt switch --create` runs it from the `[pre-start]` hook in `.config/wt.toml`. That
+  file is merged, so a project adds its commit guidance at the end of `template-append`.
+  Worktrunk reads that guidance from no other file.
 - Plain `git worktree add`, and agent tools that use it (Superset, Jean, herdr, Orca),
   fire the `post-checkout` hook, which runs it.
 
