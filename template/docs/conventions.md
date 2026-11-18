@@ -66,8 +66,9 @@ What an update does to a missing or removed file:
   `gh` token too.
 - A new project's `mise.toml` seeds `latest` (`lts` for Node). The first
   `mise run setup` pins each one to the newest release that `minimum_release_age`
-  allows, so cubert holds no tool versions except that Python line. Add a tool with
-  `mise use --pin <tool>`.
+  allows, so cubert holds no tool versions except that Python line. To add a tool, add
+  `<tool> = "latest"` to `[tools]` and run `mise run setup`. `mise use --pin <tool>` can
+  pick an installed release that the cutoff hides, then fail to lock it.
 - The `pins` check requires each request to match its version in `mise.lock`. A dotted
   prefix such as `node = "24.22"` fails when it locks `24.22.2`.
 - Commit `.mise/locks/` with `mise.lock`. The `lockfile` check verifies native npm and

@@ -42,7 +42,7 @@ def _mise_failures(path: Path) -> list[str]:
                 failures.append(
                     f"{path}: tool {name!r} request {value!r}"
                     " does not match its locked version."
-                    f" Fix: mise use --pin {name}"
+                    " Fix: mise lock"
                 )
     return failures
 

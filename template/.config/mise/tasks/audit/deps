@@ -12,7 +12,7 @@ if [ "${#args[@]}" -eq 0 ]; then
   exit 0
 fi
 if ! command -v osv-scanner >/dev/null; then
-  echo "audit:deps: osv-scanner is missing. Fix: mise use --pin osv-scanner" >&2
+  echo "audit:deps: osv-scanner is missing. Fix: mise run setup" >&2
   exit 1
 fi
 osv-scanner scan source "${args[@]}"
