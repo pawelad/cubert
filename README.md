@@ -50,6 +50,7 @@ Copier asks these questions:
 | `license`: `MPL-2.0` or all rights reserved                                | `MPL-2.0`         |
 | `copyright_year`, for all rights reserved                                  | none              |
 | `python`, `docker`, `opentofu` (`opentofu_dir`), `ansible` (`ansible_dir`) | `false`           |
+| `opentofu_state_backup` (`opentofu_state_bucket`), for `opentofu`          | `false`           |
 | `typescript` (`typescript_dirs`, a list of directories with package.json)  | `false` (`["."]`) |
 | `openspec`: `none`, `changes-only` or `spec-driven`                        | `changes-only`    |
 | `changelog`                                                                | `false`           |

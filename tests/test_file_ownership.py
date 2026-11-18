@@ -14,7 +14,7 @@ KINDS = ("Template-owned", "Merged", "Project-owned")
 # Copier writes and updates this file itself, so no row describes it.
 COPIER_MANAGED = {".copier-answers.yml"}
 
-CONDITIONAL = re.compile(r"\[% if \w+ %\](.*?)\[% endif %\]")
+CONDITIONAL = re.compile(r"\[% if [^%]+ %\](.*?)\[% endif %\]")
 
 
 def rendered_path(template_path: str) -> str:

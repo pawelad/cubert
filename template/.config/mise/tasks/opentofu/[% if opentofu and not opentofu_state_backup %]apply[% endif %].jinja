@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#MISE description="Apply OpenTofu changes (needs credentials)"
+#MISE dir="[[ opentofu_dir ]]"
+#MISE alias="tofu:apply"
+#USAGE arg "[args]..." help="A saved plan or more tofu apply flags (relative to [[ opentofu_dir ]])"
+set -euo pipefail
+set +x
+# Rerun under mise exec here, which loads [[ opentofu_dir ]]/mise.toml and its .env.
+[ -n "${OPENTOFU_TASK_ENV:-}" ] || OPENTOFU_TASK_ENV=1 exec mise exec -- "$0" "$@"
+
+tofu apply -input=false -lock-timeout=60s "$@"

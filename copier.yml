@@ -22,6 +22,7 @@ _exclude:
   - ".git"
   - "[% if openspec == 'none' %]openspec[% endif %]"
   - "[% if openspec != 'spec-driven' %]openspec/specs[% endif %]"
+  - "[% if not opentofu_state_backup %].config/opentofu[% endif %]"
 
 # Created once, then owned by the project. Copier creates a deleted one again on update.
 _skip_if_exists:
@@ -143,6 +144,24 @@ opentofu_dir:
           or opentofu_dir | regex_search('[^A-Za-z0-9._/-]|^([.]/+)*-') %]
     Use a relative project path with ASCII letters, numbers, periods, underscores,
     hyphens and slashes. The first path component cannot start with a hyphen.
+    [% endif %]
+
+opentofu_state_backup:
+  type: "bool"
+  help: "Back up the encrypted state from R2 to B2 (GitHub Actions, opentofu:apply)?"
+  default: false
+  when: "[[ opentofu ]]"
+
+# B2 names the backup bucket <bucket>-backups, and allows at most 63 characters.
+opentofu_state_bucket:
+  type: "str"
+  help: "R2 bucket that holds the encrypted OpenTofu state"
+  default: "[[ project_name ]]-opentofu-state"
+  when: "[[ opentofu_state_backup ]]"
+  validator: |
+    [% if not opentofu_state_bucket
+          | regex_search('^[a-z0-9][a-z0-9-]{4,53}[a-z0-9]$') %]
+    Use 6 to 55 lowercase letters, numbers and hyphens, with no hyphen at either end.
     [% endif %]
 
 ansible:

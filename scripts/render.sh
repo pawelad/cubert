@@ -16,6 +16,9 @@ bit() { [ "${flags:$1:1}" = "1" ] && echo true || echo false; }
 python="$(bit 1)" docker="$(bit 3)" opentofu="$(bit 5)" ansible="$(bit 7)" changelog="$(bit 9)"
 typescript="$(bit 11)"
 opentofu_dir=opentofu ansible_dir=ansible
+# Alternate the state backup with docker, so both OpenTofu shapes render.
+state_backup=false
+if [ "$opentofu" = true ] && [ "$docker" = false ]; then state_backup=true; fi
 # Alternate the directory list, so both the root and the monorepo shapes render.
 if [ "$python" = true ]; then ts_dirs='["apps/web", "apps/api"]'; else ts_dirs='["."]'; fi
 # Alternate the license, so both texts render without doubling the matrix.
@@ -40,6 +43,7 @@ run() {
   copier copy --quiet --defaults --vcs-ref HEAD \
     -d project_name="demo" -d description="A demo project." -d license="$license" ${year[@]+"${year[@]}"} \
     -d python="$python" -d docker="$docker" -d opentofu="$opentofu" \
+    -d opentofu_state_backup="$state_backup" \
     -d ansible="$ansible" -d changelog="$changelog" -d openspec="$openspec" \
     -d typescript="$typescript" -d typescript_dirs="$ts_dirs" \
     "$root" "$dest"

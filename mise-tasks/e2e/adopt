@@ -183,8 +183,8 @@ PKL
   step "pass (project: $dest)"
 }
 
-# OpenTofu with a remote backend, and Ansible with a project collection and its own
-# ansible.cfg. Setup and check must need no cloud login and keep the state backend alone.
+# OpenTofu with a remote backend and the state backup, and Ansible with a project
+# collection and its own ansible.cfg. Setup and check must need no cloud login and keep the state backend alone.
 infra() {
   dest="$out/infra"
   rm -rf "$dest"
@@ -215,8 +215,12 @@ infra() {
   commit_existing
 
   snapshot
-  adopt -d opentofu=true -d ansible=true
+  # ci:check then lints the state backup workflow and the opentofu:apply that dispatches it.
+  adopt -d opentofu=true -d ansible=true -d opentofu_state_backup=true -d opentofu_state_bucket=demo-state
   same opentofu/versions.tf opentofu/backend.tf opentofu/mise.toml ansible/ansible.cfg
+  grep -q 'demo-state/terraform.tfstate' .config/mise/tasks/opentofu/apply \
+    || fail "opentofu:apply does not read the state bucket"
+  [ -f .github/workflows/opentofu-state-backup.yml ] || fail "adoption did not add the state backup workflow"
   # Setup adds the tools that the shared steps need, and pins the project's own.
   # Tool entries can include private runtime options; required-tools checks their values.
   grep -q '^"pypi:ansible-lint" = ' mise.toml || fail "setup did not add ansible-lint to mise.toml"

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#MISE description="Apply OpenTofu changes: snapshot the state, apply, then back it up offsite"
+#MISE dir="[[ opentofu_dir ]]"
+#MISE alias="tofu:apply"
+#USAGE arg "[args]..." help="A saved plan or more tofu apply flags (relative to [[ opentofu_dir ]])"
+set -euo pipefail
+set +x
+# Rerun under mise exec here, which loads [[ opentofu_dir ]]/mise.toml and its .env.
+[ -n "${OPENTOFU_TASK_ENV:-}" ] || OPENTOFU_TASK_ENV=1 exec mise exec -- "$0" "$@"
+
+: "${AWS_ACCESS_KEY_ID:?is not set: add the R2 state credentials to [[ opentofu_dir ]]/.env}"
+: "${AWS_SECRET_ACCESS_KEY:?is not set: add the R2 state credentials to [[ opentofu_dir ]]/.env}"
+: "${AWS_ENDPOINT_URL_S3:?is not set: add the R2 endpoint to [[ opentofu_dir ]]/.env}"
+
+state_url="${AWS_ENDPOINT_URL_S3%/}/[[ opentofu_state_bucket ]]/terraform.tfstate"
+
+# Read the raw encrypted object. Credentials go through stdin, not process arguments.
+r2_get() {
+  printf 'user = "%s:%s"\n' "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" \
+    | curl --config - --silent --show-error --fail --proto '=https' \
+      --connect-timeout 15 --max-time 120 --aws-sigv4 'aws:amz:auto:s3' \
+      "$@" "$state_url"
+}
+
+# The ETag shows whether the apply wrote state, without decrypting it.
+state_etag() {
+  local etag
+  if ! etag="$(r2_get --head | tr -d '\r' | awk 'tolower($1) == "etag:" { print $2 }')" \
+    || [ -z "$etag" ]; then
+    echo "opentofu:apply: cannot read $state_url." >&2
+    echo "A new state has no object yet: run mise exec -- tofu apply in [[ opentofu_dir ]]." >&2
+    return 1
+  fi
+  printf '%s\n' "$etag"
+}
+
+before="$(state_etag)"
+
+# Keep the exact pre-apply state, still encrypted, to restore after a bad apply.
+snapshots="$MISE_PROJECT_ROOT/tmp/opentofu-state"
+mkdir -p "$snapshots"
+snapshot="$snapshots/$(date -u +%Y%m%dT%H%M%SZ).tfstate"
+(umask 077 && r2_get --output "$snapshot")
+if ! jq -e 'has("encrypted_data") and has("encryption_version")' "$snapshot" >/dev/null; then
+  rm -f "$snapshot"
+  echo "opentofu:apply: the state is not encrypted. The backup would leak it." >&2
+  exit 1
+fi
+echo "Encrypted pre-apply snapshot: $snapshot"
+
+tofu apply -input=false -lock-timeout=60s "$@"
+
+after="$(state_etag)"
+if [ "$after" = "$before" ]; then
+  echo "State unchanged: skipping the offsite state backup."
+elif ! gh workflow run opentofu-state-backup.yml \
+  --repo "[[ github_owner ]]/[[ project_name ]]" --ref main; then
+  # The apply succeeded, so do not fail the task. The weekly run copies it too.
+  echo "opentofu:apply: dispatch failed. Run: gh workflow run opentofu-state-backup.yml" >&2
+fi

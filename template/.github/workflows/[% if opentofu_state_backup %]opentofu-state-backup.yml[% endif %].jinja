@@ -1,0 +1,63 @@
+---
+# Template-owned: edit in cubert, not in a project. See docs/conventions.md.
+name: "OpenTofu state backup"
+
+on:
+  schedule:
+    # State changes only on apply, and `mise run opentofu:apply` dispatches this
+    # workflow when an apply changes it. The weekly run catches other applies.
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: "read"
+
+concurrency:
+  group: "opentofu-state-backup"
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: "Back up the OpenTofu state"
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 10
+    # The project's OpenTofu writes its secrets, and it deploys only from main. It
+    # gets read access to the ciphertext, never the state passphrase.
+    environment: "infrastructure"
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Copy the encrypted state from R2 to B2"
+        env:
+          STATE_BUCKET: "[[ opentofu_state_bucket ]]"
+          BACKUP_BUCKET: "[[ opentofu_state_bucket ]]-backups"
+          HEALTHCHECKS_PING_URL: "${{ secrets.HEALTHCHECKS_PING_URL }}"
+          RCLONE_CONFIG_B2_ACCOUNT: "${{ secrets.RCLONE_CONFIG_B2_ACCOUNT }}"
+          RCLONE_CONFIG_B2_KEY: "${{ secrets.RCLONE_CONFIG_B2_KEY }}"
+          RCLONE_CONFIG_R2_ACCESS_KEY_ID: "${{ secrets.RCLONE_CONFIG_R2_ACCESS_KEY_ID }}"
+          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: "${{ secrets.RCLONE_CONFIG_R2_SECRET_ACCESS_KEY }}"
+          RCLONE_CONFIG_R2_ENDPOINT: "${{ secrets.RCLONE_CONFIG_R2_ENDPOINT }}"
+        # Dependabot does not read `docker run`: bump the tag and digest by hand.
+        run: |
+          docker run --rm \
+            --read-only --cap-drop ALL --security-opt no-new-privileges \
+            --env STATE_BUCKET \
+            --env BACKUP_BUCKET \
+            --env HEALTHCHECKS_PING_URL \
+            --env RCLONE_CONFIG_B2_ACCOUNT \
+            --env RCLONE_CONFIG_B2_KEY \
+            --env RCLONE_CONFIG_R2_ACCESS_KEY_ID \
+            --env RCLONE_CONFIG_R2_SECRET_ACCESS_KEY \
+            --env RCLONE_CONFIG_R2_ENDPOINT \
+            --env RCLONE_CONFIG_B2_TYPE=b2 \
+            --env RCLONE_CONFIG_R2_TYPE=s3 \
+            --env RCLONE_CONFIG_R2_PROVIDER=Cloudflare \
+            --env RCLONE_CONFIG_R2_REGION=auto \
+            --env RCLONE_CONFIG_R2_NO_CHECK_BUCKET=true \
+            --mount "type=bind,src=${PWD}/.config/opentofu/state-backup.sh,dst=/state-backup.sh,readonly" \
+            --entrypoint /bin/sh \
+            "rclone/rclone:1.75.2@sha256:2687085f718d3c628f7fdfb77c52a1d344332aed543110bb88088f2c70d43eb5" \
+            /state-backup.sh

@@ -99,7 +99,8 @@ that becomes `clean/_default`. The update stops with `FileExistsError`. Pick a n
   `e2e:render` needs `--filter <regex>` for the combinations that a change touches, or
   `--all` when you really want every one. Names look like `p1d0t1a0c1s1_changes-only`:
   python, docker, opentofu, ansible, changelog, typescript, then openspec. A typescript
-  render with python on lists two directories.
+  render with python on lists two directories. An opentofu render with docker off adds
+  the state backup.
 - Each render adds a small project for each enabled feature
   (`scripts/render_fixtures.sh`). After `check` and `test`, it stages one known error
   per feature and expects the matching hk step to fail. A step that stays green on that

@@ -8,7 +8,7 @@ belongs to the template: change it in cubert, not here. Project setup lives in
 
 | Kind           | Files                                                                                                                                                                                                                                                                                                                                                                                                                                         | On `copier update`            |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Template-owned | `.config/` except `wt.toml`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/cubert-check.yml`, `.github/workflows/cubert-audit.yml`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                                                          | Takes the template's changes  |
+| Template-owned | `.config/` except `wt.toml`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/cubert-check.yml`, `.github/workflows/cubert-audit.yml`, `.github/workflows/pr-title.yml`, `.github/workflows/opentofu-state-backup.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                           | Takes the template's changes  |
 | Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.config/wt.toml`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `openspec/config.yaml`                                                                                                                                                                                                                                                                                       | Merges your additions         |
 | Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `.yamllint`, `biome.json`, `mise-tasks/`, `.github/workflows/ci.yml`, `.github/workflows/audit.yml`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<opentofu_dir>/versions.tf`, `<opentofu_dir>/mise.toml`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
 
@@ -218,6 +218,42 @@ Other. With areas, the `changelog-scope` commit hook and the PR title job reject
 breaking commit has a `!` or a `BREAKING CHANGE:` footer, of any type. The tooling
 scopes are the ones that the `commit_parsers` skip. An empty list, the default, checks
 nothing.
+
+### OpenTofu state backup
+
+The `opentofu_state_backup` option keeps an offsite copy of the encrypted state. The
+state lives in the R2 bucket `opentofu_state_bucket`, as `terraform.tfstate`. The
+`opentofu-state-backup.yml` workflow copies it to the B2 bucket `<bucket>-backups`. It
+runs on Mondays at 04:00 UTC, and `opentofu:apply` dispatches it after a state change.
+The workflow reads ciphertext only and never gets the state passphrase.
+
+With this option, `opentofu:apply` runs these steps:
+
+1. Reads the ETag of the raw state object, without decrypting it.
+2. Saves the encrypted state to `tmp/opentofu-state/`. It stops if the state is not
+   encrypted, because the backup would then leak it.
+3. Runs `tofu apply` with your arguments, such as a saved plan.
+4. Dispatches the workflow with `gh` when the ETag changed. A failed dispatch only
+   warns, because the apply succeeded. The weekly run copies the state too.
+
+The task reads the state credentials from `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+and `AWS_ENDPOINT_URL_S3` in `<opentofu_dir>/.env`, as the S3 backend does. The dispatch
+needs a `gh` login.
+
+The project's OpenTofu code creates the rest, because providers and accounts differ:
+
+- The B2 bucket `<bucket>-backups`, with a compliance file lock. A key for it without
+  `deleteFiles`, so the workflow can hide versions but never purge them.
+- A Cloudflare token with read access to the state bucket only.
+- A Healthchecks.io check with the schedule `0 4 * * 1` in UTC, and a grace period.
+- The `infrastructure` GitHub Actions environment, limited to `main`, with these
+  secrets: `HEALTHCHECKS_PING_URL`, `RCLONE_CONFIG_B2_ACCOUNT`, `RCLONE_CONFIG_B2_KEY`,
+  `RCLONE_CONFIG_R2_ACCESS_KEY_ID`, `RCLONE_CONFIG_R2_SECRET_ACCESS_KEY` and
+  `RCLONE_CONFIG_R2_ENDPOINT`.
+
+GitHub disables scheduled workflows in a public repository after 60 days without
+activity. The Healthchecks.io check then reports the missed run. Enable the workflow
+again with `gh workflow enable opentofu-state-backup.yml`.
 
 ### Project tasks
 
