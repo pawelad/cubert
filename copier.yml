@@ -42,6 +42,7 @@ _skip_if_exists:
   - "cliff.toml"
   - "CHANGELOG.md"
   - "[[ opentofu_dir ]]/versions.tf"
+  - "[[ opentofu_dir ]]/mise.toml"
   - "[[ ansible_dir ]]/.gitkeep"
   - "openspec/changes/.gitkeep"
   - "openspec/specs/.gitkeep"

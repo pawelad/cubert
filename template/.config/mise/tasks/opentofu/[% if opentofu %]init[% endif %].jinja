@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Initialize the OpenTofu providers and state backend (needs credentials)"
+#MISE dir="[[ opentofu_dir ]]"
+#MISE alias="tofu:init"
+#USAGE arg "[args]..." help="More tofu init flags, such as -upgrade"
+set -euo pipefail
+set +x
+# Rerun under mise exec here, which loads [[ opentofu_dir ]]/mise.toml and its .env.
+[ -n "${OPENTOFU_TASK_ENV:-}" ] || OPENTOFU_TASK_ENV=1 exec mise exec -- "$0" "$@"
+
+if [ -n "${TF_PLUGIN_CACHE_DIR:-}" ]; then mkdir -p "$TF_PLUGIN_CACHE_DIR"; fi
+tofu init -input=false "$@"

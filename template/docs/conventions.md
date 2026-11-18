@@ -6,11 +6,11 @@ belongs to the template: change it in cubert, not here. Project setup lives in
 
 ## File ownership
 
-| Kind           | Files                                                                                                                                                                                                                                                                                                                                                                                                             | On `copier update`            |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Template-owned | `.config/` except `wt.toml`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/cubert-check.yml`, `.github/workflows/cubert-audit.yml`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                              | Takes the template's changes  |
-| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.config/wt.toml`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `openspec/config.yaml`                                                                                                                                                                                                                                                           | Merges your additions         |
-| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `.yamllint`, `biome.json`, `mise-tasks/`, `.github/workflows/ci.yml`, `.github/workflows/audit.yml`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<opentofu_dir>/versions.tf`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
+| Kind           | Files                                                                                                                                                                                                                                                                                                                                                                                                                                         | On `copier update`            |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Template-owned | `.config/` except `wt.toml`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/cubert-check.yml`, `.github/workflows/cubert-audit.yml`, `.github/workflows/pr-title.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                                                          | Takes the template's changes  |
+| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.config/wt.toml`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `openspec/config.yaml`                                                                                                                                                                                                                                                                                       | Merges your additions         |
+| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `.yamllint`, `biome.json`, `mise-tasks/`, `.github/workflows/ci.yml`, `.github/workflows/audit.yml`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<opentofu_dir>/versions.tf`, `<opentofu_dir>/mise.toml`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
 
 Copier treats template-owned and merged files the same way: a 3-way merge of the
 template's change and your edit. The kinds differ in how you edit them. A change to a
@@ -96,6 +96,9 @@ path, so `check/repo` is `check:repo`:
 | `check:repo`         | Runs hk on every file, plus the repository guards                        |
 | `check:opentofu`     | OpenTofu option: runs `tofu validate`, with no backend or credentials    |
 | `opentofu:lock`      | OpenTofu option: locks the providers for macOS and Linux (`--upgrade`)   |
+| `opentofu:init`      | OpenTofu option: initializes the providers and the state backend         |
+| `opentofu:plan`      | OpenTofu option: shows the plan. Extra flags, such as `-out`, go to tofu |
+| `opentofu:apply`     | OpenTofu option: applies a saved plan or the current configuration       |
 | `ci:check`           | Runs `install`, `check`, then `test`: the CI check job                   |
 | `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it        |
 | `audit:actions`      | Runs zizmor's online audits, such as actions with known vulnerabilities  |
@@ -122,20 +125,31 @@ To add a project check, add a `check:<area>` task. `check` runs it with no other
 runs it, and so does CI. Let it take test file paths (`#USAGE arg "[files]..."`), so a
 run can cover only the touched files.
 
-The `opentofu` option adds `check:opentofu` and `opentofu:init`. Each `opentofu:` task
-also answers to `tofu:`, the CLI's name, such as `tofu:init`. `setup` and worktree setup
-never run `opentofu:init`, because it contacts the state backend and needs the
-operator's login. `check:opentofu` validates with `init -backend=false` in its own data
-directory (`.terraform-validate`), so it needs no credentials and leaves the real
-`.terraform` alone. Run `mise run opentofu:init` once per checkout before a plan or
-apply.
+The `opentofu` option adds `check:opentofu` and the `opentofu:` tasks. Each one also
+answers to `tofu:`, the CLI's name, such as `tofu:init`. `opentofu:init`,
+`opentofu:plan` and `opentofu:apply` run from any directory. They load
+`<opentofu_dir>/mise.toml`, and that file loads the credentials from `.env` next to it.
+The root `mise.toml` never loads them, so other tasks and hooks do not see them. Extra
+arguments go to `tofu`, and paths are relative to the OpenTofu directory. Name a saved
+plan `*.tofuplan`, which `.gitignore` covers:
+
+```console
+$ mise run tofu:plan -out=reviewed.tofuplan
+$ mise run tofu:apply reviewed.tofuplan
+```
+
+`setup` and worktree setup never run `opentofu:init`, because it contacts the state
+backend and needs the operator's login. `check:opentofu` validates with
+`init -backend=false` in its own data directory (`.terraform-validate`), so it needs no
+credentials and leaves the real `.terraform` alone. Run `mise run opentofu:init` once
+per checkout before a plan or apply.
 
 `check:opentofu` never changes `.terraform.lock.hcl`, and it fails when the lock file
 lacks a provider. `mise run opentofu:lock` then adds the hashes for macOS and Linux,
 with no backend login. After a version constraint change, run
 `mise run opentofu:lock --upgrade`. `tofu init` would lock only the local platform, and
 CI would change the file. The OpenTofu tasks create the configured provider cache before
-invoking OpenTofu. An existing project's own `opentofu:init` task must create
+invoking OpenTofu. A project that replaces `opentofu:init` must create
 `TF_PLUGIN_CACHE_DIR` too. `.config/mise/config.toml` sets `TF_PLUGIN_CACHE_DIR`, so
 each worktree reuses the providers that another one downloaded.
 

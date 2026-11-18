@@ -58,6 +58,9 @@ Copy from GitHub, not from a local clone. Copier records the source in
    Keep install and type-check prerequisites, such as Expo route generation. OpenTofu
    validation runs through `check:opentofu`; keep a project hook when validation must
    also run before commits and pushes. Preserve credential isolation and state backups.
+   Delete the project's own `init`, `plan` and `apply` tasks, and their root wrappers:
+   the shared `opentofu:` tasks replace them. Keep `.env` in the OpenTofu directory, and
+   load it from `<opentofu_dir>/mise.toml`.
 6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,
    `mise run setup` and `mise run format --all`. Commit the reformat alone, and add its
    hash to `.git-blame-ignore-revs`.

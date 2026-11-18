@@ -50,12 +50,15 @@ def test_nested_feature_directory_is_used_by_its_install_task(
     tmp_path: Path, feature: str, directory: str
 ) -> None:
     question = "opentofu_dir" if feature == "opentofu" else "ansible_dir"
-    task = "opentofu:init" if feature == "opentofu" else "ansible:install"
     project = render_template(tmp_path, **{feature: "true", question: directory})
-    config = tomllib.loads((project / "mise.toml").read_text())
 
     assert (project / directory).is_dir()
-    assert config["tasks"][task]["dir"] == directory
+    if feature == "opentofu":
+        init = (project / ".config/mise/tasks/opentofu/init").read_text()
+        assert f'#MISE dir="{directory}"' in init.splitlines()
+    else:
+        config = tomllib.loads((project / "mise.toml").read_text())
+        assert config["tasks"]["ansible:install"]["dir"] == directory
 
 
 def test_description_with_quotes_renders_valid_pyproject(tmp_path: Path) -> None:

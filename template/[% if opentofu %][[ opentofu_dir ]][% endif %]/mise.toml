@@ -1,0 +1,4 @@
+# Project-owned. The opentofu:init, opentofu:plan and opentofu:apply tasks load this
+# file, from any directory. Keep the OpenTofu credentials in .env next to it.
+[env]
+_.file = { path = ".env", optional = true }
