@@ -380,15 +380,16 @@ how many CI minutes a project spends, so each project sets its own.
 
 ## Audits
 
-`mise run audit` runs the checks that need the network: osv-scanner on `uv.lock` and
-`bun.lock`, zizmor's online audits, and lychee on every URL. The zizmor hk step runs
-offline, so only the audit finds actions with known vulnerabilities, impostor commits
-and version comments that do not match the pinned SHA. Hooks and `mise run check` skip
-them, so they stay fast and work offline. A new advisory then fails the audit and never
-an unrelated commit. CI runs it from `audit.yml`, on each push and pull request and once
-a week. Run it locally before a release or after a dependency change. Every project gets
-osv-scanner, because the Python tools also have `uv.lock` files in `.mise/locks/`. The
-scan includes those files and application lockfiles, including nested backends.
+`mise run audit` runs the checks that need the network: osv-scanner on `uv.lock`,
+`bun.lock` and script locks, zizmor's online audits, and lychee on every URL. The zizmor
+hk step runs offline, so only the audit finds actions with known vulnerabilities,
+impostor commits and version comments that do not match the pinned SHA. Hooks and
+`mise run check` skip them, so they stay fast and work offline. A new advisory then
+fails the audit and never an unrelated commit. CI runs it from `audit.yml`, on each push
+and pull request and once a week. Run it locally before a release or after a dependency
+change. Every project gets osv-scanner, because the Python tools also have `uv.lock`
+files in `.mise/locks/`. The scan includes those files and application lockfiles,
+including nested backends.
 
 ## Formatting
 
