@@ -283,6 +283,22 @@ Pick the lightest tier that fits:
 2. **Standalone Python** (`uv run --script`, PEP 723 inline dependencies): parsing, API
    calls or real branching.
 
+With the `python` option, the `mypy` hk step checks each PEP 723 script in its own uv
+environment, which holds only the inline dependencies. An import that the block misses
+then fails the check, as it would for the person who runs the script. mypy checks the
+script for the oldest Python that its `requires-python` allows, or mypy's own oldest
+target when that is newer (3.10 for mypy 2.x). The project's `[tool.mypy]` settings
+still apply.
+
+- Add stub packages, such as `types-requests`, to the inline block.
+- Test a script the way its users run it: `uv run <script>` in a subprocess.
+- The first check of a script needs the network to install its dependencies.
+- For the project's 7-day cooldown, add `exclude-newer = "7 days"` under `[tool.uv]` in
+  the block.
+- ruff formats for the project's `requires-python`. For a script that allows an older
+  Python, add it to `per-file-target-version` under `[tool.ruff]`, such as
+  `"skills/**/scripts/*.py" = "py311"`. Otherwise mypy rejects ruff's newer syntax.
+
 `scripts/` holds only code that is not a task: check scripts that hk calls with
 `{{files}}`, modules with tests, and git hook shims.
 

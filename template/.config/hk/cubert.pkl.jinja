@@ -19,7 +19,7 @@ steps {
   ["mypy"] = new Step {
     glob = List("**/*.py", "**/*.pyi")
     exclude = List(".config/**")
-    check = "uv run mypy {{files}}"
+    check = ".config/hk/checks/check_mypy.py {{files}}"
   }
 [% endif %]
 [% if typescript %]
