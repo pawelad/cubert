@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Set up a new worktree once: copy ignored files, link shared dirs, install"
+#MISE description="Set up a new worktree once: link shared paths, copy ignored files, install"
 #MISE alias="wt:setup"
 #USAGE flag "--force" help="Run again in a worktree that is already set up"
 set -euo pipefail
@@ -19,8 +19,6 @@ if [ -f "$marker" ] && [ "${usage_force:-false}" != "true" ]; then
 fi
 
 primary="$(git worktree list --porcelain | sed -n '1s/^worktree //p')"
-
-wt step copy-ignored --require-include
 
 # A real directory blocks its link, because `ln -sfn` would put the link inside it.
 link() {
@@ -46,6 +44,9 @@ if [ -f .worktreelinks ]; then
     link "$path"
   done <.worktreelinks
 fi
+
+# After links: an unanchored .env in .worktreeinclude also matches <opentofu_dir>/.env.
+wt step copy-ignored --require-include
 
 mise run install
 touch "$marker"

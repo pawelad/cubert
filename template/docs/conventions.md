@@ -402,11 +402,12 @@ Every way to create a worktree runs `mise run worktree:setup`:
 
 `worktree:setup` exits in the primary checkout. In a new worktree it:
 
-1. Copies the gitignored files listed in `.worktreeinclude` (default `.env`).
-2. Links `tmp/` and the agent dirs (`.claude`, `.codex`, ...) to the primary checkout,
+1. Links `tmp/` and the agent dirs (`.claude`, `.codex`, ...) to the primary checkout,
    so agent output outlives the worktree.
-3. Links each path in `.worktreelinks` to the primary checkout. Use it for operator
-   credentials, which are the same on every branch.
+2. Links each path in `.worktreelinks` to the primary checkout. Use it for operator
+   credentials, which are the same on every branch (`<opentofu_dir>/.env` and
+   `<ansible_dir>/.vault_pass` when enabled).
+3. Copies the gitignored files listed in `.worktreeinclude` (default `.env`).
 4. Runs `mise run install`.
 5. Writes the marker `cubert-worktree-setup-done` in the worktree's git dir.
 

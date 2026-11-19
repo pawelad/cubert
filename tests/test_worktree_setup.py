@@ -75,6 +75,14 @@ def project(tmp_path_factory: pytest.TempPathFactory) -> Project:
             "project_name=demo",
             "-d",
             "description=A demo project.",
+            "-d",
+            "opentofu=true",
+            "-d",
+            "opentofu_dir=src/opentofu",
+            "-d",
+            "ansible=true",
+            "-d",
+            "ansible_dir=src/ansible",
             str(source),
             str(primary),
         ],
@@ -85,7 +93,8 @@ def project(tmp_path_factory: pytest.TempPathFactory) -> Project:
     # `wt` outside mise.
     worktrunk = tomllib.loads((ROOT / "mise.toml").read_text())["tools"]["worktrunk"]
     (primary / "mise.toml").write_text(f'[tools]\nworktrunk = "{worktrunk}"\n')
-    (primary / ".worktreelinks").write_text("secrets/token\n")
+    links = primary / ".worktreelinks"
+    links.write_text(f"{links.read_text()}secrets/token\n")
     run(["git", "init", "--quiet", "--initial-branch", "main"], primary, env)
     run(["git", "add", "--all"], primary, env)
     commit = ["git", "commit", "--quiet", "--no-verify", "-m", "chore: render"]
@@ -93,6 +102,8 @@ def project(tmp_path_factory: pytest.TempPathFactory) -> Project:
 
     # Untracked files that only the primary checkout has.
     (primary / ".env").write_text("DEMO=1\n")
+    (primary / "src/opentofu/.env").write_text("TOFU=1\n")
+    (primary / "src/ansible/.vault_pass").write_text("vault\n")
     for name in AGENT_DIRS:
         (primary / name).mkdir()
     (primary / "secrets").mkdir()
@@ -124,10 +135,14 @@ def test_agent_dir_missing_in_primary_is_not_linked(project: Project) -> None:
     assert not (project.worktree / ".gemini").exists()
 
 
-def test_worktreelinks_path_links_to_primary(project: Project) -> None:
-    link = project.worktree / "secrets/token"
+@pytest.mark.parametrize(
+    "path",
+    ["src/opentofu/.env", "src/ansible/.vault_pass", "secrets/token"],
+)
+def test_worktreelinks_path_links_to_primary(project: Project, path: str) -> None:
+    link = project.worktree / path
     assert link.is_symlink()
-    assert link.resolve() == (project.primary / "secrets/token").resolve()
+    assert link.resolve() == (project.primary / path).resolve()
 
 
 def test_worktreeinclude_file_is_copied(project: Project) -> None:
