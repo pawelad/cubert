@@ -1,6 +1,10 @@
 # The template's rules (pyproject.toml.jinja), for cubert's scripts and tests.
 target-version = "py314"
 
+# Projects run the check scripts on any Python from 3.11, as their blocks declare.
+[per-file-target-version]
+"template/.config/hk/checks/*.py" = "py311"
+
 [lint]
 select = [
   "A", # flake8-builtins
