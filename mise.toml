@@ -28,9 +28,10 @@ git-cliff = "2.14.2"
 description = "Run the unit tests for the check scripts"
 usage = 'arg "[files]..." help="Test files to run"'
 # mise passes usage args only as usage_* variables, and the list must split into words.
+# A full run spreads over every core. A few named files run faster in one process.
 run = '''
 # shellcheck disable=SC2086
-uv run pytest ${usage_files:-}
+uv run pytest ${usage_files:--n auto}
 '''
 
 [tasks."test:oldest-python"]
