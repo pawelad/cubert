@@ -421,6 +421,12 @@ A new worktree links the agent dirs from the primary checkout, so it needs neith
 installer, check what it installs: `impeccable update` takes the latest skills, not the
 version that `mise.toml` pins.
 
+In a repository that publishes skills, `npx skills add ./ --list` also lists the skills
+in the agent dirs, such as OpenSpec's. A clone has no agent dirs, so
+`npx skills add <owner>/<repo>` offers only the published skills. To test locally, point
+the CLI at the skills dir: `npx skills add ./skills`. A `skills.sh.json` cannot help:
+its `paths` add to the standard locations and do not replace them (skills 1.9.0).
+
 ## Worktrees
 
 Every way to create a worktree runs `mise run worktree:setup`:
