@@ -169,7 +169,8 @@ no runtime variables. A passing parse does not prove that a deployment will succ
 The `python` option adds `test:python`. It runs `uv run pytest` and treats pytest's exit
 code 5 (no tests collected) as a pass, so a fresh project passes `mise run test`. A
 project without pytest in its dev group skips with a message. Add it with
-`uv add --dev pytest`.
+`uv add --dev pytest`. A full run uses pytest-xdist (`-n auto`) when the dev group has
+it. A run with test files runs in one process.
 
 The `typescript` option asks for `typescript_dirs`: the directories that hold a
 `package.json`, `["."]` by default. A monorepo lists each one. Paths stay inside the
