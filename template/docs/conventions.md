@@ -103,7 +103,7 @@ path, so `check/repo` is `check:repo`:
 | `ci:check`           | Runs `install`, `check`, then `test`: the CI check job                   |
 | `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it        |
 | `audit:actions`      | Runs zizmor's online audits, such as actions with known vulnerabilities  |
-| `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities                 |
+| `audit:deps`         | Scans `uv.lock`, `bun.lock` and script locks for known vulnerabilities   |
 | `audit:links`        | Checks every link in the Markdown files, URLs included                   |
 | `test`               | Runs every `test:*` task                                                 |
 | `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests     |
@@ -295,6 +295,9 @@ still apply.
 - The first check of a script needs the network to install its dependencies.
 - For the project's 7-day cooldown, add `exclude-newer = "7 days"` under `[tool.uv]` in
   the block.
+- To pin what users install, run `uv lock --script <script>` and commit `<script>.lock`.
+  `uv run` then installs from it, and `audit:deps` scans it. The check fails while the
+  lock is stale.
 - ruff formats for the project's `requires-python`. For a script that allows an older
   Python, add it to `per-file-target-version` under `[tool.ruff]`, such as
   `"skills/**/scripts/*.py" = "py311"`. Otherwise mypy rejects ruff's newer syntax.

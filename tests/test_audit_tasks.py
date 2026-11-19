@@ -26,6 +26,7 @@ def test_default_project_scans_tool_and_nested_application_lockfiles(
         ".mise/locks/pypi-copier/tool/uv.lock",
         "apps/backend/uv.lock",
         "apps/web/bun.lock",
+        "skills/demo/hello/scripts/hello.py.lock",
     ]
     for name in locks:
         lock = project / name
@@ -60,4 +61,5 @@ def test_default_project_scans_tool_and_nested_application_lockfiles(
     arguments = calls.read_text().splitlines()
     assert arguments[:2] == ["scan", "source"]
     assert arguments[2::2] == ["--lockfile"] * len(locks)
-    assert sorted(arguments[3::2]) == sorted(locks)
+    expected = [f"uv.lock:{n}" if n.endswith(".py.lock") else n for n in locks]
+    assert sorted(arguments[3::2]) == sorted(expected)
