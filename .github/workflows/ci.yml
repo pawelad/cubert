@@ -20,8 +20,9 @@ permissions:
 env:
   MISE_GITHUB_TOKEN: "${{ github.token }}"
 
+# Per event: a push must not cancel the full matrix that a manual or weekly run renders.
 concurrency:
-  group: "${{ github.workflow }}-${{ github.ref }}"
+  group: "${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}"
   cancel-in-progress: true
 
 jobs:
@@ -132,10 +133,40 @@ jobs:
           if-no-files-found: "ignore"
           retention-days: 3
 
-  # Each job renders every other feature combination. The name shows the OpenSpec
-  # option and TypeScript, so the job list does not truncate what differs.
+  # Push and PR runs render 8 combinations that cover every pair of answer values.
+  render-pairwise:
+    name: "Render pairwise"
+    if: "github.event_name == 'push' || github.event_name == 'pull_request'"
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 45
+    steps:
+      - name: "Check out the repository"
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Set up mise"
+        uses: "$/template/.github/actions/setup-mise"
+
+      - name: "Render the pairwise combinations"
+        run: |
+          mise run e2e:render --pairwise --jobs 4 --out "${RUNNER_TEMP}/renders"
+
+      - name: "Preserve failure logs"
+        if: "failure()"
+        uses: "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9" # v7.0.2
+        with:
+          name: "render-logs-pairwise"
+          path: "${{ runner.temp }}/renders/*.log*"
+          if-no-files-found: "ignore"
+          retention-days: 3
+
+  # Weekly and manual runs render all 192. Each job renders every other feature
+  # combination. The name shows the OpenSpec option and TypeScript, so the job list
+  # does not truncate what differs.
   render:
     name: "${{ matrix.openspec }}, ${{ matrix.typescript == '1' && 'TS' || 'no TS' }}"
+    if: "github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
     runs-on: "ubuntu-24.04"
     timeout-minutes: 45
     strategy:

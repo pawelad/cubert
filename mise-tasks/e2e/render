@@ -2,14 +2,16 @@
 #MISE description="Render every feature combination, then run setup, check and test in each"
 #USAGE flag "-j --jobs <n>" default="4" help="Renders to run in parallel"
 #USAGE flag "--filter <regex>" help="Only render the combinations whose name matches"
-#USAGE flag "--all" help="Render every combination (CI does; locally, only when asked)"
+#USAGE flag "--all" help="Render every combination (weekly CI does; locally, only when asked)"
+#USAGE flag "--pairwise" help="Render only the combinations in scripts/render_pairwise.txt"
 #USAGE flag "--out <dir>" help="Write the renders here (default: a new temp dir)"
 set -euo pipefail
 # macOS runs bash 3.2: no mapfile, no associative arrays.
 
 # The full matrix is 192 renders. Locally, name the combinations that a change touches.
-if [ -z "${usage_filter:-}" ] && [ "${usage_all:-false}" != "true" ] && [ -z "${CI:-}" ]; then
-  echo "e2e:render: pass --filter <regex> for the combinations you touched, or --all." >&2
+if [ -z "${usage_filter:-}" ] && [ "${usage_all:-false}" != "true" ] \
+  && [ "${usage_pairwise:-false}" != "true" ] && [ -z "${CI:-}" ]; then
+  echo "e2e:render: pass --filter <regex> for the combinations you touched, --pairwise or --all." >&2
   exit 2
 fi
 
@@ -18,14 +20,22 @@ out="${usage_out:-$(mktemp -d "${TMPDIR:-/tmp}/cubert-render.XXXXXX")}"
 source "$PWD/scripts/e2e_env.sh"
 
 names=()
-for p in 0 1; do for d in 0 1; do for t in 0 1; do for a in 0 1; do for c in 0 1; do for s in 0 1; do
-  for openspec in none changes-only spec-driven; do
-    name="p${p}d${d}t${t}a${a}c${c}s${s}_${openspec}"
+if [ "${usage_pairwise:-false}" = "true" ]; then
+  while IFS= read -r name; do
     if [ -z "${usage_filter:-}" ] || grep -qE "$usage_filter" <<<"$name"; then
       names+=("$name")
     fi
-  done
-done; done; done; done; done; done
+  done < <(grep -v '^#' scripts/render_pairwise.txt)
+else
+  for p in 0 1; do for d in 0 1; do for t in 0 1; do for a in 0 1; do for c in 0 1; do for s in 0 1; do
+    for openspec in none changes-only spec-driven; do
+      name="p${p}d${d}t${t}a${a}c${c}s${s}_${openspec}"
+      if [ -z "${usage_filter:-}" ] || grep -qE "$usage_filter" <<<"$name"; then
+        names+=("$name")
+      fi
+    done
+  done; done; done; done; done; done
+fi
 
 if [ "${#names[@]}" -eq 0 ]; then
   echo "e2e:render: --filter '$usage_filter' matches no combination, such as p1d0t0a0c0s0_none." >&2

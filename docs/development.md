@@ -96,11 +96,13 @@ that becomes `clean/_default`. The update stops with `FileExistsError`. Pick a n
 - E2E output paths become absolute. A mise ceiling keeps parent project tasks out,
   including when `--out` points inside cubert.
 - `e2e:render` runs 192 combinations, about 20 minutes with `--jobs 6`. Locally,
-  `e2e:render` needs `--filter <regex>` for the combinations that a change touches, or
-  `--all` when you really want every one. Names look like `p1d0t1a0c1s1_changes-only`:
-  python, docker, opentofu, ansible, changelog, typescript, then openspec. A typescript
-  render with python on lists two directories. An opentofu render with docker off adds
-  the state backup.
+  `e2e:render` needs `--filter <regex>` for the combinations that a change touches,
+  `--pairwise`, or `--all` when you really want every one. `--pairwise` renders the 8
+  names in `scripts/render_pairwise.txt`, which cover every pair of answer values.
+  `test_render_pairwise.py` fails when a pair is missing. Names look like
+  `p1d0t1a0c1s1_changes-only`: python, docker, opentofu, ansible, changelog, typescript,
+  then openspec. A typescript render with python on lists two directories. An opentofu
+  render with docker off adds the state backup.
 - Each render adds a small project for each enabled feature
   (`scripts/render_fixtures.sh`). After `check` and `test`, it stages one known error
   per feature and expects the matching hk step to fail. A step that stays green on that
@@ -119,8 +121,9 @@ that becomes `clean/_default`. The update stops with `FileExistsError`. Pick a n
   Python tool lockfiles too. These fixtures do not replace a migration rehearsal with
   the real project's jobs.
 - CI runs `check`, `test`, `audit`, `e2e:update`, `e2e:conflict`, `e2e:adopt` and the
-  full render matrix. A weekly run repeats `audit` and the render matrix, which catch
-  new advisories and tool releases.
+  pairwise renders. The weekly run and a manual run (`gh workflow run CI`) render all
+  192 instead. The weekly run also repeats `audit`, so it catches new advisories and
+  tool releases.
 - The e2e tasks are not `test:*` tasks, so `mise run test` stays fast.
 
 The unit tests in `tests/` cover the template's check scripts, so projects do not test
@@ -156,9 +159,11 @@ them. Five more tests read the template itself:
 cubert uses SemVer tags (`v0.1.0`). `template:update` updates a project to the latest
 tag, so a tag is a release. git-cliff generates the release notes from the commits.
 
-1. Push `main` and wait for CI. It runs the checks, the tests, the full render matrix
-   and the update, conflict and adoption tests. CI updates from the previous commit
-   only, so also run `mise run e2e:update --from <previous tag>`.
+1. Push `main` and wait for CI. It runs the checks, the tests, the pairwise renders and
+   the update, conflict and adoption tests. Then run the full render matrix with
+   `gh workflow run CI --ref main`, and wait for it. The release task checks only the
+   push run. CI updates from the previous commit only, so also run
+   `mise run e2e:update --from <previous tag>`.
 2. Run `mise run release:preview` and read the entries.
 3. Run `mise run release X.Y.Z`. It writes the `CHANGELOG.md` section with git-cliff,
    commits `chore(release): vX.Y.Z` and tags it with the section as the message. It
