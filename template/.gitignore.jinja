@@ -39,5 +39,12 @@ node_modules/
 [[ ansible_dir ]]/.vault_pass
 [[ ansible_dir ]]/collections/
 [% endif %]
+[% if openspec != 'none' %]
+# `openspec init` creates these placeholders in every clone.
+openspec/changes/archive/.gitkeep
+[% endif %]
+[% if openspec == 'changes-only' %]
+openspec/specs/
+[% endif %]
 
 # Project

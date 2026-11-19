@@ -105,7 +105,6 @@ path, so `check/repo` is `check:repo`:
 | `audit:actions`      | Runs zizmor's online audits, such as actions with known vulnerabilities  |
 | `audit:deps`         | Scans `uv.lock` and `bun.lock` for known vulnerabilities                 |
 | `audit:links`        | Checks every link in the Markdown files, URLs included                   |
-| `skills:update`      | OpenSpec option: updates the installed agent skills (`openspec update`)  |
 | `test`               | Runs every `test:*` task                                                 |
 | `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests     |
 | `test:typescript`    | TypeScript option: runs each directory's test script, or `bun test`      |
@@ -389,6 +388,22 @@ and `.editorconfig` sets `max_line_length` for editors. Set a new formatter to 8
 
 A commit that only reformats code goes in `.git-blame-ignore-revs`. GitHub reads that
 file, and `mise run setup` sets `blame.ignoreRevsFile` for local blame.
+
+## Agent skills
+
+Each person picks the agents that get skills, so no task installs them. The agent dirs
+are gitignored. With the OpenSpec option, install its skills once in each clone, and
+update them after an OpenSpec bump:
+
+```console
+$ openspec init --tools claude,pi,antigravity
+$ openspec update
+```
+
+A new worktree links the agent dirs from the primary checkout, so it needs neither step.
+`openspec init` writes skills from the pinned CLI. Before you add another skill
+installer, check what it installs: `impeccable update` takes the latest skills, not the
+version that `mise.toml` pins.
 
 ## Worktrees
 
