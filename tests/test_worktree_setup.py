@@ -18,7 +18,7 @@ from tests.support import ROOT, project_env, run, snapshot_template
 
 MARKER = "cubert-worktree-setup-done"
 NEEDED_TOOLS = ("git", "mise", "copier", "wt")
-AGENT_DIRS = ("tmp", ".claude", ".codex")
+AGENT_DIRS = ("tmp", ".claude", ".codex", ".pi")
 
 pytestmark = pytest.mark.skipif(
     any(shutil.which(tool) is None for tool in NEEDED_TOOLS),
