@@ -18,6 +18,68 @@ python_fixture() {
   mkdir -p tests
   printf '"""Demo module."""\n\n\ndef add(a: int, b: int) -> int:\n    """Return the sum of two numbers."""\n    return a + b\n' >demo.py
   printf 'from demo import add\n\n\ndef test_add_sums_two_numbers() -> None:\n    assert add(1, 2) == 3\n' >tests/test_demo.py
+  skill_fixture
+}
+
+# An Agent Skill with a PEP 723 script, laid out as in a public skills repo.
+skill_fixture() {
+  mkdir -p skills/demo/hello/scripts tests/demo
+  cat >skills/demo/hello/SKILL.md <<'MD'
+---
+name: hello
+description: Greets a person by name. Use when the user asks for a greeting.
+---
+
+# Hello
+
+Run `uv run scripts/hello.py --name <name>`.
+MD
+  cat >skills/demo/hello/scripts/hello.py <<'PY'
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["rich"]
+#
+# [tool.uv]
+# exclude-newer = "7 days"
+# ///
+"""Greet a person by name."""
+
+import argparse
+
+from rich.text import Text
+
+
+def main() -> None:
+    """Print the greeting."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--name", required=True)
+    name: str = parser.parse_args().name
+    print(Text.assemble("Hello, ", (name, "bold"), "!").plain)
+
+
+if __name__ == "__main__":
+    main()
+PY
+  chmod +x skills/demo/hello/scripts/hello.py
+  # A committed lock: ci:check syncs it with --locked, and audit:deps scans it.
+  uv lock --quiet --script skills/demo/hello/scripts/hello.py
+  cat >tests/demo/test_hello.py <<'PY'
+import subprocess
+from pathlib import Path
+
+SCRIPT = Path(__file__).parents[2] / "skills/demo/hello/scripts/hello.py"
+
+
+def test_hello_greets_by_name() -> None:
+    result = subprocess.run(  # noqa: S603
+        ["uv", "run", "--script", str(SCRIPT), "--name", "Ada"],  # noqa: S607
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert result.stdout == "Hello, Ada!\n"
+PY
 }
 
 typescript_fixture() {
@@ -190,6 +252,13 @@ break_link() { printf '[Gone](docs/gone.md)\n' >notes.md; }
 # Split, so that no scanner flags this script.
 break_secret() { printf 'token = "ghp_%s"\n' 'qOomCIZBWchHR4v5FPp9UiQRS9CyigrCkXXuIJQPfe63f12a' >notes.txt; }
 break_python() { printf 'x: int = "text"\n' >>demo.py; }
+# The mypy step must check a script against its inline block, which now misses rich.
+# The lock follows the block, so the failure is the import and not a stale lock.
+break_script_dependency() {
+  sed -i.bak 's/^# dependencies = \["rich"\]$/# dependencies = []/' skills/demo/hello/scripts/hello.py
+  rm skills/demo/hello/scripts/hello.py.bak
+  uv lock --quiet --script skills/demo/hello/scripts/hello.py
+}
 break_typescript() {
   local dir
   dir="$(tr -d '[]",' <<<"$ts_dirs" | cut -d' ' -f1)"

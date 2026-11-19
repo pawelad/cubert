@@ -94,7 +94,10 @@ run() {
   expect_hook_failure link lychee
   expect_hook_failure secret betterleaks
   expect_hook_failure workflow jactionlint
-  if [ "$python" = true ]; then expect_hook_failure python mypy; fi
+  if [ "$python" = true ]; then
+    expect_hook_failure python mypy
+    expect_hook_failure script_dependency mypy 'module named "rich'
+  fi
   if [ "$typescript" = true ]; then expect_hook_failure typescript "tsc"; fi
   if [ "$docker" = true ]; then expect_hook_failure docker "hadolint"; fi
   if [ "$opentofu" = true ]; then expect_hook_failure opentofu "tofu-fmt"; fi
