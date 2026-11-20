@@ -267,9 +267,15 @@ mise installs fnox and, for Proton Pass, `pass-cli`. `required-tools` requires f
 1.50.0 or later, because 1.48.0 fails to launch on macOS 15. Commit the `mise.lock`
 entries that `mise run setup` writes for both.
 
-The tasks have one body for every answer, so a project can switch later. Run
-`copier update` with the new answer for the tools and rules. `<opentofu_dir>/mise.toml`
-and `fnox.toml` are project-owned, so create, edit or delete them by hand.
+The tasks have one body for every answer, so a project can switch later. The update
+brings the tools, rules and worktree hook:
+
+```console
+$ mise run template:update -d secrets_provider=proton-pass -d secrets_vault=<vault>
+```
+
+`<opentofu_dir>/mise.toml` and `fnox.toml` are project-owned, so create, edit or delete
+them by hand.
 
 ### OpenTofu state backup
 
@@ -534,8 +540,9 @@ Notes:
 
 `mise run template:update` runs `copier update` from the latest cubert tag. It needs a
 clean tree, keeps your earlier answers, and stops with a list of files that have
-conflict markers. Resolve them, run `mise run setup` (the update can change tools and
-hooks) and `mise run check`, then commit the result as one commit.
+conflict markers. `-d <question>=<answer>` changes an answer, and you can repeat it.
+Resolve them, run `mise run setup` (the update can change tools and hooks) and
+`mise run check`, then commit the result as one commit.
 
 An update cannot add a tool to the project-owned `mise.toml`.
 `.config/mise/required-tools` lists the tools that the shared steps and tasks call.

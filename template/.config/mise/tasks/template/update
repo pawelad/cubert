@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #MISE description="Update the files that the cubert template owns, then stop on conflicts"
 #USAGE flag "--vcs-ref <ref>" help="Template Git ref (default: the latest tag)"
+#USAGE flag "-d --data <answer>" var=#true help="Change an answer, such as -d secrets_provider=age"
 set -euo pipefail
 
 # Copier rewrites this file while it runs, and bash reads a script as it goes. Bash
@@ -15,6 +16,12 @@ main() {
   if [ -n "${usage_vcs_ref:-}" ]; then
     args+=(--vcs-ref "$usage_vcs_ref")
   fi
+  # mise passes a repeated flag as one string of single-quoted words: 'a=1' 'b=2'.
+  local data=() answer
+  eval "data=(${usage_data:-})"
+  for answer in ${data[@]+"${data[@]}"}; do
+    args+=(--data "$answer")
+  done
   # Copier commits in temporary repos. Global hk hooks would run there and drop mise.lock.
   # Its "Make sure Git >= 2.24" warning is harmless on Git 2.55+ (copier-org/copier#2759).
   HK=0 copier "${args[@]}"
