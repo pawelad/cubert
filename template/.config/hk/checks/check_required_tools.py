@@ -58,7 +58,7 @@ def missing(required: str, config: str) -> list[str]:
 
 def unpinned(config: str) -> list[str]:
     """Return seeded requests, preserving inline options through mise's own writer."""
-    found = []
+    found: list[str] = []
     for name, spec in tomllib.loads(config).get("tools", {}).items():
         specs = spec if isinstance(spec, list) else [spec]
         versions = [
@@ -123,12 +123,12 @@ def main(args: list[str]) -> int:
             _request(name, minimum, requirements[name][1]) for name, minimum, _ in old
         ]
         changed = set(tools) | {name for name, _, _ in old}
-        configured = [
+        kept = [
             _request(name, version, runtime)
             for name, runtime, version in runtimes
             if name not in changed
         ]
-        print("\n".join([*added, *raised, *configured]))
+        print("\n".join([*added, *raised, *kept]))
         return 0
     for tool in tools:
         print(f"{CONFIG}: {tool} is missing, and the shared steps need it.")
