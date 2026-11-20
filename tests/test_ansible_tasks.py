@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -13,7 +14,7 @@ from tests.support import project_env, render_template, run
 
 
 @pytest.fixture
-def ansible_project(tmp_path: Path) -> tuple[Path, dict[str, object]]:
+def ansible_project(tmp_path: Path) -> tuple[Path, dict[str, dict[str, Any]]]:
     project = render_template(tmp_path, ansible="true", openspec="none")
     steps = json.loads(
         run(
@@ -25,7 +26,7 @@ def ansible_project(tmp_path: Path) -> tuple[Path, dict[str, object]]:
 
 
 def test_syntax_check_visits_nested_playbooks_and_reports_failures(
-    tmp_path: Path, ansible_project: tuple[Path, dict[str, object]]
+    tmp_path: Path, ansible_project: tuple[Path, dict[str, dict[str, Any]]]
 ) -> None:
     project, steps = ansible_project
     playbooks = project / "ansible/playbooks"
@@ -80,7 +81,7 @@ def test_syntax_check_visits_nested_playbooks_and_reports_failures(
 )
 def test_template_only_change_triggers_ansible_step(
     tmp_path: Path,
-    ansible_project: tuple[Path, dict[str, object]],
+    ansible_project: tuple[Path, dict[str, dict[str, Any]]],
     directory: str,
 ) -> None:
     project, _ = ansible_project

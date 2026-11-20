@@ -30,7 +30,7 @@ def project(tmp_path: Path) -> Path:
     return render_template(tmp_path)
 
 
-def run_setup(tmp_path: Path, project: Path, config: str | None) -> list[str]:
+def run_setup(tmp_path: Path, project: Path, config: str | None) -> list[list[str]]:
     """Run setup with the stub and return the `mise use` requests, one list per call."""
     if config is not None:
         (project / "mise.toml").write_text(config)
