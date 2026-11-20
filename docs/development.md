@@ -154,7 +154,8 @@ them. Five more tests read the template itself:
   exactly that release, and an older local mise stops. Bump it by hand, to a release
   that Homebrew ships, so a Homebrew install can meet it.
 - Dependabot bumps the Actions in cubert's workflows and in the template. It also bumps
-  pytest and pytest-xdist in `uv.lock`, which pins them for cubert's tests.
+  pytest, pytest-xdist and mypy in `uv.lock`, which pins them for cubert's tests and
+  type checks.
 
 ## Releases
 

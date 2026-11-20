@@ -12,6 +12,12 @@ steps {
   ["ruff-format"] = (builtins.ruff_format) {
     depends = "ruff"
   }
+  // ansible-lint loads jinja_syntax.py from its own mise env, which has `ansiblelint`.
+  ["mypy"] = new Step {
+    glob = List("**/*.py", "**/*.pyi")
+    exclude = List("template/.config/hk/ansible_rules/**")
+    check = ".config/hk/checks/check_mypy.py {{files}}"
+  }
   // The template's own workflows get the same audits. A `.github/**` glob would also
   // pass zizmor.yml, which zizmor warns it cannot read as a workflow.
   ["zizmor"] {

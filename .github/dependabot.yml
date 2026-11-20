@@ -22,7 +22,7 @@ updates:
       actions:
         update-types: ["minor", "patch"]
 
-  # pytest, pinned by uv.lock for cubert's own tests.
+  # pytest and mypy, pinned by uv.lock for cubert's own tests and type checks.
   - package-ecosystem: "uv"
     directory: "/"
     schedule:

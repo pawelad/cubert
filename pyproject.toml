@@ -1,4 +1,4 @@
-# Only pins pytest for cubert's tests. cubert is not a Python package.
+# Only pins cubert's test and type-check tools. cubert is not a Python package.
 [project]
 name = "cubert"
 version = "0.0.0"
@@ -8,7 +8,7 @@ dependencies = []
 
 [dependency-groups]
 # uv.lock pins them, so this file holds no versions.
-dev = ["pytest", "pytest-xdist"]
+dev = ["mypy", "pytest", "pytest-xdist"]
 
 [tool.uv]
 package = false
@@ -21,3 +21,10 @@ testpaths = ["tests"]
 # tests/support.py imports by the `tests` package name.
 pythonpath = ["."]
 addopts = "--import-mode=importlib"
+
+[tool.mypy]
+strict = true
+# Tests load scripts with importlib, so each call into one returns Any.
+[[tool.mypy.overrides]]
+module = "tests.*"
+warn_return_any = false
