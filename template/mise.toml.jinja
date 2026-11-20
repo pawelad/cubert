@@ -40,6 +40,12 @@ hadolint = "latest"
 [% if opentofu %]
 opentofu = "latest"
 [% endif %]
+[% if secrets_provider != 'none' %]
+fnox = "latest"
+[% endif %]
+[% if secrets_provider == 'proton-pass' %]
+"github:protonpass/pass-cli" = "latest"
+[% endif %]
 [% if ansible %]
 "pypi:ansible-core" = { version = "latest", python = "3.14" }
 "pypi:ansible-lint" = { version = "latest", python = "3.14" }

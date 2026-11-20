@@ -25,6 +25,18 @@ if [ "$python" = true ]; then ts_dirs='["apps/web", "apps/api"]'; else ts_dirs='
 ones="${flags//[^1]/}"
 license="MPL-2.0" year=()
 if [ $((${#ones} % 2)) -eq 1 ]; then license="ARR" year=(-d copyright_year=2026); fi
+# Pick the credential store from ansible and changelog. The pairwise set then renders
+# each store, and none both with and without the state backup (test_render_pairwise.py).
+secrets_provider=none secrets=()
+if [ "$opentofu" = true ]; then
+  if [ "$ansible" = true ]; then
+    # A public key: no test needs the identity.
+    secrets_provider=age secrets=(-d secrets_age_recipient=age12qrxf73pllq0kn0rjz07auqsc4jm0h5357eh2v4y4v8hpgdqdu9szdjrx8)
+  elif [ "$changelog" = true ]; then
+    secrets_provider=proton-pass secrets=(-d secrets_vault=demo)
+  fi
+  secrets+=(-d secrets_provider="$secrets_provider")
+fi
 
 # shellcheck source=scripts/render_fixtures.sh
 source "$root/scripts/render_fixtures.sh"
@@ -43,7 +55,7 @@ run() {
   copier copy --quiet --defaults --vcs-ref HEAD \
     -d project_name="demo" -d description="A demo project." -d license="$license" ${year[@]+"${year[@]}"} \
     -d python="$python" -d docker="$docker" -d opentofu="$opentofu" \
-    -d opentofu_state_backup="$state_backup" \
+    -d opentofu_state_backup="$state_backup" ${secrets[@]+"${secrets[@]}"} \
     -d ansible="$ansible" -d changelog="$changelog" -d openspec="$openspec" \
     -d typescript="$typescript" -d typescript_dirs="$ts_dirs" \
     "$root" "$dest"
@@ -74,6 +86,8 @@ run() {
         echo "render: .terraform-validate is not ignored" >&2
         exit 1
       }
+    # `fnox list` parses the config and reads no provider, so it needs no login.
+    if [ "$secrets_provider" != none ]; then (cd "$opentofu_dir" && fnox list); fi
   fi
 
   # The lockfile scan needs the network, so it runs here and not in check.

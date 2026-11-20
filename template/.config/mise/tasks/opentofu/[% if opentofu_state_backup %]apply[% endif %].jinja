@@ -8,27 +8,45 @@ set +x
 # Rerun under mise exec here, which loads [[ opentofu_dir ]]/mise.toml and its .env.
 [ -n "${OPENTOFU_TASK_ENV:-}" ] || OPENTOFU_TASK_ENV=1 exec mise exec -- "$0" "$@"
 
-: "${AWS_ACCESS_KEY_ID:?is not set: add the R2 state credentials to [[ opentofu_dir ]]/.env}"
-: "${AWS_SECRET_ACCESS_KEY:?is not set: add the R2 state credentials to [[ opentofu_dir ]]/.env}"
-: "${AWS_ENDPOINT_URL_S3:?is not set: add the R2 endpoint to [[ opentofu_dir ]]/.env}"
+# With fnox.toml, fnox holds the credentials, and only the wrapped command gets them.
+with_credentials() { if [ -f fnox.toml ]; then fnox exec -- "$@"; else "$@"; fi; }
 
-state_url="${AWS_ENDPOINT_URL_S3%/}/[[ opentofu_state_bucket ]]/terraform.tfstate"
+# fnox fails on its own with the missing name, because fnox.toml sets if_missing.
+if [ ! -f fnox.toml ]; then
+  : "${AWS_ACCESS_KEY_ID:?is not set: add the R2 state credentials to [[ opentofu_dir ]]/.env}"
+  : "${AWS_SECRET_ACCESS_KEY:?is not set: add the R2 state credentials to [[ opentofu_dir ]]/.env}"
+  : "${AWS_ENDPOINT_URL_S3:?is not set: add the R2 endpoint to [[ opentofu_dir ]]/.env}"
+fi
+
+state_object="[[ opentofu_state_bucket ]]/terraform.tfstate"
 
 # Read the raw encrypted object. Credentials go through stdin, not process arguments.
-r2_get() {
+r2_curl() {
   printf 'user = "%s:%s"\n' "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" \
     | curl --config - --silent --show-error --fail --proto '=https' \
       --connect-timeout 15 --max-time 120 --aws-sigv4 'aws:amz:auto:s3' \
-      "$@" "$state_url"
+      "$@" "${AWS_ENDPOINT_URL_S3%/}/$state_object"
+}
+export -f r2_curl
+export state_object
+
+# No redaction: the ETag check parses this output, and a mask would alter it.
+r2_get() {
+  if [ -f fnox.toml ]; then
+    fnox exec --no-redact -- bash -c 'r2_curl "$@"' r2_curl "$@"
+  else
+    r2_curl "$@"
+  fi
 }
 
 # The ETag shows whether the apply wrote state, without decrypting it.
 state_etag() {
-  local etag
+  local etag runner="mise exec"
   if ! etag="$(r2_get --head | tr -d '\r' | awk 'tolower($1) == "etag:" { print $2 }')" \
     || [ -z "$etag" ]; then
-    echo "opentofu:apply: cannot read $state_url." >&2
-    echo "A new state has no object yet: run mise exec -- tofu apply in [[ opentofu_dir ]]." >&2
+    if [ -f fnox.toml ]; then runner="fnox exec"; fi
+    echo "opentofu:apply: cannot read the R2 object $state_object." >&2
+    echo "A new state has no object yet: run $runner -- tofu apply in [[ opentofu_dir ]]." >&2
     return 1
   fi
   printf '%s\n' "$etag"
@@ -48,7 +66,7 @@ if ! jq -e 'has("encrypted_data") and has("encryption_version")' "$snapshot" >/d
 fi
 echo "Encrypted pre-apply snapshot: $snapshot"
 
-tofu apply -input=false -lock-timeout=60s "$@"
+with_credentials tofu apply -input=false -lock-timeout=60s "$@"
 
 after="$(state_etag)"
 if [ "$after" = "$before" ]; then

@@ -1,6 +1,6 @@
 # Paths that `mise run worktree:setup` links from the primary checkout, one per line.
 # Use it for operator credentials that are the same on every branch.
-[% if opentofu %]
+[% if opentofu and secrets_provider == 'none' %]
 [[ opentofu_dir ]]/.env
 [% endif %]
 [% if ansible %]

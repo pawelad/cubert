@@ -1,8 +1,19 @@
-# Merged: add project lines below the shared ones, so updates merge cleanly.
+# Merged: add project lines below the shared ones, so updates merge cleanly. Add hook
+# keys inside a shared table: a second [pre-start] or [post-start] header breaks TOML.
 # Put setup steps in .worktreeinclude, .worktreelinks or the `install` task instead.
 
 [pre-start]
 setup = "mise run worktree:setup"
+[% if secrets_provider == 'proton-pass' %]
+
+# Initializes only with a Proton Pass session, and never waits on a login prompt.
+# `mise exec` finds pass-cli even when the hook shell has no mise activation.
+[post-start]
+opentofu-init = """
+  mise exec -- pass-cli info >/dev/null 2>&1 || exit 0
+  FNOX_NON_INTERACTIVE=1 mise run opentofu:init
+"""
+[% endif %]
 
 # `wt merge` and `wt step squash` pass this to the LLM that writes the commit message.
 [commit.generation]

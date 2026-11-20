@@ -51,6 +51,8 @@ Copier asks these questions:
 | `copyright_year`, for all rights reserved                                  | none              |
 | `python`, `docker`, `opentofu` (`opentofu_dir`), `ansible` (`ansible_dir`) | `false`           |
 | `opentofu_state_backup` (`opentofu_state_bucket`), for `opentofu`          | `false`           |
+| `secrets_provider`, for `opentofu`: `proton-pass`, `age` or `none`         | `none`            |
+| `secrets_vault`, for `proton-pass`; `secrets_age_recipient`, for `age`     | none              |
 | `typescript` (`typescript_dirs`, a list of directories with package.json)  | `false` (`["."]`) |
 | `openspec`: `none`, `changes-only` or `spec-driven`                        | `changes-only`    |
 | `changelog`                                                                | `false`           |

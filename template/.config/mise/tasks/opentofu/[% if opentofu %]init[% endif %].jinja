@@ -8,5 +8,8 @@ set +x
 # Rerun under mise exec here, which loads [[ opentofu_dir ]]/mise.toml and its .env.
 [ -n "${OPENTOFU_TASK_ENV:-}" ] || OPENTOFU_TASK_ENV=1 exec mise exec -- "$0" "$@"
 
+# With fnox.toml, fnox holds the credentials, and only the wrapped command gets them.
+with_credentials() { if [ -f fnox.toml ]; then fnox exec -- "$@"; else "$@"; fi; }
+
 if [ -n "${TF_PLUGIN_CACHE_DIR:-}" ]; then mkdir -p "$TF_PLUGIN_CACHE_DIR"; fi
-tofu init -input=false "$@"
+with_credentials tofu init -input=false "$@"

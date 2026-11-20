@@ -38,6 +38,13 @@ npm:dclint
 [% if opentofu %]
 opentofu
 [% endif %]
+[% if secrets_provider != 'none' %]
+# 1.48.0 fails to launch on macOS 15, and minimum_release_age can still pick it.
+fnox>=1.50.0
+[% endif %]
+[% if secrets_provider == 'proton-pass' %]
+github:protonpass/pass-cli
+[% endif %]
 [% if ansible %]
 pypi:ansible-core[python=3.14]
 pypi:ansible-lint[python=3.14]

@@ -59,9 +59,11 @@ Copy from GitHub, not from a local clone. Copier records the source in
    validation runs through `check:opentofu`; keep a project hook when validation must
    also run before commits and pushes. Preserve credential isolation and state backups.
    Delete the project's own `init`, `plan` and `apply` tasks, and their root wrappers:
-   the shared `opentofu:` tasks replace them. Keep `.env` in the OpenTofu directory, and
-   load it from `<opentofu_dir>/mise.toml`. A project that already copies its state from
-   R2 to B2 answers `opentofu_state_backup`. It then deletes its own backup workflow and
+   the shared `opentofu:` tasks replace them. With `secrets_provider: none`, keep `.env`
+   in the OpenTofu directory, and load it from `<opentofu_dir>/mise.toml`. With fnox,
+   list each value in `<opentofu_dir>/fnox.toml`, then delete `.env`, `.env.example` and
+   the `.env` line in `.worktreelinks`. A project that already copies its state from R2
+   to B2 answers `opentofu_state_backup`. It then deletes its own backup workflow and
    script, and keeps its OpenTofu resources. Check them against
    [OpenTofu state backup](../template/docs/conventions.md#opentofu-state-backup).
 6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,

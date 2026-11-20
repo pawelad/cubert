@@ -17,12 +17,12 @@ described in [template/docs/conventions.md](../template/docs/conventions.md).
 cubert follows its own template, at the working tree and not at a release:
 
 - `.config/hk`, `.config/lychee.toml`, `.config/typos.toml`, `.config/mise/config.toml`,
-  `.config/wt.toml`, `.editorconfig` and `.shellcheckrc` link into `template/`.
+  `.editorconfig` and `.shellcheckrc` link into `template/`.
 - `.config/mise/tasks/` links each shared task that cubert can run. Tasks with a
   conditional name stay out: mise would load them under that name.
 - `.github/workflows/pr-title.yml` is a copy, not a link, because GitHub ignores a
-  symlinked workflow. `.github/CODEOWNERS` and `.gitignore` are copies of rendered
-  files. `test_cubert_copies.py` fails when a copy drifts.
+  symlinked workflow. `.github/CODEOWNERS`, `.gitignore` and `.config/wt.toml` are
+  copies of rendered files. `test_cubert_copies.py` fails when a copy drifts.
 - `hk.pkl`, `dprint.json`, `.yamllint` and `lychee.toml` layer on the template's files,
   as a project's files do.
 - `cliff.toml` and `CHANGELOG.md` are project-owned copies. cubert's `cliff.toml` hides
@@ -102,7 +102,9 @@ that becomes `clean/_default`. The update stops with `FileExistsError`. Pick a n
   `test_render_pairwise.py` fails when a pair is missing. Names look like
   `p1d0t1a0c1s1_changes-only`: python, docker, opentofu, ansible, changelog, typescript,
   then openspec. A typescript render with python on lists two directories. An opentofu
-  render with docker off adds the state backup.
+  render with docker off adds the state backup. An opentofu render with ansible uses
+  `secrets_provider: age`. Without ansible, changelog selects `proton-pass`, and
+  otherwise the render uses `none`.
 - Each render adds a small project for each enabled feature
   (`scripts/render_fixtures.sh`). After `check` and `test`, it stages one known error
   per feature and expects the matching hk step to fail. A step that stays green on that
@@ -134,7 +136,7 @@ them. Five more tests read the template itself:
 - `test_update_ownership.py` renders two releases and checks what an update does to an
   edited, deleted and removed file of each kind.
 - `test_cubert_copies.py` fails when cubert's copies of the PR title workflow,
-  `CODEOWNERS` or `.gitignore` drift from the template's.
+  `CODEOWNERS`, `.gitignore` or `.config/wt.toml` drift from the template's.
 - `test_render.py` renders a project with awkward answers and parses the output.
 - `test_worktree_setup.py` renders a project and runs `git worktree add`. It skips when
   `git`, `mise`, `copier` or `wt` is missing.

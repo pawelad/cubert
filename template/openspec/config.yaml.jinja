@@ -19,6 +19,11 @@ rules:
   specs:
     - "A spec's H1 is its capability name in Title Case with abbreviations expanded."
     - "Requirement text states the rule. Rationale goes in design.md."
+[% if secrets_provider == 'proton-pass' %]
+    - >-
+      Call the credential store "the operator password manager", never by its
+      product name.
+[% endif %]
     - >-
       To retire a scenario, list its requirement under REMOVED, then under ADDED
       with a new name.

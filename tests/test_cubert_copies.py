@@ -37,3 +37,18 @@ def test_codeowners_matches_the_template() -> None:
     shipped = (ROOT / "template/.github/CODEOWNERS.jinja").read_text()
 
     assert own == shipped.replace("[[ github_user ]]", "pawelad")
+
+
+def test_worktrunk_config_matches_the_template_without_feature_blocks() -> None:
+    # A copy, because the template's file is rendered. cubert has no OpenTofu.
+    shipped, depth = [], 0
+    for line in (ROOT / "template/.config/wt.toml.jinja").read_text().splitlines():
+        if line.startswith("[% if"):
+            depth += 1
+        elif line.startswith("[% endif"):
+            depth -= 1
+        elif depth == 0:
+            shipped.append(line)
+    own = (ROOT / ".config/wt.toml").read_text().splitlines()
+
+    assert own == shipped

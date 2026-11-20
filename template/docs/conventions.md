@@ -6,11 +6,11 @@ belongs to the template: change it in cubert, not here. Project setup lives in
 
 ## File ownership
 
-| Kind           | Files                                                                                                                                                                                                                                                                                                                                                                                                                                         | On `copier update`            |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| Template-owned | `.config/` except `wt.toml`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/cubert-check.yml`, `.github/workflows/cubert-audit.yml`, `.github/workflows/pr-title.yml`, `.github/workflows/opentofu-state-backup.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                           | Takes the template's changes  |
-| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.config/wt.toml`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `openspec/config.yaml`                                                                                                                                                                                                                                                                                       | Merges your additions         |
-| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `.yamllint`, `biome.json`, `mise-tasks/`, `.github/workflows/ci.yml`, `.github/workflows/audit.yml`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<opentofu_dir>/versions.tf`, `<opentofu_dir>/mise.toml`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
+| Kind           | Files                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | On `copier update`            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Template-owned | `.config/` except `wt.toml`, `.editorconfig`, `.shellcheckrc`, `.dclintrc.yaml`, `.github/actions/setup-mise/`, `.github/workflows/cubert-check.yml`, `.github/workflows/cubert-audit.yml`, `.github/workflows/pr-title.yml`, `.github/workflows/opentofu-state-backup.yml`, `.github/zizmor.yml`, `.github/CODEOWNERS`, `docs/conventions.md`, `openspec/schemas/`                                                                                                       | Takes the template's changes  |
+| Merged         | `AGENTS.md`, `README.md`, `docs/README.md`, `.config/wt.toml`, `.gitignore`, `.git-blame-ignore-revs`, `.github/dependabot.yml`, `openspec/config.yaml`                                                                                                                                                                                                                                                                                                                   | Merges your additions         |
+| Project-owned  | `mise.toml`, `hk.pkl`, `dprint.json`, `.yamllint`, `biome.json`, `mise-tasks/`, `.github/workflows/ci.yml`, `.github/workflows/audit.yml`, `.worktreeinclude`, `.worktreelinks`, `docs/setup.md`, `LICENSE`, `CONTRIBUTING.md`, `pyproject.toml`, `.python-version`, `cliff.toml`, `CHANGELOG.md`, `<opentofu_dir>/versions.tf`, `<opentofu_dir>/mise.toml`, `<opentofu_dir>/fnox.toml`, `<ansible_dir>/.gitkeep`, `openspec/changes/.gitkeep`, `openspec/specs/.gitkeep` | Created once, then left alone |
 
 Copier treats template-owned and merged files the same way: a 3-way merge of the
 template's change and your edit. The kinds differ in how you edit them. A change to a
@@ -128,10 +128,11 @@ run can cover only the touched files.
 The `opentofu` option adds `check:opentofu` and the `opentofu:` tasks. Each one also
 answers to `tofu:`, the CLI's name, such as `tofu:init`. `opentofu:init`,
 `opentofu:plan` and `opentofu:apply` run from any directory. They load
-`<opentofu_dir>/mise.toml`, and that file loads the credentials from `.env` next to it.
-The root `mise.toml` never loads them, so other tasks and hooks do not see them. Extra
-arguments go to `tofu`, and paths are relative to the OpenTofu directory. Name a saved
-plan `*.tofuplan`, which `.gitignore` covers:
+`<opentofu_dir>/mise.toml`, and read the credentials as
+[Operator credentials](#operator-credentials) describes. The root `mise.toml` never
+loads them, so other tasks and hooks do not see them. Extra arguments go to `tofu`, and
+paths are relative to the OpenTofu directory. Name a saved plan `*.tofuplan`, which
+`.gitignore` covers:
 
 ```console
 $ mise run tofu:plan -out=reviewed.tofuplan
@@ -139,7 +140,11 @@ $ mise run tofu:apply reviewed.tofuplan
 ```
 
 `setup` and worktree setup never run `opentofu:init`, because it contacts the state
-backend and needs the operator's login. `check:opentofu` validates with
+backend and needs the operator's login. With `secrets_provider: proton-pass`, a
+`[post-start]` hook in `.config/wt.toml` runs it in a new worktree. The hook skips when
+`pass-cli info` finds no session. It sets `FNOX_NON_INTERACTIVE=1`, so it never waits on
+a login prompt. Put a project's own `post-start` hooks in that table, because a second
+`[post-start]` header is a TOML error. `check:opentofu` validates with
 `init -backend=false` in its own data directory (`.terraform-validate`), so it needs no
 credentials and leaves the real `.terraform` alone. Run `mise run opentofu:init` once
 per checkout before a plan or apply.
@@ -220,6 +225,52 @@ breaking commit has a `!` or a `BREAKING CHANGE:` footer, of any type. The tooli
 scopes are the ones that the `commit_parsers` skip. An empty list, the default, checks
 nothing.
 
+### Operator credentials
+
+The `secrets_provider` answer sets where the OpenTofu operator credentials live:
+
+| Answer        | Store                                         | Loaded by                     |
+| ------------- | --------------------------------------------- | ----------------------------- |
+| `proton-pass` | The Proton Pass vault `secrets_vault`         | `fnox exec`, from `fnox.toml` |
+| `age`         | Ciphertext in `fnox.toml`, for the age key    | `fnox exec`, from `fnox.toml` |
+| `none`        | A gitignored `.env` in the OpenTofu directory | `_.file` in its `mise.toml`   |
+
+With fnox, `<opentofu_dir>/fnox.toml` lists every value that the tasks need, with a
+description. `fnox list` shows them. No `.env.example` exists. The file sets:
+
+- `if_missing = "error"`: a missing value stops the task and names it.
+- `env = "exec"`: `fnox activate` never exports the values into a shell.
+- `redact_exec = true`: piped output shows `[REDACTED]` for each value, so an agent that
+  reads a plan does not see it. A terminal shows the output unchanged.
+- `[daemon]`: a per-user daemon caches the values for one idle hour. Run
+  `fnox daemon clear` after you rotate a value.
+
+When `<opentofu_dir>/fnox.toml` exists, the tasks wrap only the commands that need
+credentials in `fnox exec --`, never a whole script. mise `[env]` never loads them. A
+command whose output is saved or compared passes `--no-redact`, because a mask would
+change it. `tofu` runs with `-input=false`, so a variable without a value fails with its
+name and does not wait on a prompt.
+
+Proton Pass holds one vault per project, and one custom item per service. A field name
+is the variable name without `TF_VAR_` and without the service prefix:
+`TF_VAR_cloudflare_api_token` is the `api_token` field of the `Cloudflare` item. Secrets
+use hidden fields. Other values, such as an account ID, use text fields. OpenTofu's own
+values, such as the state passphrase, go in the `OpenTofu` item. Log in once per machine
+with `pass-cli login`.
+
+With age, `fnox set <NAME>` encrypts a value into `fnox.toml` for the
+`secrets_age_recipient` key. Decryption reads the identity in `~/.config/fnox/age.txt`.
+To give another operator access, add their public key to `recipients`, then run
+`fnox reencrypt`.
+
+mise installs fnox and, for Proton Pass, `pass-cli`. `required-tools` requires fnox
+1.50.0 or later, because 1.48.0 fails to launch on macOS 15. Commit the `mise.lock`
+entries that `mise run setup` writes for both.
+
+The tasks have one body for every answer, so a project can switch later. Run
+`copier update` with the new answer for the tools and rules. `<opentofu_dir>/mise.toml`
+and `fnox.toml` are project-owned, so create, edit or delete them by hand.
+
 ### OpenTofu state backup
 
 The `opentofu_state_backup` option keeps an offsite copy of the encrypted state. The
@@ -238,8 +289,9 @@ With this option, `opentofu:apply` runs these steps:
    warns, because the apply succeeded. The weekly run copies the state too.
 
 The task reads the state credentials from `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-and `AWS_ENDPOINT_URL_S3` in `<opentofu_dir>/.env`, as the S3 backend does. The dispatch
-needs a `gh` login.
+and `AWS_ENDPOINT_URL_S3`, as the S3 backend does. The seeded `fnox.toml` lists them.
+With Proton Pass, they are fields of the `Cloudflare` item: `state_access_key_id`,
+`state_secret_access_key` and `state_endpoint_url`. The dispatch needs a `gh` login.
 
 The project's OpenTofu code creates the rest, because providers and accounts differ:
 
@@ -447,8 +499,8 @@ Every way to create a worktree runs `mise run worktree:setup`:
 1. Links `tmp/` and the agent dirs (`.claude`, `.codex`, ...) to the primary checkout,
    so agent output outlives the worktree.
 2. Links each path in `.worktreelinks` to the primary checkout. Use it for operator
-   credentials, which are the same on every branch (`<opentofu_dir>/.env` and
-   `<ansible_dir>/.vault_pass` when enabled).
+   credentials, which are the same on every branch (`<opentofu_dir>/.env` with
+   `secrets_provider: none`, and `<ansible_dir>/.vault_pass`).
 3. Copies the gitignored files listed in `.worktreeinclude` (default `.env`).
 4. Runs `mise run install`.
 5. Writes the marker `cubert-worktree-setup-done` in the worktree's git dir.

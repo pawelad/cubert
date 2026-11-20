@@ -44,6 +44,7 @@ _skip_if_exists:
   - "CHANGELOG.md"
   - "[[ opentofu_dir ]]/versions.tf"
   - "[[ opentofu_dir ]]/mise.toml"
+  - "[[ opentofu_dir ]]/fnox.toml"
   - "[[ ansible_dir ]]/.gitkeep"
   - "openspec/changes/.gitkeep"
   - "openspec/specs/.gitkeep"
@@ -162,6 +163,32 @@ opentofu_state_bucket:
     [% if not opentofu_state_bucket
           | regex_search('^[a-z0-9][a-z0-9-]{4,53}[a-z0-9]$') %]
     Use 6 to 55 lowercase letters, numbers and hyphens, with no hyphen at either end.
+    [% endif %]
+
+secrets_provider:
+  type: "str"
+  help: "Where the OpenTofu operator credentials live"
+  choices:
+    A Proton Pass vault, through fnox: "proton-pass"
+    age-encrypted in fnox.toml: "age"
+    A gitignored .env file: "none"
+  default: "none"
+  when: "[[ opentofu ]]"
+
+# No default: each project gets its own vault, and a shared name would mix projects.
+secrets_vault:
+  type: "str"
+  help: "Proton Pass vault that holds this project's operator credentials"
+  when: "[[ opentofu and secrets_provider == 'proton-pass' ]]"
+  validator: "[% if not secrets_vault %]Required[% endif %]"
+
+secrets_age_recipient:
+  type: "str"
+  help: "age public key for the credentials: age-keygen -y ~/.config/fnox/age.txt"
+  when: "[[ opentofu and secrets_provider == 'age' ]]"
+  validator: |
+    [% if not secrets_age_recipient | regex_search('^age1[02-9ac-hj-np-z]{58}$') %]
+    Enter an age public key, which starts with age1.
     [% endif %]
 
 ansible:

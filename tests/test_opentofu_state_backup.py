@@ -91,8 +91,18 @@ def test_apply_without_the_backup_only_applies(tmp_path: Path) -> None:
     assert 'tofu apply -input=false -lock-timeout=60s "$@"' in task
 
 
-@pytest.fixture(scope="module")
-def apply_task(tmp_path_factory: pytest.TempPathFactory) -> Path:
+SECRETS = {"none": {}, "proton-pass": {"secrets_vault": "demo"}}
+CREDENTIALS = {
+    "AWS_ACCESS_KEY_ID": "key-id",
+    "AWS_SECRET_ACCESS_KEY": ACCESS_KEY,
+    "AWS_ENDPOINT_URL_S3": "https://account.eu.r2.cloudflarestorage.com/",
+}
+
+
+@pytest.fixture(scope="module", params=list(SECRETS))
+def apply_task(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> Path:
     if shutil.which("copier") is None:
         pytest.skip("needs copier on PATH")
     project = render_template(
@@ -100,8 +110,15 @@ def apply_task(tmp_path_factory: pytest.TempPathFactory) -> Path:
         opentofu="true",
         opentofu_state_backup="true",
         openspec="none",
+        secrets_provider=request.param,
+        **SECRETS[request.param],
     )
     return project / ".config/mise/tasks/opentofu/apply"
+
+
+def fnox_config(task: Path) -> Path:
+    """Return the rendered fnox.toml. Its presence makes the task use fnox."""
+    return task.parents[4] / "opentofu/fnox.toml"
 
 
 def run_apply(
@@ -136,7 +153,24 @@ def run_apply(
         '[ -z "$CHANGES" ] || echo two > "$ETAG"\n',
     )
     stub(tools, "gh", 'printf "gh %s\\n" "$*" >> "$CALLS"\n[ -z "$GH_FAILS" ]\n')
+    # Like fnox, the stub sets the credentials only in the command that it runs.
+    stub(
+        tools,
+        "fnox",
+        'printf "%s\\n" "$*" >> "$FNOX_CALLS"\n'
+        'while [ "$1" != -- ]; do shift; done\nshift\n'
+        'export AWS_ACCESS_KEY_ID="$STUB_KEY_ID" AWS_SECRET_ACCESS_KEY="$STUB_KEY"\n'
+        'export AWS_ENDPOINT_URL_S3="$STUB_ENDPOINT"\nexec "$@"\n',
+    )
+    (tmp_path / "fnox_calls").touch()
     env = project_env()
+    if fnox_config(task).exists():
+        shutil.copy(fnox_config(task), tmp_path / "fnox.toml")
+        credentials = {}
+        for name in CREDENTIALS:
+            env.pop(name, None)
+    else:
+        credentials = CREDENTIALS
     env.update(
         PATH=f"{tools}{os.pathsep}{env['PATH']}",
         CALLS=str(calls),
@@ -144,9 +178,11 @@ def run_apply(
         STATE=str(tmp_path / "state"),
         CHANGES="1" if changes else "",
         GH_FAILS="1" if gh_fails else "",
-        AWS_ACCESS_KEY_ID="key-id",
-        AWS_SECRET_ACCESS_KEY=ACCESS_KEY,
-        AWS_ENDPOINT_URL_S3="https://account.eu.r2.cloudflarestorage.com/",
+        FNOX_CALLS=str(tmp_path / "fnox_calls"),
+        STUB_KEY_ID=CREDENTIALS["AWS_ACCESS_KEY_ID"],
+        STUB_KEY=CREDENTIALS["AWS_SECRET_ACCESS_KEY"],
+        STUB_ENDPOINT=CREDENTIALS["AWS_ENDPOINT_URL_S3"],
+        **credentials,
         MISE_PROJECT_ROOT=str(tmp_path),
         # Skip the mise exec rerun that loads the OpenTofu env.
         OPENTOFU_TASK_ENV="1",
@@ -179,6 +215,17 @@ def test_apply_dispatches_the_backup_when_the_state_changes(
         "gh workflow run opentofu-state-backup.yml --repo pawelad/demo --ref main"
     )
     assert not any(ACCESS_KEY in call for call in calls)
+    if fnox_config(apply_task).exists():
+        # The R2 reads are saved or compared, so they skip redaction. The apply masks.
+        assert (tmp_path / "fnox_calls").read_text().splitlines() == [
+            'exec --no-redact -- bash -c r2_curl "$@" r2_curl --head',
+            'exec --no-redact -- bash -c r2_curl "$@" r2_curl --output '
+            + str(next(snapshots.iterdir())),
+            "exec -- tofu apply -input=false -lock-timeout=60s tfplan",
+            'exec --no-redact -- bash -c r2_curl "$@" r2_curl --head',
+        ]
+    else:
+        assert (tmp_path / "fnox_calls").read_text() == ""
     [snapshot] = snapshots.iterdir()
     assert snapshot.read_text() == ENCRYPTED
     assert snapshot.stat().st_mode & 0o077 == 0

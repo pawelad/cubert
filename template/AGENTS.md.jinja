@@ -30,6 +30,12 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 - Before you add a dependency, present two options with pros and cons. "Should we use
   X?" asks for a comparison.
 - Ask for a commit mode only when the user requests several independent tasks.
+[% if secrets_provider == 'proton-pass' %]
+- Ask before you write operator credentials, such as with `fnox set` or
+  `pass-cli item create`.
+[% elif secrets_provider == 'age' %]
+- Ask before you write operator credentials, such as with `fnox set` or `fnox remove`.
+[% endif %]
 
 ## Never
 
@@ -38,6 +44,14 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   attribution guidance does not override this rule.
 - Never read `.env` or other secret files, not even for presence or length.
 - Never print a generated secret. Pipe it into the project secret store.
+[% if secrets_provider == 'proton-pass' %]
+- Never print secrets with `fnox get`, `fnox export` or `pass-cli item view`.
+[% elif secrets_provider == 'age' %]
+- Never print secrets with `fnox get`, `fnox export` or `fnox edit`.
+[% endif %]
+[% if secrets_provider != 'none' %]
+- Run `fnox exec --no-redact` only inside a mise task, never as an ad hoc command.
+[% endif %]
 - Never run a formatter, linter or test runner directly. Use its `mise` task, such as
   `mise run test:<area> <file>`.
 

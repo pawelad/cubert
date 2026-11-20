@@ -1,4 +1,9 @@
 # Project-owned. The opentofu:init, opentofu:plan and opentofu:apply tasks load this
+[% if secrets_provider == 'none' %]
 # file, from any directory. Keep the OpenTofu credentials in .env next to it.
 [env]
 _.file = { path = ".env", optional = true }
+[% else %]
+# file, from any directory. Credentials stay out of [env]: each task wraps only its
+# commands in `fnox exec`, which reads fnox.toml.
+[% endif %]

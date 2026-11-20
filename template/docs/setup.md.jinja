@@ -11,6 +11,19 @@ $ mise run setup
 
 `mise run setup` installs the pinned tools and the git hooks, then runs
 `mise run install` for the project dependencies. Run it again at any time.
+[% if secrets_provider == 'proton-pass' %]
+
+The OpenTofu tasks read the operator credentials from Proton Pass, through fnox.
+`fnox.toml` in the OpenTofu directory names the vault and lists each value. Log in once
+per machine with `pass-cli login`.
+[% elif secrets_provider == 'age' %]
+
+The OpenTofu tasks decrypt the operator credentials in `fnox.toml`, in the OpenTofu
+directory. fnox reads the age identity in `~/.config/fnox/age.txt`.
+[% elif opentofu %]
+
+The OpenTofu tasks read the operator credentials from `.env` in the OpenTofu directory.
+[% endif %]
 
 The shared tooling (tasks, hooks, worktrees, upgrades) is described in
 [conventions.md](./conventions.md).
