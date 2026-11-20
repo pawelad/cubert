@@ -95,16 +95,16 @@ that becomes `clean/_default`. The update stops with `FileExistsError`. Pick a n
 - Renders read the working tree, including uncommitted changes.
 - E2E output paths become absolute. A mise ceiling keeps parent project tasks out,
   including when `--out` points inside cubert.
-- `e2e:render` runs 192 combinations, about 20 minutes with `--jobs 6`. Locally,
-  `e2e:render` needs `--filter <regex>` for the combinations that a change touches,
-  `--pairwise`, or `--all` when you really want every one. `--pairwise` renders the 8
-  names in `scripts/render_pairwise.txt`, which cover every pair of answer values.
-  `test_render_pairwise.py` fails when a pair is missing. Names look like
-  `p1d0t1a0c1s1_changes-only`: python, docker, opentofu, ansible, changelog, typescript,
-  then openspec. A typescript render with python on lists two directories. An opentofu
-  render with docker off adds the state backup. An opentofu render with ansible uses
-  `secrets_provider: age`. Without ansible, changelog selects `proton-pass`, and
-  otherwise the render uses `none`.
+- `e2e:render` runs 192 combinations. CI's six jobs take about 15 minutes. One laptop
+  with `--jobs 6` takes about 2 hours. Locally, `e2e:render` needs `--filter <regex>`
+  for the combinations that a change touches, `--pairwise`, or `--all` when you really
+  want every one. `--pairwise` renders the 8 names in `scripts/render_pairwise.txt`,
+  which cover every pair of answer values. `test_render_pairwise.py` fails when a pair
+  is missing. Names look like `p1d0t1a0c1s1_changes-only`: python, docker, opentofu,
+  ansible, changelog, typescript, then openspec. A typescript render with python on
+  lists two directories. An opentofu render with docker off adds the state backup. An
+  opentofu render with ansible uses `secrets_provider: age`. Without ansible, changelog
+  selects `proton-pass`, and otherwise the render uses `none`.
 - Each render adds a small project for each enabled feature
   (`scripts/render_fixtures.sh`). After `check` and `test`, it stages one known error
   per feature and expects the matching hk step to fail. A step that stays green on that
