@@ -37,8 +37,9 @@ uv run pytest ${usage_files:--n auto}
 [tasks."test:oldest-python"]
 description = "Run the shipped check script tests on Python 3.11, the oldest they declare"
 # Projects pin their own Python, and uv warns on each hook run below requires-python.
+# uv.lock targets 3.14, so pytest resolves here, with the same 7-day cooldown.
 run = """
-uv run --isolated --no-project --python 3.11 --with pytest pytest \
+uv run --isolated --no-project --python 3.11 --exclude-newer "7 days" --with pytest pytest \
   tests/test_check_comment_length.py tests/test_check_file_length.py \
   tests/test_check_pins.py tests/test_check_required_tools.py \
   tests/test_check_lockfile.py tests/test_check_mypy.py
