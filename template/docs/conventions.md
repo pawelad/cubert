@@ -40,8 +40,16 @@ What an update does to a missing or removed file:
   tools with `mise install`, not with setup actions.
 - `min_version` in `.config/mise/config.toml` pins mise itself. CI installs exactly that
   release. An older local mise stops and prints how to upgrade.
-- A Python CLI is a mise `pypi:` tool, which mise installs with uv. Do not run `uvx` or
-  `pipx` directly.
+- A Python CLI that does not touch the project's code, such as yamllint or copier, is a
+  mise `pypi:` tool, which mise installs with uv. Do not run `uvx` or `pipx` directly.
+- A Python tool that only reads code, such as ruff, is a pinned mise tool. Most of these
+  are Rust CLIs and need no Python environment.
+- A tool that imports the code or loads plugins, such as pytest, pytest-xdist or mypy,
+  goes in the uv `dev` group, and `uv.lock` pins it. It must see the project's Python
+  and dependencies. This also holds in a repo that is not a package (`package = false`
+  under `[tool.uv]`, or no `[build-system]`).
+- mypy is the only type checker. ty is not offered: it is pre-1.0, and its 0.0.x
+  releases make breaking changes. Recheck at ty 1.0. Pyrefly 1.0 is the other candidate.
 - Python CLI tools select a private Python 3.14 runtime through their `python` option.
   mise installs it before the tools and limits their graphs to that Python line. The
   application's `.python-version` stays independent. This Python line is the one version
@@ -349,7 +357,10 @@ script for the oldest Python that its `requires-python` allows, or mypy's own ol
 target when that is newer (3.10 for mypy 2.x). The project's `[tool.mypy]` settings
 still apply.
 
-- Add stub packages, such as `types-requests`, to the inline block.
+- The inline block holds only the libraries that the script imports at runtime. Tools
+  such as pytest and mypy come from the project's dev group.
+- The one exception is stub packages, such as `types-requests`. The mypy step finds
+  stubs only in the script's environment, so add them to the inline block.
 - Test a script the way its users run it: `uv run <script>` in a subprocess.
 - The first check of a script needs the network to install its dependencies.
 - For the project's 7-day cooldown, add `exclude-newer = "7 days"` under `[tool.uv]` in
