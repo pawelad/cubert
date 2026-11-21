@@ -133,8 +133,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 - If an active `tasks.md` already lists a follow-up, cite the task and write no prompt.
 - Keep tasks, design and specs aligned with the implementation during the change. Update
   existing tasks for review fixes.
-- Archive a change (`openspec archive`) as soon as its tasks are done and shipped. Never
-  rewrite archived artifacts unless the user asks.
+- When a change's tasks are done and shipped, suggest `openspec archive`. Archive only
+  when the user asks. Never rewrite archived artifacts unless the user asks.
 [% if openspec == 'spec-driven' %]
 - For a small spec delta, ask whether to edit the spec directly or to propose a change.
 - When a requirement changes, update every active change that modifies it.
