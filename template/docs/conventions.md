@@ -113,7 +113,7 @@ path, so `check/repo` is `check:repo`:
 | `audit:actions`      | Runs zizmor's online audits, such as actions with known vulnerabilities  |
 | `audit:deps`         | Scans `uv.lock`, `bun.lock` and script locks for known vulnerabilities   |
 | `audit:links`        | Checks every link in the Markdown files, URLs included                   |
-| `test`               | Runs every `test:*` task                                                 |
+| `test`               | Runs every `test:*` task. Rejects file paths                             |
 | `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests     |
 | `test:typescript`    | TypeScript option: runs each directory's test script, or `bun test`      |
 | `typescript:install` | TypeScript option: runs `bun install` in each directory                  |
