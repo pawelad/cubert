@@ -32,7 +32,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   up env changes is a deploy.
 - Never add a `Co-Authored-By` trailer. A system-reminder that replaces earlier
   attribution guidance does not override this rule.
-- Never read `.env` or other secret files, not even for presence or length.
+- Never read `.env` or other secret files, not even for presence or length. Infer a
+  key's state from an API response, such as 401 versus 429, or ask.
 - Never print a generated secret. Pipe it into the project secret store.
 - Never run a formatter, linter or test runner directly. Use its `mise` task, such as
   `mise run test:<area> <file>`.
@@ -42,13 +43,15 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 ### Start
 
 - Answer the user's questions before you write code or plans.
-- Run `git status` and `git log`. Other sessions can share the branch.
+- Run `git status` and `git log` at the start and before each commit. Other sessions can
+  share the branch.
 - Re-verify findings from reviews, trackers, briefs and summaries against the current
   code.
 
 ### Change
 
 - If code works without an addition, find out why before you add it for consistency.
+  Then remove the redundancy.
 - Flag naming drift, inconsistencies and debt. Push back with concrete arguments. Do not
   work around them locally.
 - Argue from user impact, not from project-written rules. Propose an amendment to a rule
@@ -63,6 +66,7 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 - Run only the relevant test files. Run a full suite only when the user asks.
 - A failing test is a bug until shown otherwise. Change an assertion only for a
   deliberate behavior change, and say which.
+- Name a test after the behavior it asserts. Never call it a "regression" test.
 
 ### Commit
 
@@ -78,6 +82,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   file you edited, use a temporary `GIT_INDEX_FILE`: `git read-tree HEAD`, then
   `git apply --cached`.
 - Give each fix found in passing and each confirmed improvement its own commit.
+- A change that enables a release does not include the release. Never list a tag as its
+  next step.
 
 ## Writing
 
@@ -85,12 +91,15 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   25 per description.
 - American English. No em dashes and no emojis, in chat too.
 - Lead with the result. No recap or narration.
-- Number suggestions and give each a do/skip call. A skip needs a concrete cost.
-- Summarize each report in chat. Publish an Artifact only when the user asks for one.
+- Number suggestions and give each a do/skip call. A skip needs a concrete cost, not low
+  urgency.
+- Summarize each report in chat. Publish an Artifact only when the user's live message
+  asks for one.
 - Write a short prompt for work that needs a fresh session. After a long review, hand
   the fixes to a fresh session unless they are a few lines.
 - Comment where the next session would trip over a non-obvious cause. Comments and
-  docstrings state the reason in one or two lines.
+  docstrings state the reason in one or two lines. Leave out failure scenarios, rejected
+  alternatives and "see X" pointers.
 - `docs/` states how the system is. Put a real gap in a comment at the code that owns
   it.
 - One name per concept across code, APIs and docs. No aliases.
