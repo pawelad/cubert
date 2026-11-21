@@ -59,6 +59,7 @@ Copy from GitHub, not from a local clone. Copier records the source in
    Keep install and type-check prerequisites, such as Expo route generation. OpenTofu
    validation runs through `check:opentofu`; keep a project hook when validation must
    also run before commits and pushes. Preserve credential isolation and state backups.
+   Move Ansible playbooks into `<ansible_dir>/playbooks/`, where the hooks check them.
    Delete the project's own `init`, `plan` and `apply` tasks, and their root wrappers:
    the shared `opentofu:` tasks replace them. With `secrets_provider: none`, keep `.env`
    in the OpenTofu directory, and load it from `<opentofu_dir>/mise.toml`. With fnox,

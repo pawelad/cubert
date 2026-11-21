@@ -169,6 +169,8 @@ each worktree reuses the providers that another one downloaded.
 OpenTofu hooks check formatting. Validation runs through `check:opentofu` during `check`
 and CI. Keep a project hook if validation must also run before commits or pushes.
 
+The Ansible hooks check `playbooks/`, `roles/` and `collections/` under `<ansible_dir>`.
+Put playbooks in `<ansible_dir>/playbooks/`: the hooks skip a `site.yml` at the root.
 Ansible syntax checks discover nested playbooks. They exclude directories named `tasks`,
 `handlers`, `vars`, `group_vars`, `host_vars`, `roles`, `templates` and `files`. Those
 directories hold task fragments, variables and assets rather than playbook entrypoints.
