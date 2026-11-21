@@ -25,7 +25,6 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   count and cost first.
 - Before you add a dependency, present two options with pros and cons. "Should we use
   X?" asks for a comparison.
-- Ask for a commit mode only when the user requests several independent tasks.
 
 ## Never
 
@@ -54,7 +53,7 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   work around them locally.
 - Argue from user impact, not from project-written rules. Propose an amendment to a rule
   you disagree with.
-- Fix bugs and stale docs found in passing, each in its own commit.
+- Fix bugs and stale docs found in passing.
 - When a fix changes user-visible behavior, pick the best UX over the literal wording of
   the brief.
 - Use subagents only for open-ended searches across many files.
@@ -76,9 +75,9 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 - Fold a follow-up into an unpushed commit: `git commit --fixup`, then
   `git rebase --autosquash`.
 - If another session staged files, commit with `git commit -- <paths>`. If it staged a
-  file you edited, use a temporary `GIT_INDEX_FILE`.
-- Commit confirmed improvements separately. Write a short prompt for work that needs a
-  fresh session, or after a long review.
+  file you edited, use a temporary `GIT_INDEX_FILE`: `git read-tree HEAD`, then
+  `git apply --cached`.
+- Give each fix found in passing and each confirmed improvement its own commit.
 
 ## Writing
 
@@ -87,11 +86,11 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 - American English. No em dashes and no emojis, in chat too.
 - Lead with the result. No recap or narration.
 - Number suggestions and give each a do/skip call. A skip needs a concrete cost.
-- Write reports to `tmp/reports/` and summarize them in chat. Publish an Artifact only
-  when the user asks for one.
-- Comments and docstrings: one or two lines with the non-obvious reason. Rationale goes
-  in `docs/`.
-- Leave a one-line comment where the next session would trip over a non-obvious cause.
+- Summarize each report in chat. Publish an Artifact only when the user asks for one.
+- Write a short prompt for work that needs a fresh session. After a long review, hand
+  the fixes to a fresh session unless they are a few lines.
+- Comment where the next session would trip over a non-obvious cause. Comments and
+  docstrings state the reason in one or two lines.
 - `docs/` states how the system is. Put a real gap in a comment at the code that owns
   it.
 - One name per concept across code, APIs and docs. No aliases.
@@ -99,9 +98,10 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 ## Done
 
 - [ ] `mise run format`, then `mise run check`, pass.
+- [ ] The relevant test files pass.
 - [ ] Grepped `docs/` for each touched name. Fixed what went stale.
 - [ ] Nested `AGENTS.md` checklists and the Project checklist pass.
-- [ ] Listed the improvements found along the way.
+- [ ] Listed the improvements found along the way, if any.
 - [ ] Committed (Batch mode, or when the user asks) or suggested a commit message.
 
 <!-- cubert:shared:end -->
