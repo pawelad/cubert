@@ -2,7 +2,7 @@
 [project]
 name = "cubert"
 version = "0.0.0"
-description = "A Copier template for my projects: shared tooling, checks and agent rules."
+description = "A Copier template for my projects, with shared tooling, checks and agent rules."
 requires-python = ">=3.14"
 dependencies = []
 

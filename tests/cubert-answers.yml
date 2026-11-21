@@ -3,6 +3,6 @@
 # The shared-agents hk step renders with them.
 project_name: "cubert"
 description: >-
-  A Copier template for my projects: shared tooling, checks and agent rules.
+  A Copier template for my projects, with shared tooling, checks and agent rules.
 openspec: "none"
 changelog: true

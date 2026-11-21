@@ -1,6 +1,7 @@
 # Agent Instructions
 
-`cubert`: a Copier template for my projects: shared tooling, checks and agent rules.
+`cubert`: a Copier template for my projects, with shared tooling, checks and agent
+rules.
 
 This file holds the rules that no tool checks. Rationale lives in `docs/`.
 
@@ -13,7 +14,7 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 - Tasks: `mise tasks`. Shared tasks: `.config/mise/tasks/`, which links into
   `template/`. cubert's tasks: `mise.toml` and `mise-tasks/`.
 - Git hooks: `hk.pkl`, which amends the template's `base.pkl` through the `.config/hk`
-  link. A rule that a tool enforces is not listed here. Its error states the fix.
+  link. A failing step states the fix.
 - Reports: `tmp/reports/YYYY-MM-DD-<topic>.md`. Scratch work: `tmp/<task>/`.
 
 <!-- cubert:shared:start: edit in cubert, not here -->
@@ -134,5 +135,5 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 ### Done
 
 - [ ] A template change: `mise run e2e:render --filter <regex>` passes for the
-      combinations it touches.
+      combinations it touches. A broad change uses `--pairwise`.
 - [ ] A change to a template-owned or merged file: `mise run e2e:update` passes.
