@@ -115,7 +115,8 @@ def action_failures(root: Path) -> list[str]:
     bumped: dict[str, str] = {}
     for path in sorted(plain):
         bumped |= action_refs(path.read_text())
-    for path in sorted(root.glob("template/.github/**/*.yml.jinja")):
+    # Not *.yml.jinja: a conditional name ends in `[% endif %].jinja`.
+    for path in sorted(root.glob("template/.github/**/*.jinja")):
         for action, ref in action_refs(path.read_text()).items():
             if action in bumped and bumped[action] != ref:
                 found.append(

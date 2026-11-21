@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tests.support import load_script
 
 check_versions = load_script("scripts/check_versions.py")
@@ -62,10 +64,13 @@ def test_hk_package_must_match_hk(tmp_path: Path) -> None:
     assert len(failures_in(tmp_path, {"template/.config/hk/base.pkl": url})) == 1
 
 
-def test_jinja_workflow_must_match_bumped_action(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "name", ["ci.yml.jinja", "[% if backup %]backup.yml[% endif %].jinja"]
+)
+def test_jinja_workflow_must_match_bumped_action(tmp_path: Path, name: str) -> None:
     files = {
         ".github/workflows/ci.yml": '- uses: "actions/checkout@v7.0.2"\n',
-        "template/.github/workflows/ci.yml.jinja": (
+        f"template/.github/workflows/{name}": (
             '- uses: "actions/checkout@v7.0.1"\n'
             '- uses: "./.github/actions/setup-mise"\n'
         ),
