@@ -80,6 +80,8 @@ that becomes `clean/_default`. The update stops with `FileExistsError`. Pick a n
 `cubert:shared:start` and `cubert:shared:end` markers. Edit it in
 `template/AGENTS.md.jinja`. The `shared-agents` hk step renders the template with
 `tests/cubert-answers.yml` and fails if the blocks differ. Its diff shows what to copy.
+dprint reflows `AGENTS.md` but not the template, so wrap template lines the way dprint
+would, at 88 columns.
 
 ## Tests
 
