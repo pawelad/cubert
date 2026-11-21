@@ -47,11 +47,36 @@ def test_mise_exact_version_forms_pass(tmp_path: Path) -> None:
         assert check_pins.main([str(config)]) == 0, version
 
 
-def test_partial_request_does_not_match_its_resolved_patch(tmp_path: Path) -> None:
+def test_partial_request_does_not_match_its_resolved_patch(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     config = tmp_path / "mise.toml"
     config.write_text('[tools]\nnode = "24.22"\n')
     (tmp_path / "mise.lock").write_text('[[tools.node]]\nversion = "24.22.2"\n')
     assert check_pins.main([str(config)]) == 1
+    assert f'Fix: pin node = "24.22.2" in {config}' in capsys.readouterr().out
+
+
+def test_partial_pin_hint_quotes_a_backend_key(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = tmp_path / "mise.toml"
+    config.write_text('[tools]\n"npm:typescript" = "7.0"\n')
+    (tmp_path / "mise.lock").write_text(
+        '[[tools."npm:typescript"]]\nversion = "7.0.2"\n'
+    )
+    assert check_pins.main([str(config)]) == 1
+    assert 'Fix: pin "npm:typescript" = "7.0.2"' in capsys.readouterr().out
+
+
+def test_stale_exact_request_suggests_mise_lock(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = tmp_path / "mise.toml"
+    config.write_text('[tools]\nnode = "24.22.3"\n')
+    (tmp_path / "mise.lock").write_text('[[tools.node]]\nversion = "24.22.2"\n')
+    assert check_pins.main([str(config)]) == 1
+    assert "Fix: mise lock" in capsys.readouterr().out
 
 
 def test_exact_request_without_a_lock_entry_fails(tmp_path: Path) -> None:

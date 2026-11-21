@@ -38,12 +38,18 @@ def _mise_failures(path: Path) -> list[str]:
             resolved = {
                 entry["version"].removeprefix("v") for entry in locked.get(name, [])
             }
-            if value.removeprefix("v") not in resolved:
-                failures.append(
-                    f"{path}: tool {name!r} request {value!r}"
-                    " does not match its locked version."
-                    " Fix: mise lock"
-                )
+            request = value.removeprefix("v")
+            if request in resolved:
+                continue
+            # mise lock keeps a partial request, so only an exact pin fixes it.
+            patches = sorted(v for v in resolved if v.startswith(f"{request}."))
+            key = name if re.fullmatch(r"[A-Za-z0-9_-]+", name) else f'"{name}"'
+            pins = " or ".join(f'{key} = "{patch}"' for patch in patches)
+            fix = f"pin {pins} in {path}" if patches else "mise lock"
+            failures.append(
+                f"{path}: tool {name!r} request {value!r}"
+                f" does not match its locked version. Fix: {fix}"
+            )
     return failures
 
 
