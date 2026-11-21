@@ -69,8 +69,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 
 - Conventional Commits with a kebab-case scope. A `feat`, `fix` or `perf` subject
   describes the change that users see.
-- One task: commit related changes without asking for a mode, then suggest the message.
-  Several tasks: ask for a mode and keep it:
+- One task: implement related changes without asking for a mode, then suggest the
+  message. Several tasks: ask for a mode and keep it:
   - **Step**: after each section, suggest the message; commit only when asked.
   - **Batch**: commit each finished section; the user reviews at the end.
 - Fold a follow-up into an unpushed commit: `git commit --fixup`, then
@@ -102,7 +102,7 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 - [ ] Grepped `docs/` for each touched name. Fixed what went stale.
 - [ ] Nested `AGENTS.md` checklists and the Project checklist pass.
 - [ ] Listed the improvements found along the way.
-- [ ] Committed, or suggested a commit message.
+- [ ] Committed (Batch mode, or when the user asks) or suggested a commit message.
 
 <!-- cubert:shared:end -->
 
