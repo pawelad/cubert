@@ -79,9 +79,9 @@ that becomes `clean/_default`. The update stops with `FileExistsError`. Pick a n
 `AGENTS.md` here has the same shared block as a project's, between the
 `cubert:shared:start` and `cubert:shared:end` markers. Edit it in
 `template/AGENTS.md.jinja`. The `shared-agents` hk step renders the template with
-`tests/cubert-answers.yml` and fails if the blocks differ. Its diff shows what to copy.
-dprint reflows `AGENTS.md` but not the template, so wrap template lines the way dprint
-would, at 88 columns.
+`tests/cubert-answers.yml` and fails if the blocks differ. `mise run format` and the
+pre-commit hook copy the render into `AGENTS.md`. dprint reflows `AGENTS.md` but not the
+template, so wrap template lines the way dprint would, at 88 columns.
 
 ## Tests
 

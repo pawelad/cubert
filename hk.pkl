@@ -31,6 +31,11 @@ steps {
   ["shared-agents"] = new Step {
     glob = List("AGENTS.md", "copier.yml", "template/AGENTS.md.jinja", "tests/cubert-answers.yml")
     check = "scripts/check_agents.sh"
+    fix = "scripts/check_agents.sh --fix"
+  }
+  // shared-agents rewrites AGENTS.md, so dprint must not format it at the same time.
+  ["dprint"] {
+    depends = "shared-agents"
   }
   ["template-versions"] = new Step {
     glob = List("mise.toml", ".github/**", "template/**", "scripts/check_versions.py")
