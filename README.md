@@ -61,8 +61,9 @@ Copier asks these questions:
 `mise.toml`, `mise.lock` and `.mise/locks/` after it.
 
 Feature directories stay inside the project. Their names use ASCII letters, numbers,
-periods, underscores, hyphens and slashes. The first path component cannot start with a
-hyphen. Copier rejects unsupported paths before rendering.
+periods, underscores, hyphens and slashes. Write a path as `infra/opentofu`, with no
+`./`, `..`, trailing or double slash, or leading hyphen. Copier rejects other paths
+before rendering.
 
 ## Update a project
 

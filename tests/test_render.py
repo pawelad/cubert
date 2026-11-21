@@ -35,6 +35,11 @@ TRICKY = 'A "quoted" project with a \\ backslash.'
         "././-rf",
         ".//-rf",
         "././/-rf",
+        ".",
+        "./infra",
+        "infra/",
+        "infra//tofu",
+        "infra/./tofu",
     ],
 )
 def test_unsupported_feature_directory_fails_before_render(

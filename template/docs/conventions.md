@@ -187,17 +187,17 @@ it. A run with test files runs in one process.
 
 The `typescript` option asks for `typescript_dirs`: the directories that hold a
 `package.json`, `["."]` by default. A monorepo lists each one. Paths stay inside the
-project and use ASCII letters, numbers, periods, underscores, hyphens and slashes. The
-first path component cannot start with a hyphen. Internal names such as `apps/-x` are
-accepted. Copier rejects other names before rendering, because task file arguments split
-on spaces. `typescript:install` and `test:typescript` loop over them and skip a
-directory without `package.json`. Dependabot gets the same list. `test:typescript` runs
-the `test` script of a `package.json` that has one, such as Jest or Vitest. Otherwise it
-runs `bun test`, which passes when it finds no tests. Given file paths, it runs only the
-directories that hold them. Redundant `/` separators and `.` components are normalized
-in directory names and selected file paths. A selection outside every configured package
-fails with a message. A test file that imports `bun:test` needs
-`bun add --dev @types/bun` for `tsc`.
+project and use ASCII letters, numbers, periods, underscores, hyphens and slashes. Write
+a path as `apps/web`, with no `./`, `..`, trailing or double slash, or leading hyphen.
+Internal names such as `apps/-x` are accepted. Copier rejects other names before
+rendering, because task file arguments split on spaces. `typescript:install` and
+`test:typescript` loop over them and skip a directory without `package.json`. Dependabot
+gets the same list. `test:typescript` runs the `test` script of a `package.json` that
+has one, such as Jest or Vitest. Otherwise it runs `bun test`, which passes when it
+finds no tests. Given file paths, it runs only the directories that hold them. Redundant
+`/` separators and `.` components are normalized in selected file paths. A selection
+outside every configured package fails with a message. A test file that imports
+`bun:test` needs `bun add --dev @types/bun` for `tsc`.
 
 The `changelog` option adds git-cliff, `cliff.toml`, `CHANGELOG.md`, `release` and
 `release:preview`. `release X.Y.Z` runs from a clean `main` that matches `origin/main`.

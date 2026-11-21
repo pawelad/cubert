@@ -33,6 +33,13 @@ from tests.support import project_env, render_template
         ["././-rf"],
         [".//-rf"],
         ["././/-rf"],
+        ["./apps/web"],
+        ["apps/web/"],
+        ["./"],
+        ["././apps/web"],
+        ["apps/./web"],
+        ["apps//web"],
+        ["apps/web//"],
     ],
 )
 def test_unsupported_package_directories_fail_before_render(
@@ -53,15 +60,9 @@ def test_unsupported_package_directories_fail_before_render(
     "directory",
     [
         "apps/web",
-        "./apps/web",
-        "apps/web/",
         ".",
-        "./",
         "apps/-x",
-        "././apps/web",
-        "apps/./web",
-        "apps//web",
-        "apps/web//",
+        ".config/web",
     ],
 )
 @pytest.mark.parametrize("script", [False, True])

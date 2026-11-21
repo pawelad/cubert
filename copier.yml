@@ -116,10 +116,12 @@ typescript_dirs:
     Each directory must be a nonempty string.
     [% elif dir.startswith('/') or '..' in dir.split('/') %]
     Directories must stay inside the project.
-    [% elif dir | regex_search('^([.]/+)*-') %]
-    The first path component cannot start with a hyphen.
     [% elif dir | regex_search('[^A-Za-z0-9._/-]') %]
     Use ASCII letters, numbers, periods, underscores, hyphens and slashes in paths.
+    [% elif dir != '.' and not dir | regex_search(
+            '^(?![-])(?!(.*/)?[.][.]?(/|$))'
+            ~ '[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$') %]
+    Write each path as apps/web: no ./, trailing or double slash, or leading hyphen.
     [% endif %]
     [% endfor %]
     [% endif %]
@@ -134,17 +136,20 @@ opentofu:
   help: "OpenTofu infrastructure (tofu fmt and validate, Dependabot opentofu)?"
   default: false
 
+# .gitignore writes the path as given, and git never matches `./x` or `x//y`.
 opentofu_dir:
   type: "str"
   help: "OpenTofu directory"
   default: "opentofu"
   when: "[[ opentofu ]]"
   validator: |
-    [% if not opentofu_dir or opentofu_dir.startswith('/')
-          or '..' in opentofu_dir.split('/')
-          or opentofu_dir | regex_search('[^A-Za-z0-9._/-]|^([.]/+)*-') %]
-    Use a relative project path with ASCII letters, numbers, periods, underscores,
-    hyphens and slashes. The first path component cannot start with a hyphen.
+    [% if opentofu_dir | regex_search('[^A-Za-z0-9._/-]')
+          or not opentofu_dir | regex_search(
+            '^(?![-])(?!(.*/)?[.][.]?(/|$))'
+            ~ '[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$') %]
+    Use a relative project path, such as infra/opentofu, with ASCII letters, numbers,
+    periods, underscores, hyphens and slashes. No ./, .., trailing or double slash, or
+    leading hyphen.
     [% endif %]
 
 opentofu_state_backup:
@@ -196,17 +201,20 @@ ansible:
   help: "Ansible playbooks (ansible-lint, syntax check)?"
   default: false
 
+# .gitignore writes the path as given, and git never matches `./x` or `x//y`.
 ansible_dir:
   type: "str"
   help: "Ansible directory"
   default: "ansible"
   when: "[[ ansible ]]"
   validator: |
-    [% if not ansible_dir or ansible_dir.startswith('/')
-          or '..' in ansible_dir.split('/')
-          or ansible_dir | regex_search('[^A-Za-z0-9._/-]|^([.]/+)*-') %]
-    Use a relative project path with ASCII letters, numbers, periods, underscores,
-    hyphens and slashes. The first path component cannot start with a hyphen.
+    [% if ansible_dir | regex_search('[^A-Za-z0-9._/-]')
+          or not ansible_dir | regex_search(
+            '^(?![-])(?!(.*/)?[.][.]?(/|$))'
+            ~ '[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$') %]
+    Use a relative project path, such as infra/ansible, with ASCII letters, numbers,
+    periods, underscores, hyphens and slashes. No ./, .., trailing or double slash, or
+    leading hyphen.
     [% endif %]
 
 openspec:
