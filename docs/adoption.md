@@ -23,7 +23,8 @@ Copy from GitHub, not from a local clone. Copier records the source in
      application jobs, image scans and deployment gates. Override `ci:check` when those
      jobs already run the application suites.
    - Restore project privacy rules and commit policies in `AGENTS.md`. Reconcile them
-     with the shared defaults, which permit automatic commits for a single task.
+     with the shared defaults: a single task ends with a suggested commit message, and
+     agents commit only in Batch mode or when asked.
    - `wt.toml` hooks become `.worktreeinclude`, `.worktreelinks` and the `install` task.
      Project commit guidance, such as area scopes, goes at the end of `template-append`.
    - yamllint relaxations go in the project's `.yamllint`, which extends

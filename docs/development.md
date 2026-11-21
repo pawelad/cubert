@@ -18,8 +18,8 @@ cubert follows its own template, at the working tree and not at a release:
 
 - `.config/hk`, `.config/lychee.toml`, `.config/typos.toml`, `.config/mise/config.toml`,
   `.editorconfig` and `.shellcheckrc` link into `template/`.
-- `.config/mise/tasks/` links each shared task that cubert can run. Tasks with a
-  conditional name stay out: mise would load them under that name.
+- `.config/mise/tasks/` links each shared task that cubert can run, under its rendered
+  name. `release/preview` links to `release/[% if changelog %]preview[% endif %]`.
 - `.github/workflows/pr-title.yml` is a copy, not a link, because GitHub ignores a
   symlinked workflow. `.github/CODEOWNERS`, `.gitignore` and `.config/wt.toml` are
   copies of rendered files. `test_cubert_copies.py` fails when a copy drifts.
@@ -27,8 +27,6 @@ cubert follows its own template, at the working tree and not at a release:
   as a project's files do.
 - `cliff.toml` and `CHANGELOG.md` are project-owned copies. cubert's `cliff.toml` hides
   only the `agents`, `docs` and `e2e` scopes, because its tooling is what projects get.
-- `release:preview` is a TOML task in `mise.toml`, because the shared one has a
-  conditional name.
 
 A new shared task needs a link here too. Run `mise run setup` after you clone cubert.
 
