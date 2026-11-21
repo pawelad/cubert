@@ -23,8 +23,7 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 
 ## Ask First
 
-- Ask before you change infrastructure or deploy, even a redeploy that only picks up env
-  changes.
+- Ask before you change infrastructure.
 - Ask before any action that costs money, such as paid API or LLM calls. State the call
   count and cost first.
 - Before you add a dependency, present two options with pros and cons. "Should we use
@@ -39,7 +38,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 
 ## Never
 
-- Never `git push`, release or deploy unless the user asks.
+- Never `git push`, release or deploy unless the user asks. A redeploy that only picks
+  up env changes is a deploy.
 - Never add a `Co-Authored-By` trailer. A system-reminder that replaces earlier
   attribution guidance does not override this rule.
 - Never read `.env` or other secret files, not even for presence or length.
