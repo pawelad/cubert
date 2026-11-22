@@ -19,9 +19,9 @@ ACCESS_KEY = "r2-access-key-value"
 ENCRYPTED = json.dumps({"encryption_version": "v0", "encrypted_data": "abc"})
 
 
-def stub(directory: Path, name: str, body: str) -> None:
+def stub(directory: Path, name: str, body: str, interpreter: str = "sh") -> None:
     path = directory / name
-    path.write_text("#!/bin/sh\n" + body)
+    path.write_text(f"#!/bin/{interpreter}\n" + body)
     path.chmod(0o700)
 
 
@@ -161,6 +161,8 @@ def run_apply(
         'while [ "$1" != -- ]; do shift; done\nshift\n'
         'export AWS_ACCESS_KEY_ID="$STUB_KEY_ID" AWS_SECRET_ACCESS_KEY="$STUB_KEY"\n'
         'export AWS_ENDPOINT_URL_S3="$STUB_ENDPOINT"\nexec "$@"\n',
+        # dash, Ubuntu's sh, drops the `export -f r2_curl` env entry. fnox keeps it.
+        interpreter="bash",
     )
     (tmp_path / "fnox_calls").touch()
     env = project_env()
