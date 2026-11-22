@@ -156,6 +156,16 @@ them. Five more tests read the template itself:
 - Dependabot bumps the Actions in cubert's workflows and in the template. It also bumps
   pytest, pytest-xdist and mypy in `uv.lock`, which pins them for cubert's tests and
   type checks.
+- cubert's own workflows name each action by its tag, and
+  `.github/workflows/actions.lock` holds the commit that GitHub runs. Dependabot updates
+  both. The template's workflows and composite actions keep SHA pins, because a project
+  gets no lockfile. After you edit a workflow by hand, run `gh-actions-lock` and review
+  the diff. The `actions-lock` hk step checks coverage offline, and `audit:actions-lock`
+  checks each commit online.
+- cubert's CI runs the template's `setup-mise`, so the lockfile also lists its actions,
+  at the SHAs that `setup-mise` pins. A Dependabot bump to `setup-mise` does not update
+  the lockfile, and GitHub rejects the run. Run `gh-actions-lock` on the pull request
+  branch and push the result.
 
 ## Releases
 

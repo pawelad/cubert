@@ -23,6 +23,8 @@ ruff = "0.17.4"
 zizmor = "1.32.0"
 osv-scanner = "2.7.0"
 git-cliff = "2.14.2"
+# Its release assets are bare binaries named after the platform, such as `linux-amd64`.
+"github:github/gh-actions-lock" = { version = "0.5.1", bin = "gh-actions-lock" }
 
 [tasks."test:scripts"]
 description = "Run the unit tests for the check scripts"
@@ -44,6 +46,11 @@ uv run --isolated --no-project --python 3.11 --exclude-newer "7 days" --with pyt
   tests/test_check_pins.py tests/test_check_required_tools.py \
   tests/test_check_lockfile.py tests/test_check_mypy.py
 """
+
+[tasks."audit:actions-lock"]
+description = "Check that actions.lock covers every workflow and that GitHub would run each locked commit (needs the network)"
+# It reads the `gh auth login` token itself. CI's audit job sets GITHUB_TOKEN.
+run = "gh-actions-lock --verify"
 
 [tasks.upgrade]
 description = "Upgrade cubert's tools and the template's dprint plugins"

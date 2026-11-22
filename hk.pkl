@@ -23,6 +23,12 @@ steps {
   ["zizmor"] {
     glob = super.glob + List("template/.github/workflows/*.yml")
   }
+  // Offline coverage only: `mise run audit` checks that each locked commit is trustworthy.
+  // No fixer: relocking calls the GitHub API, and `mise run format` stays offline.
+  ["actions-lock"] = new Step {
+    glob = List(".github/workflows/*.yml", ".github/workflows/actions.lock", "template/.github/actions/**")
+    check = "gh-actions-lock --verify-local || { echo 'Fix: gh-actions-lock, then review the diff' >&2; exit 1; }"
+  }
   // lychee.toml excludes template/, and lychee warns on each excluded file that hk passes.
   ["lychee"] {
     exclude = super.exclude + List("template/**")
