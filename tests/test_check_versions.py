@@ -69,13 +69,25 @@ def test_hk_package_must_match_hk(tmp_path: Path) -> None:
 )
 def test_jinja_workflow_must_match_bumped_action(tmp_path: Path, name: str) -> None:
     files = {
-        ".github/workflows/ci.yml": '- uses: "actions/checkout@v7.0.2"\n',
+        "template/.github/workflows/ci.yml": '- uses: "actions/checkout@v7.0.2"\n',
         f"template/.github/workflows/{name}": (
             '- uses: "actions/checkout@v7.0.1"\n'
             '- uses: "./.github/actions/setup-mise"\n'
         ),
     }
     assert len(failures_in(tmp_path, files)) == 1
+
+
+def test_jinja_workflow_ignores_cubert_workflow_tags(
+    tmp_path: Path,
+) -> None:
+    files = {
+        ".github/workflows/ci.yml": '- uses: "actions/upload-artifact@v7.0.2"\n',
+        "template/.github/workflows/ci.yml.jinja": (
+            '- uses: "actions/upload-artifact@cf430e0" # v7.0.2\n'
+        ),
+    }
+    assert failures_in(tmp_path, files) == []
 
 
 def test_repository_passes() -> None:

@@ -8,7 +8,7 @@ The template seeds `latest` (or `lts`), and the project's `mise run setup` pins 
 `check:repo` requires each seeded tool. The hk package and the hk minimum in the
 required list must match cubert's own hk tool.
 Dependabot skips `.jinja` workflows, so their actions must match the versions in the
-workflows that it bumps.
+template workflows that it bumps.
 """
 
 from __future__ import annotations
@@ -111,9 +111,9 @@ def hk_minimum_failures(root: Path) -> list[str]:
 def action_failures(root: Path) -> list[str]:
     """Return each action in a `.jinja` workflow that Dependabot bumped elsewhere."""
     found: list[str] = []
-    plain = [*root.glob(".github/**/*.yml"), *root.glob("template/.github/**/*.yml")]
+    # cubert's own workflows name tags and lock commits in actions.lock, so they differ.
     bumped: dict[str, str] = {}
-    for path in sorted(plain):
+    for path in sorted(root.glob("template/.github/**/*.yml")):
         bumped |= action_refs(path.read_text())
     # Not *.yml.jinja: a conditional name ends in `[% endif %].jinja`.
     for path in sorted(root.glob("template/.github/**/*.jinja")):
