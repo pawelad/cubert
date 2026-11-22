@@ -73,8 +73,14 @@ def test_minimum_python_reads_the_lower_bound(
 
 @pytest.mark.skipif(shutil.which("uv") is None, reason="needs uv on PATH")
 class TestMain:
+    # The demo project has no uv.lock, so ci:check's UV_LOCKED would fail every uv call.
     @pytest.fixture(autouse=True)
     def project(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        unlocked = {"UV_LOCKED", "UV_FROZEN"}
+        for name in unlocked:
+            monkeypatch.delenv(name, raising=False)
+        env = {k: v for k, v in check_mypy.BASE_ENV.items() if k not in unlocked}
+        monkeypatch.setattr(check_mypy, "BASE_ENV", env)
         write(tmp_path / "pyproject.toml", PROJECT)
         monkeypatch.chdir(tmp_path)
 
