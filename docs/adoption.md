@@ -71,21 +71,23 @@ Copy from GitHub, not from a local clone. Copier records the source in
    PRs.
 5. Move what cubert now owns out of the project files: the `postinstall` hook, the
    `[settings]` and `[env]` entries that `.config/mise/config.toml` already sets, and
-   duplicate hk steps. Split a project `check` or `test` task into `check:<area>` and
-   `test:<area>` tasks. Turn shell scripts into file tasks in `mise-tasks/`, unless
-   tests cover them. A release script becomes the shared `release` task, with its
-   version edits in `release:bump` and any step after the push in `release:publish`.
-   Keep install and type-check prerequisites, such as Expo route generation. OpenTofu
-   validation runs through `check:opentofu`; keep a project hook when validation must
-   also run before commits and pushes. Preserve credential isolation and state backups.
-   Move Ansible playbooks into `<ansible_dir>/playbooks/`, where the hooks check them.
-   Delete the project's own `init`, `plan` and `apply` tasks, and their root wrappers:
-   the shared `opentofu:` tasks replace them. With `secrets_provider: none`, keep `.env`
-   in the OpenTofu directory, and load it from `<opentofu_dir>/mise.toml`. With fnox,
-   list each value in `<opentofu_dir>/fnox.toml`, then delete `.env`, `.env.example` and
-   the `.env` line in `.worktreelinks`. A project that already copies its state from R2
-   to B2 answers `opentofu_state_backup`. It then deletes its own backup workflow and
-   script, and keeps its OpenTofu resources. Check them against
+   duplicate hk steps. Move project files out of `.config/`, such as check scripts in
+   `.config/hk/checks/`, to `scripts/`: the ruff and mypy steps skip `.config/**`. Split
+   a project `check` or `test` task into `check:<area>` and `test:<area>` tasks. Turn
+   shell scripts into file tasks in `mise-tasks/`, unless tests cover them. A release
+   script becomes the shared `release` task, with its version edits in `release:bump`
+   and any step after the push in `release:publish`. Keep install and type-check
+   prerequisites, such as Expo route generation. OpenTofu validation runs through
+   `check:opentofu`; keep a project hook when validation must also run before commits
+   and pushes. Preserve credential isolation and state backups. Move Ansible playbooks
+   into `<ansible_dir>/playbooks/`, where the hooks check them. Delete the project's own
+   `init`, `plan` and `apply` tasks, and their root wrappers: the shared `opentofu:`
+   tasks replace them. With `secrets_provider: none`, keep `.env` in the OpenTofu
+   directory, and load it from `<opentofu_dir>/mise.toml`. With fnox, list each value in
+   `<opentofu_dir>/fnox.toml`, then delete `.env`, `.env.example` and the `.env` line in
+   `.worktreelinks`. A project that already copies its state from R2 to B2 answers
+   `opentofu_state_backup`. It then deletes its own backup workflow and script, and
+   keeps its OpenTofu resources. Check them against
    [OpenTofu state backup](../template/docs/conventions.md#opentofu-state-backup).
 6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,
    `mise run setup` and `mise run format --all`. Commit the reformat alone, and add its
