@@ -89,9 +89,13 @@ Copy from GitHub, not from a local clone. Copier records the source in
    `opentofu_state_backup`. It then deletes its own backup workflow and script, and
    keeps its OpenTofu resources. Check them against
    [OpenTofu state backup](../template/docs/conventions.md#opentofu-state-backup).
-6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,
-   `mise run setup` and `mise run format --all`. Commit the reformat alone, and add its
-   hash to `.git-blame-ignore-revs`. Before you commit, review the reformat:
+6. Exclude generated and vendored data from `dprint.json`. Run `mise trust` and
+   `mise run setup`, which pins tools in `mise.toml` and `mise.lock`. Commit steps 2 to
+   6 with `HK=0 git commit`. The new hooks reject the old formatting, which the next
+   commit fixes. Then run `mise run format --all`, and commit the reformat alone. Blame
+   skips that commit, so it must hold no other change. Add its hash to
+   `.git-blame-ignore-revs` in a third commit. Before you commit the reformat, review
+   it:
    - dprint trims a trailing space inside a Markdown code span, so `` `] ` `` becomes
      `` `]` ``. Find each changed span with
      ``git diff --word-diff -- '*.md' | grep '`'``. Write such a value in a code block
