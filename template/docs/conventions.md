@@ -86,8 +86,9 @@ What an update does to a missing or removed file:
 ## Tasks
 
 `mise tasks` lists every task. Names follow `<area>:<verb>`, where the area is the noun
-that the task acts on (`kif:deploy`, `opentofu:init`). A wildcard then selects one area:
-`mise run 'kif:*'`.
+that the task acts on (`kif:deploy`, `opentofu:init`). A wildcard runs every task that
+matches it, in parallel: `mise run 'test:*'`. Never run a wildcard over an area with
+deploy tasks. `mise run 'kif:*'` runs `kif:deploy` and `kif:provision` together.
 
 Four tasks run a group: `check`, `test`, `audit` and `clean`. A task that one of them
 runs takes the verb first, with one area after it: `check:opentofu`, `test:backend`,
