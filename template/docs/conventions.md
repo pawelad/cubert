@@ -395,12 +395,12 @@ In Cubert, change the hk package pins in `template/.config/hk/base.pkl` and
 `template/.config/hk/cubert.pkl.jinja` together. Projects receive those files as
 `.config/hk/base.pkl` and `.config/hk/cubert.pkl`.
 
-The prose rules (American English, no em dashes, no emojis) check Markdown and text
-files in full. In code and config files they check comment lines only, and a fixer
-rewrites only a comment. A string, an identifier or a config value can name an external
-API or hold a fixture, so the rules leave it alone. Paths named `fixtures`, `testdata`,
-`__snapshots__`, `generated` and `vendor` are skipped, by the smart-quotes fixer too.
-Skip another path with
+The prose rules (American English, no em dashes, no emojis, no smart quotes) check
+Markdown and text files in full. In code and config files they check comment lines only,
+and a fixer rewrites only a comment. A string, an identifier or a config value can name
+an external API or hold a fixture, so the rules leave it alone. Data files, such as
+JSON, are skipped. Paths named `fixtures`, `testdata`, `__snapshots__`, `generated` and
+`vendor` are skipped too. Skip another path with
 `steps { ["no-british-english"] { exclude = List("docs/legacy/**") } }`.
 
 The `openspec` step runs `openspec validate --all --strict`. With `spec-driven`, an

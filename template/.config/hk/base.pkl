@@ -12,6 +12,9 @@ local emDash = "\u{2014}"
 // The bracketed spellings are on purpose, so typos skips this line.
 local britishEnglish = "(organi|customi|optimi|minimi|maximi|initiali|reali|normali|seriali|recogni|authori|categori|prioriti|summari|synchroni|standardi|personali|randomi|saniti|tokeni|finali|locali|capitali|speciali|generali|visuali|moderni|publici|emphasi)s(e|es|ed|er|ers|ing|ation|ations)|analys[e]([^s]|$)|analys(ed|er|ing)|favo[u]rite|colo[u]r|behavio[u]r|labo[u]r|hono[u]r|neighbo[u]r|humo[u]r|rumo[u]r|flavo[u]r|endeavo[u]r|harbo[u]r|vapo[u]r|armo[u]r|odo[u]r|savio[u]r|lice[n]ce|defe[n]ce|offe[n]ce|prete[n]ce|practis(e|ed|es|ing)|cent[r]e|met[r]e|lit[r]e|theat[r]e|fib[r]e|calib[r]e|arte[f]act|specialit(y|ies)|enquir(y|ies|e|ed|ing)|whils[t]|amongs[t]|learn[t]|agein[g]|cheq[u]e|alumini[u]m|manoeuv[r]|marvello[u]s|jewelle[r]y|skilfu[l]|instalmen[t]|enrolmen[t]|scepti[c]|gre[y]" // spellchecker:disable-line
 local emoji = "[\\x{1F300}-\\x{1FAFF}\\x{2600}-\\x{27BF}]"
+local smartSingleQuote = "\\x{2018}\\x{2019}\\x{201B}\\x{FF07}"
+local smartDoubleQuote = "\\x{201C}\\x{201D}\\x{201F}\\x{FF02}"
+local smartQuote = "[\(smartSingleQuote)\(smartDoubleQuote)]"
 
 // Prose rules apply to prose in full, and to comments in code. They skip string values,
 // identifiers and config values: those can name an external API or a fixture.
@@ -80,9 +83,18 @@ steps {
     exclude = List("**/migrations/**")
     check = ".config/hk/checks/check_file_length.py {{files}}"
   }
-  // Its fixer would rewrite verbatim external text, such as recorded API responses.
+  // The builtin matches every text file. A quote in a data file, such as a recorded API
+  // response, is a value and must stay as written.
   ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {
+    glob = proseFiles
     exclude = frozen
+  }
+  // The same characters as the builtin. The fixer rewrites comment lines only.
+  ["fix-smart-quotes-comments"] = new Step {
+    glob = commentFiles
+    exclude = frozen
+    check = "perl -CSD -ne 'if (m{\(commentLine)} && /\(smartQuote)/) { print \"$ARGV:$.: $_\"; $bad = 1 } close ARGV if eof; END { exit($bad ? 1 : 0) }' {{files}}"
+    fix = "perl -CSD -pi -e 'if (m{\(commentLine)}) { tr/\(smartSingleQuote)/\\x27/; tr/\(smartDoubleQuote)/\"/ }' {{files}}"
   }
   ["forbid-submodules"] = Builtins.forbid_submodules
   // Offline, so it checks relative links only. `mise run audit` checks the URLs. A root

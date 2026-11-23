@@ -4,10 +4,11 @@
 # hk skips a step when no file matches its glob, so a bare render proves nothing.
 
 # Prose rules must leave values alone: an external API can use a British spelling in a
-# field name or send an em dash. Both files pass, and so does a fixtures dir.
+# field name or send an em dash or a smart quote. Both files pass, and so does a
+# fixtures dir.
 prose_fixture() {
   mkdir -p fixtures
-  printf '{\n  "colour": "red \xe2\x80\x94 dark"\n}\n' >data.json
+  printf '{\n  "colour": "red \xe2\x80\x94 \xe2\x80\x9edark\xe2\x80\x9d"\n}\n' >data.json
   printf -- '---\ncolour: "grey \xe2\x80\x94 dark"\n' >settings.yaml
   # A Markdown heading in a string is not a divider.
   printf 'story: |\n  ###### Fine print\n' >>settings.yaml
@@ -244,6 +245,7 @@ expect_openspec_info() {
 break_prose() { printf '# Notes\n\nThe colour is red.\n' >notes.md; }
 break_comment() { printf '# The colour is red.\n' >>settings.yaml; }
 break_dash() { printf '# One \xe2\x80\x94 two.\n' >>settings.yaml; }
+break_quote() { printf '# One \xe2\x80\x9ctwo\xe2\x80\x9d.\n' >>settings.yaml; }
 break_divider() { printf '# ----------\n' >>settings.yaml; }
 # Default yamllint allows a plain string, so this fails only with the shared rules.
 break_yaml() { printf 'plain: text\n' >>settings.yaml; }

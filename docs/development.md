@@ -148,6 +148,8 @@ them. Five more tests read the template itself:
   `cubert.pkl.jinja`, and the `hk>=` minimum in
   `template/.config/mise/required-tools.jinja`. The `template-versions` hk step fails
   until they match.
+- After an hk bump, compare `smartQuote` in `template/.config/hk/base.pkl` with the
+  characters in hk's `src/cli/util/fix_smart_quotes.rs`. The comment fixer copies them.
 - After an OpenSpec bump, run `mise run openspec:refork`. It rebuilds the changes-only
   schema from the new built-in one. Review the diff, then run the render tests.
 - `min_version` in `template/.config/mise/config.toml` is the one mise pin. CI installs
