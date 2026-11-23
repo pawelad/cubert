@@ -75,14 +75,30 @@ def release(
     *,
     push: bool = False,
     ci: str = "passed",
-    answer: str | None = None,
+    confirm: str | bool | None = None,
 ) -> subprocess.CompletedProcess[str]:
+    """Run release with stubbed `gh` and `gum`.
+
+    `confirm` supplies a `read` line when a string, or stubs `gum confirm` when a bool.
+    """
     tools = project.parent / "bin"
     tools.mkdir(exist_ok=True)
     gh = tools / "gh"
     # The stub answers `gh run list` with one push run in the given state.
     gh.write_text(f'#!/bin/sh\necho "$*" >> "{project.parent}/gh-calls"\necho {ci}\n')
     gh.chmod(0o755)
+    gum_bin = tools / "gum"
+    if isinstance(confirm, bool):
+        status = 0 if confirm else 1
+        gum_bin.write_text(
+            "#!/bin/sh\n"
+            'if [ "$1" = "--version" ]; then echo "gum 2.0.2"; exit 0; fi\n'
+            f'echo "$*" >> "{project.parent}/gum-calls"\n'
+            f"exit {status}\n"
+        )
+    else:
+        gum_bin.write_text("#!/bin/sh\nexit 1\n")
+    gum_bin.chmod(0o755)
     env = project_env()
     env.update(
         PATH=f"{tools}{os.pathsep}{env['PATH']}",
@@ -98,7 +114,7 @@ def release(
         MISE_LOCKFILE="false",
         MISE_AUTO_INSTALL="false",
     )
-    if answer is None:
+    if confirm is None:
         return subprocess.run(  # noqa: S603
             ["bash", TASK],  # noqa: S607
             cwd=project,
@@ -110,7 +126,8 @@ def release(
         )
     # The task asks only on a terminal, so a pty answers its prompt.
     main, terminal = pty.openpty()
-    os.write(main, f"{answer}\n".encode())
+    if isinstance(confirm, str):
+        os.write(main, f"{confirm}\n".encode())
     try:
         return subprocess.run(  # noqa: S603
             ["bash", TASK],  # noqa: S607
@@ -267,7 +284,7 @@ def test_confirmed_push_publishes_with_the_hook_in_place_of_the_github_release(
     if hooks:
         add_hooks(project, publish='echo "$usage_tag" > ../published')
 
-    result = release(project, "0.1.0", push=True, answer="y")
+    result = release(project, "0.1.0", push=True, confirm="y")
 
     assert result.returncode == 0, result.stderr
     assert "v0.1.0" in git(project, "ls-remote", "--tags", "origin")
@@ -285,10 +302,22 @@ def test_confirmed_push_publishes_with_the_hook_in_place_of_the_github_release(
 def test_prompt_accepts_y_or_yes_in_any_case(
     project: Path, answer: str, pushed: bool
 ) -> None:
-    result = release(project, "0.1.0", push=True, answer=answer)
+    result = release(project, "0.1.0", push=True, confirm=answer)
 
     assert result.returncode == 0, result.stderr
     assert ("v0.1.0" in git(project, "ls-remote", "--tags", "origin")) == pushed
+
+
+@pytest.mark.parametrize("accepted", [True, False])
+def test_gum_confirms_the_push_when_installed(project: Path, accepted: bool) -> None:
+    result = release(project, "0.1.0", push=True, confirm=accepted)
+
+    assert result.returncode == 0, result.stderr
+    assert (
+        "confirm --default=false Push main and v0.1.0, then run:"
+        in (project.parent / "gum-calls").read_text()
+    )
+    assert ("v0.1.0" in git(project, "ls-remote", "--tags", "origin")) == accepted
 
 
 @pytest.mark.parametrize("hooks", [False, True])
@@ -309,7 +338,7 @@ def test_local_release_names_the_publish_step_that_a_push_would_run(
 def test_failing_publish_hook_names_the_retry(project: Path) -> None:
     add_hooks(project, publish="exit 3")
 
-    result = release(project, "0.1.0", push=True, answer="y")
+    result = release(project, "0.1.0", push=True, confirm="y")
 
     assert result.returncode == 1
     assert "pushed v0.1.0, but release:publish failed" in result.stderr

@@ -86,15 +86,21 @@ if [ "$push" = false ]; then
   echo "release: ${tag} is ready locally. Publish it with: ${pushed}"
   exit 0
 fi
-answer=""
-if [ -t 0 ]; then read -r -p "Push main and ${tag}, then run: ${publish}? [y/N] " answer; fi
-case "$answer" in
-  [yY] | [yY][eE][sS]) ;;
-  *)
-    echo "release: ${tag} stays local. Publish it with: ${pushed}"
-    exit 0
-    ;;
-esac
+# gum is optional, and a mise shim without a configured version fails, so probe it.
+confirm() {
+  local answer=""
+  [ -t 0 ] || return 1
+  if gum --version >/dev/null 2>&1; then
+    gum confirm --default=false "$1"
+    return
+  fi
+  read -r -p "$1 [y/N] " answer
+  case "$answer" in [yY] | [yY][eE][sS]) return 0 ;; *) return 1 ;; esac
+}
+if ! confirm "Push main and ${tag}, then run: ${publish}?"; then
+  echo "release: ${tag} stays local. Publish it with: ${pushed}"
+  exit 0
+fi
 
 # Another session can move main while you review the release.
 [ "$(git branch --show-current)" = main ] && [ "$(git rev-parse HEAD)" = "$(git rev-parse "${tag}^{commit}")" ] \
