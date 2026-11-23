@@ -118,3 +118,50 @@ Copy from GitHub, not from a local clone. Copier records the source in
    jobs and deployment gates before merging the adoption. A step that needs a secret
    fails in CI too. An Ansible vault password file is the exception: `ci:check` supplies
    a throwaway one.
+
+## Rebasing pre-reformat branches
+
+A branch that forks before the reformat commit conflicts with it when rebased directly
+onto `main`. Replay the branch onto the adoption commit before the reformat, format only
+the files each commit touches, then rebase onto `main`:
+
+1. Keep a backup ref before you start:
+
+   ```console
+   $ git branch <branch>-pre-cubert <branch>
+   ```
+
+2. Save a scoped exec script, such as `tmp/rebase_format.sh`, and mark it executable.
+   Plain `mise run format --all` would also rewrite untouched files whose post-reformat
+   fixes live on `main` (such as quoted YAML placeholders):
+
+   ```bash
+   #!/usr/bin/env bash
+   # Rebase exec: reformat only the files this commit touches, then amend.
+   # No -e: check-only hk steps can exit non-zero after the formatters finish.
+   set -uo pipefail
+   export GIT_LITERAL_PATHSPECS=1
+   mise run format --all >/dev/null
+   while IFS= read -r -d '' f; do
+     git diff --quiet HEAD~1 HEAD -- "$f" && git checkout -q HEAD -- "$f"
+   done < <(git diff -z --name-only)
+   git commit -q -a --amend --no-edit --no-verify
+   ```
+
+3. Replay the branch onto the commit before the reformat, which has the new formatter
+   configs, then rebase onto `main`. The reformat SHA is the one in
+   `.git-blame-ignore-revs`:
+
+   ```console
+   $ git rebase <reformat-sha>~1 --exec tmp/rebase_format.sh
+   $ git rebase main
+   ```
+
+   Read the exec output: a formatter error there leaves that commit partly formatted. A
+   commit can still conflict on a file that an earlier exec reformatted. Take the
+   commit's side with `git checkout --theirs -- <file>`, then `git add` it and run
+   `git rebase --continue`. The exec after that commit formats the file again.
+
+4. Run `mise run format`, in case `main` changed a formatter since the reformat. Commit
+   any change. Then run `mise run check` and `mise run test`, and delete
+   `<branch>-pre-cubert`.
