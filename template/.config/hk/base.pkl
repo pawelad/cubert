@@ -26,6 +26,8 @@ local commentFiles = codeFiles + List("*.css")
 local commentLine = "^[[:space:]]*(#|//|--|/\\*|\\*)"
 // Archived changes keep their text as written, the schema fork keeps upstream text, and
 // the rest is text that another program wrote or that must match an external system.
+// Local, because an amending module cannot add a property. A project finds the steps
+// that use it by the `**/vendor/**` entry.
 local frozen = List("**/openspec/changes/archive/**", "**/openspec/schemas/**", "**/fixtures/**", "**/testdata/**", "**/__snapshots__/**", "**/generated/**", "**/vendor/**")
 
 steps {

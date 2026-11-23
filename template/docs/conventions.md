@@ -408,8 +408,24 @@ Markdown and text files in full. In code and config files they check comment lin
 and a fixer rewrites only a comment. A string, an identifier or a config value can name
 an external API or hold a fixture, so the rules leave it alone. Data files, such as
 JSON, are skipped. Paths named `fixtures`, `testdata`, `__snapshots__`, `generated` and
-`vendor` are skipped too. Skip another path with
-`steps { ["no-british-english"] { exclude = List("docs/legacy/**") } }`.
+`vendor` are skipped too. Skip another path in one step with
+`steps { ["typos"] { exclude = super.exclude + List("docs/legacy/**") } }`. `super`
+keeps the shared paths. To skip paths in every step that skips those, loop over the
+shared steps in the `steps` block of `hk.pkl`:
+
+```pkl
+import ".config/hk/cubert.pkl" as shared
+
+local frozen = List("docs/legacy/**", "tests/recorded/**")
+
+steps {
+  for (name, step in shared.steps) {
+    when (step.exclude is List && (step.exclude as List).contains("**/vendor/**")) {
+      [name] { exclude = super.exclude + frozen }
+    }
+  }
+}
+```
 
 Some strings in code and config files reach users, such as notification text in YAML or
 dashboard labels in Jinja templates. To check whole files of a type, add its glob to
