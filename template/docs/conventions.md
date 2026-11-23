@@ -136,6 +136,11 @@ To add a project check, add a `check:<area>` task. `check` runs it with no other
 runs it, and so does CI. Let it take test file paths (`#USAGE arg "[files]..."`), so a
 run can cover only the touched files.
 
+`test` runs the suites in parallel. A suite that starts a stack, such as Docker E2E
+tests, can then starve for CPU. Let it wait for the others with
+`[tasks."test:e2e"] wait_for = ["test:backend", "test:frontend"]`. mise then starts it
+after them, in `test` and in `ci:check`. The other suites still run in parallel.
+
 The `opentofu` option adds `check:opentofu` and the `opentofu:` tasks. Each one also
 answers to `tofu:`, the CLI's name, such as `tofu:init`. `opentofu:init`,
 `opentofu:plan` and `opentofu:apply` run from any directory. They load
