@@ -58,8 +58,14 @@ before="$(state_etag)"
 snapshots="$MISE_PROJECT_ROOT/tmp/opentofu-state"
 mkdir -p "$snapshots"
 snapshot="$snapshots/$(date -u +%Y%m%dT%H%M%SZ).tfstate"
-(umask 077 && r2_get --output "$snapshot")
-if ! jq -e 'has("encrypted_data") and has("encryption_version")' "$snapshot" >/dev/null; then
+# curl can leave a partial file behind, which a restore would take for a snapshot.
+if ! (umask 077 && r2_get --output "$snapshot"); then
+  rm -f "$snapshot"
+  echo "opentofu:apply: cannot download the pre-apply snapshot of $state_object." >&2
+  exit 1
+fi
+if ! jq -e '[.encrypted_data, .encryption_version]
+    | all(type == "string" and length > 0)' "$snapshot" >/dev/null 2>&1; then
   rm -f "$snapshot"
   echo "opentofu:apply: the state is not encrypted. The backup would leak it." >&2
   exit 1

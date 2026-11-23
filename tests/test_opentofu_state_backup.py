@@ -127,9 +127,12 @@ def run_apply(
     *,
     state: str = ENCRYPTED,
     changes: bool = True,
-    gh_fails: bool = False,
+    fails: str = "",
 ) -> tuple[subprocess.CompletedProcess[str], list[str], Path]:
-    """Run the task with stubs: `tofu` changes the ETag that `curl --head` reports."""
+    """Run the task with stubs: `tofu` changes the ETag that `curl --head` reports.
+
+    `fails` names the stub that fails: `gh`, or `download` for the snapshot.
+    """
     tools = tmp_path / "bin"
     tools.mkdir()
     calls = tmp_path / "calls"
@@ -143,7 +146,8 @@ def run_apply(
         'printf "curl %s\\n" "$*" >> "$CALLS"\ncat > /dev/null\n'
         'case " $* " in\n'
         '  *" --head "*) printf \'ETag: "%s"\\r\\n\' "$(cat "$ETAG")" ;;\n'
-        '  *) while [ "$1" != --output ]; do shift; done; cp "$STATE" "$2" ;;\n'
+        '  *) while [ "$1" != --output ]; do shift; done; cp "$STATE" "$2"\n'
+        '     [ -z "$DOWNLOAD_FAILS" ] || exit 18 ;;\n'
         "esac\n",
     )
     stub(
@@ -179,7 +183,8 @@ def run_apply(
         ETAG=str(etag),
         STATE=str(tmp_path / "state"),
         CHANGES="1" if changes else "",
-        GH_FAILS="1" if gh_fails else "",
+        GH_FAILS="1" if fails == "gh" else "",
+        DOWNLOAD_FAILS="1" if fails == "download" else "",
         FNOX_CALLS=str(tmp_path / "fnox_calls"),
         STUB_KEY_ID=CREDENTIALS["AWS_ACCESS_KEY_ID"],
         STUB_KEY=CREDENTIALS["AWS_SECRET_ACCESS_KEY"],
@@ -255,10 +260,41 @@ def test_apply_refuses_a_plaintext_state(tmp_path: Path, apply_task: Path) -> No
     assert list(snapshots.iterdir()) == []
 
 
+@pytest.mark.parametrize(
+    "state",
+    [
+        '{"encryption_version": "v0", "encrypted_data": null}',
+        '{"encryption_version": "v0", "encrypted_data": ""}',
+        '{"encryption_version": "", "encrypted_data": "abc"}',
+        "not json",
+    ],
+)
+def test_apply_refuses_a_state_without_encrypted_data(
+    tmp_path: Path, apply_task: Path, state: str
+) -> None:
+    result, calls, snapshots = run_apply(tmp_path, apply_task, state=state)
+
+    assert result.returncode == 1
+    assert "not encrypted" in result.stderr
+    assert not any(call.startswith("tofu ") for call in calls)
+    assert list(snapshots.iterdir()) == []
+
+
+def test_apply_removes_a_partial_snapshot_when_the_download_fails(
+    tmp_path: Path, apply_task: Path
+) -> None:
+    result, calls, snapshots = run_apply(tmp_path, apply_task, fails="download")
+
+    assert result.returncode == 1
+    assert "cannot download" in result.stderr
+    assert not any(call.startswith("tofu ") for call in calls)
+    assert list(snapshots.iterdir()) == []
+
+
 def test_apply_only_warns_when_the_dispatch_fails(
     tmp_path: Path, apply_task: Path
 ) -> None:
-    result, calls, _ = run_apply(tmp_path, apply_task, gh_fails=True)
+    result, calls, _ = run_apply(tmp_path, apply_task, fails="gh")
 
     assert result.returncode == 0
     assert calls[-1].startswith("gh workflow run")
