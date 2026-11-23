@@ -65,13 +65,16 @@ steps {
   }
 [% endif %]
 [% if ansible %]
+  // The yamllint step checks these files with the project's rules. ansible-lint's own
+  // yaml rule would load yamllint's defaults: it runs in the Ansible directory, where
+  // the root `.yamllint` cannot resolve its relative `extends`.
   ["ansible-lint"] = new Step {
     dir = "[[ ansible_dir ]]"
     glob = List(
       "playbooks/**/*.yml", "playbooks/**/*.yaml", "roles/**/*.yml", "roles/**/*.yaml",
       "collections/**/roles/**/*.yml", "collections/**/roles/**/*.yaml"
     )
-    check = "ansible-lint {{files}}"
+    check = "ansible-lint --skip-list yaml {{files}}"
   }
   // A role or collection edit changes every playbook that uses it, so check them all.
   ["ansible-syntax-check"] = new Step {

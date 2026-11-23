@@ -176,6 +176,10 @@ Ansible syntax checks discover nested playbooks. They exclude directories named 
 directories hold task fragments, variables and assets rather than playbook entrypoints.
 Keep playbook entrypoints outside them.
 
+The `yamllint` hook checks Ansible YAML with the project's `.yamllint`, so the
+`ansible-lint` hook skips its own `yaml` rule. Do not pass `--yamllint-file`: yamllint
+resolves `extends` from the working directory, and ansible-lint runs in `<ansible_dir>`.
+
 The `ansible-template` hook parses changed `.j2` files with a custom ansible-lint rule.
 It uses the existing Jinja installation, Ansible's configured extensions and `#jinja2:`
 delimiter overrides. It does not render values or resolve filters, so syntax checks need
