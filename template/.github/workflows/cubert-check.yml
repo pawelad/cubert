@@ -22,6 +22,26 @@ jobs:
       - name: "Set up mise"
         uses: "$/.github/actions/setup-mise"
 
+      # OpenTofu checks each provider against the lock file, so an older cache is safe.
+      - name: "Cache OpenTofu providers"
+        if: "hashFiles('**/.terraform.lock.hcl') != ''"
+        uses: "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9" # v6.1.0
+        with:
+          path: "~/.cache/opentofu/plugins"
+          key: "opentofu-providers-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}"
+          restore-keys: "opentofu-providers-${{ runner.os }}-"
+
+      # A collections path inside the checkout can hold tracked collections. The key
+      # covers them, so a restore never puts back an old copy. Exact keys only.
+      - name: "Cache Ansible collections"
+        if: "hashFiles('**/requirements.yml') != ''"
+        uses: "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9" # v6.1.0
+        with:
+          path: |
+            ~/.ansible/collections
+            **/collections/ansible_collections
+          key: "ansible-collections-${{ runner.os }}-${{ hashFiles('**/requirements.yml', '**/collections/**') }}"
+
       # A project replaces `ci:check` in mise.toml when other jobs run its slow suites.
       - name: "Run the checks and tests"
         run: "mise run ci:check"

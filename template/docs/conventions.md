@@ -472,6 +472,8 @@ how many CI minutes a project spends, so each project sets its own.
 - In CI, `ci:check` points `ANSIBLE_VAULT_PASSWORD_FILE` at a throwaway password file
   when Ansible is installed. An `ansible.cfg` with `vault_password_file` then works
   without the real file. A check that decrypts a value still fails.
+- The `Check` job caches mise's tools, the OpenTofu providers and the Ansible
+  collections from `requirements.yml`.
 - `ci:check` sets `UV_LOCKED=1`, so a stale `uv.lock` fails CI. Bun installs with
   `--frozen-lockfile` everywhere. An override sets `UV_LOCKED=1` itself.
 
