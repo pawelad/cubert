@@ -5,4 +5,8 @@ extend-ignore-re = [
   "(?Rm)^.*(#|//)\\s*spellchecker:disable-line$",
   # Commit hashes, such as git-cliff's changelog links: `2c410ba` reads as `ba`.
   "\\b[0-9a-f]{7,40}\\b",
+  # MAC addresses, such as `AE:BA:DE:FE:0A:1B`, where `BA` reads as a typo.
+  "\\b[0-9A-Fa-f]{2}([:-][0-9A-Fa-f]{2}){5}\\b",
+  # Base64 in a PEM block, such as a certificate, holds random words.
+  "(?s)-----BEGIN [A-Z0-9 ]+-----.*?-----END [A-Z0-9 ]+-----",
 ]
