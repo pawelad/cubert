@@ -108,7 +108,11 @@ Copy from GitHub, not from a local clone. Copier records the source in
    - Parse each changed YAML file before and after the reformat, and compare the data.
    - dprint keeps a line break inside a code span. Join the span by hand, so a search
      for its text finds it.
-7. Fix what `mise run ci:check` and `mise run audit` report, then commit. Exercise
-   application jobs and deployment gates before merging the adoption. A step that needs
-   a secret fails in CI too. An Ansible vault password file is the exception: `ci:check`
-   supplies a throwaway one.
+7. Fix what `mise run ci:check` and `mise run audit` report, then commit. The project's
+   own workflows meet zizmor here for the first time, often with unpinned actions,
+   persisted credentials and template injection. Run `zizmor --fix=safe .github`, and
+   review its edits. Fix the rest by hand, or end a line with a
+   `# zizmor: ignore[<rule>]` comment, with the reason above it. Exercise application
+   jobs and deployment gates before merging the adoption. A step that needs a secret
+   fails in CI too. An Ansible vault password file is the exception: `ci:check` supplies
+   a throwaway one.
