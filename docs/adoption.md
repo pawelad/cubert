@@ -70,7 +70,13 @@ Copy from GitHub, not from a local clone. Copier records the source in
    [OpenTofu state backup](../template/docs/conventions.md#opentofu-state-backup).
 6. Exclude generated and vendored data from `dprint.json`. Then run `mise trust`,
    `mise run setup` and `mise run format --all`. Commit the reformat alone, and add its
-   hash to `.git-blame-ignore-revs`.
+   hash to `.git-blame-ignore-revs`. Before you commit, review the reformat:
+   - dprint trims a trailing space inside a Markdown code span, so `` `] ` `` becomes
+     `` `]` ``. Find each changed span with
+     ``git diff --word-diff -- '*.md' | grep '`'``. Write such a value in a code block
+     instead.
+   - dprint keeps a line break inside a code span. Join the span by hand, so a search
+     for its text finds it.
 7. Fix what `mise run ci:check` and `mise run audit` report, then commit. Exercise
    application jobs and deployment gates before merging the adoption. A step that needs
    a secret fails in CI too. An Ansible vault password file is the exception: `ci:check`
