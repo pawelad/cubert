@@ -75,6 +75,12 @@ Copy from GitHub, not from a local clone. Copier records the source in
      `` `]` ``. Find each changed span with
      ``git diff --word-diff -- '*.md' | grep '`'``. Write such a value in a code block
      instead.
+   - YAML reads an unquoted `{{VAR}}` placeholder as a flow mapping, and dprint rewrites
+     it to `{ { VAR } }`. A tool that substitutes the text before it parses the file
+     then breaks. Quote each placeholder before the reformat.
+   - dprint wraps a long flow mapping across lines, and yamllint can reject the result.
+     Write it as a block mapping.
+   - Parse each changed YAML file before and after the reformat, and compare the data.
    - dprint keeps a line break inside a code span. Join the span by hand, so a search
      for its text finds it.
 7. Fix what `mise run ci:check` and `mise run audit` report, then commit. Exercise
