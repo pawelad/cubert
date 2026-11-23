@@ -2,8 +2,9 @@
 # A change can pick the other schema: `openspec new change <name> --schema <name>`.
 schema: "[[ openspec ]]"
 
+# Wrapped: yamllint fails a line over 88 columns, and dprint keeps a block scalar.
 context: |
-  `[[ project_name ]]`: [[ description ]]
+  [[ ("`" ~ project_name ~ "`: " ~ description) | wordwrap(86, break_long_words=False, break_on_hyphens=False, wrapstring="\n  ") ]]
 
   Read the root `AGENTS.md` for the rules and `docs/README.md` for the docs index.
 

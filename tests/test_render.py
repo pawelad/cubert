@@ -83,6 +83,19 @@ def test_description_with_quotes_renders_valid_pyproject(tmp_path: Path) -> None
     assert parsed["project"]["description"] == TRICKY
 
 
+def test_long_description_wraps_in_openspec_config_within_yamllint_limit(
+    tmp_path: Path,
+) -> None:
+    description = " ".join(["A long description that keeps going."] * 6)
+    project = render_template(tmp_path, description=description)
+    lines = (project / "openspec/config.yaml").read_text().splitlines()
+
+    assert all(len(line) <= 88 for line in lines)
+    start = lines.index("context: |") + 1
+    context = " ".join(line.strip() for line in lines[start : start + 3])
+    assert context.startswith(f"`demo`: {description}")
+
+
 # worktree:setup links openspec/changes into a worktree, and git must ignore the link.
 def test_untracked_openspec_changes_stay_out_of_git_as_a_dir_or_a_link(
     tmp_path: Path,
