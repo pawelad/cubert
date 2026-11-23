@@ -3,10 +3,17 @@
 #USAGE flag "--all" help="Fix every file in the repository"
 set -euo pipefail
 
-# tsc has no fixer, and its type errors would abort the fixers that run after it.
 # --no-fail-fast: one failing check step would otherwise abort every fixer after it.
+args=(--no-fail-fast)
 if [ "${usage_all:-false}" = "true" ]; then
-  hk fix --all --no-fail-fast --skip-step tsc
-else
-  hk fix --no-fail-fast --skip-step tsc
+  args+=(--all)
 fi
+
+# tsc has no fixer, and its type errors would abort the fixers that run after it.
+# Skip it only when configured: hk warns when --skip-step names a missing step.
+if [ -f hk.pkl ] \
+  && [ "$(pkl eval -x 'steps.containsKey("tsc")' hk.pkl 2>/dev/null || true)" = "true" ]; then
+  args+=(--skip-step tsc)
+fi
+
+hk fix "${args[@]}"
