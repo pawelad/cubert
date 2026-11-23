@@ -21,8 +21,9 @@ cubert follows its own template, at the working tree and not at a release:
 - `.config/mise/tasks/` links each shared task that cubert can run, under its rendered
   name. `release/preview` links to `release/[% if changelog %]preview[% endif %]`.
 - `.github/workflows/pr-title.yml` is a copy, not a link, because GitHub ignores a
-  symlinked workflow. `.github/CODEOWNERS`, `.gitignore` and `.config/wt.toml` are
-  copies of rendered files. `test_cubert_copies.py` fails when a copy drifts.
+  symlinked workflow. It names actions by tag, as cubert's other workflows do.
+  `.github/CODEOWNERS`, `.gitignore` and `.config/wt.toml` are copies of rendered files.
+  `test_cubert_copies.py` fails when a copy drifts.
 - `hk.pkl`, `dprint.json`, `.yamllint` and `lychee.toml` layer on the template's files,
   as a project's files do.
 - `cliff.toml` and `CHANGELOG.md` are project-owned copies. cubert's `cliff.toml` hides
