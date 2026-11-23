@@ -480,15 +480,19 @@ Three hk steps cover what the formatters and linters miss:
 - `betterleaks` scans for tokens, passwords and keys. A false positive gets a
   `betterleaks:allow` comment on the line, or a fingerprint in `.betterleaksignore`. A
   fingerprint holds the line number, so an edit above the line brings the finding back.
-  For a whole path or a pattern, add an allowlist to a root `.betterleaks.toml`:
+  For a whole path or a pattern, add an allowlist to a root `.betterleaks.toml`. hk
+  passes it with `--config`. Fake test passwords trip the generic rules, so an allowlist
+  can skip only those rules in test paths. Specific rules, such as private keys, still
+  scan them:
 
   ```toml
   [extend]
   useDefault = true
 
   [[allowlists]]
-  description = "Recorded API responses"
-  paths = ['''^tests/data/''']
+  description = "Fake credentials in tests"
+  targetRules = ["generic-api-key", "generic-credential-uri", "generic-password"]
+  paths = ['''(^|/)tests/''', '''\.test\.tsx?$''']
   ```
 - `lychee` runs with `--offline`, so it checks relative links in Markdown only. A
   project excludes paths or URLs in a root `lychee.toml`, which layers on
