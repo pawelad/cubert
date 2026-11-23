@@ -118,6 +118,12 @@ Copy from GitHub, not from a local clone. Copier records the source in
    jobs and deployment gates before merging the adoption. A step that needs a secret
    fails in CI too. An Ansible vault password file is the exception: `ci:check` supplies
    a throwaway one.
+8. Merge the adoption with a merge commit, or fast-forward with
+   `git merge --ff-only <branch>`. A squash or rebase merge rewrites commit hashes and
+   breaks the reformat SHA in `.git-blame-ignore-revs`. A fast-forward needs a direct
+   push to `main`, which branch protection can block. If `main` moved, the fast-forward
+   needs a rebase, which gives the reformat a new hash. After the last rebase, put the
+   new hash in `.git-blame-ignore-revs`, and amend the third commit.
 
 ## Rebasing pre-reformat branches
 
