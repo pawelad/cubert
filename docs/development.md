@@ -151,6 +151,9 @@ them. Five more tests read the template itself:
   until they match.
 - After an hk bump, compare `smartQuote` in `template/.config/hk/base.pkl` with the
   characters in hk's `src/cli/util/fix_smart_quotes.rs`. The comment fixer copies them.
+- After an hk bump, compare the `betterleaks` step's `check` in
+  `template/.config/hk/base.pkl` with hk's builtin `betterleaks.pkl`. The step replaces
+  the builtin's command to add `--config`, so it misses the builtin's new flags.
 - After an OpenSpec bump, run `mise run openspec:refork`. It rebuilds the changes-only
   schema from the new built-in one. Review the diff, then run the render tests.
 - `min_version` in `template/.config/mise/config.toml` is the one mise pin. CI installs

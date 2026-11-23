@@ -436,7 +436,18 @@ Three hk steps cover what the formatters and linters miss:
   words in a root `typos.toml`, which layers on `.config/typos.toml`. A line that ends
   in a `spellchecker:disable-line` comment is skipped.
 - `betterleaks` scans for tokens, passwords and keys. A false positive gets a
-  `betterleaks:allow` comment on the line, or a fingerprint in `.betterleaksignore`.
+  `betterleaks:allow` comment on the line, or a fingerprint in `.betterleaksignore`. A
+  fingerprint holds the line number, so an edit above the line brings the finding back.
+  For a whole path or a pattern, add an allowlist to a root `.betterleaks.toml`:
+
+  ```toml
+  [extend]
+  useDefault = true
+
+  [[allowlists]]
+  description = "Recorded API responses"
+  paths = ['''^tests/data/''']
+  ```
 - `lychee` runs with `--offline`, so it checks relative links in Markdown only. A
   project excludes paths or URLs in a root `lychee.toml`, which layers on
   `.config/lychee.toml`.

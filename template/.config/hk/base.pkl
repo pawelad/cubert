@@ -39,8 +39,15 @@ steps {
       ["SHELLCHECK_OPTS"] = "--exclude=SC1090 --exclude=SC2046 --exclude=SC2086 --exclude=SC2129"
     }
   }
-  // Finds private keys, tokens and passwords.
-  ["betterleaks"] = Builtins.betterleaks
+  // Finds private keys, tokens and passwords. betterleaks auto-loads a repository config
+  // only with an unsafe flag, so a root `.betterleaks.toml` loads through `--config`.
+  ["betterleaks"] = (Builtins.betterleaks) {
+    check = """
+      config=''
+      if [ -f .betterleaks.toml ]; then config='--config .betterleaks.toml'; fi
+      betterleaks dir --redact --verbose --no-banner $config {{files}}
+      """
+  }
   ["check-added-large-files"] = (Builtins.check_added_large_files) {
     exclude = List("**/*.lock")
   }
