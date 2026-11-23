@@ -55,6 +55,12 @@ def test_fenced_code_does_not_count(tmp_path: Path) -> None:
     assert run_on(tmp_path, "a.py", text) == 0
 
 
+def test_script_metadata_block_does_not_count(tmp_path: Path) -> None:
+    block = f"# /// script\n# dependencies = [\n{prose(MAX, '#   ')}# ]\n# ///\n"
+    text = block + prose(MAX, "# ")
+    assert run_on(tmp_path, "a.py", text) == 0
+
+
 def test_ts_line_comments_over_the_cap_fail(tmp_path: Path) -> None:
     text = prose(MAX + 1, "// ") + "const x = 1;\n"
     assert run_on(tmp_path, "a.ts", text) == 1

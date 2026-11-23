@@ -5,8 +5,8 @@
 """Fail on comment blocks and docstrings whose prose runs past `MAX_PROSE_LINES`.
 
 Prose is every non-blank line before the first Google docstring section
-(`Args:`, `Returns:`, ...) or JSDoc `@tag`; linter directives and fenced code
-blocks don't count.
+(`Args:`, `Returns:`, ...) or JSDoc `@tag`; linter directives, fenced code
+blocks and PEP 723 metadata blocks don't count.
 """
 
 from __future__ import annotations
@@ -29,19 +29,28 @@ DIRECTIVE = re.compile(
     r"^\s*(biome-ignore|eslint-disable|eslint-enable|@ts-expect-error|@ts-ignore"
     r"|noqa|type: ignore|pragma|ruff:|mypy:|fmt:)"
 )
+# A PEP 723 block, such as `# /// script`, as it reads once the `#` is stripped.
+METADATA = re.compile(r"^///( [a-zA-Z0-9-]+)?$")
 PY_EXTENSIONS = {".py"}
 TS_EXTENSIONS = {".ts", ".tsx", ".js", ".mjs"}
 
 
 def _prose_length(lines: list[str], *, stop_at: re.Pattern[str]) -> int:
     count = 0
-    in_fence = False
+    in_fence = in_metadata = False
     for line in lines:
         if stop_at.match(line):
             break
         if line.strip().startswith("```"):
             in_fence = not in_fence
-        elif line.strip() and not in_fence and not DIRECTIVE.match(line):
+        elif METADATA.match(line.strip()):
+            in_metadata = not in_metadata
+        elif (
+            line.strip()
+            and not in_fence
+            and not in_metadata
+            and not DIRECTIVE.match(line)
+        ):
             count += 1
     return count
 
