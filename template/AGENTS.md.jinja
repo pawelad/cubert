@@ -101,6 +101,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 - If another session staged files, commit with `git commit -- <paths>`. If it staged a
   file you edited, use a temporary `GIT_INDEX_FILE`: `git read-tree HEAD`, then
   `git apply --cached`.
+- After `git commit -- <paths>`, run `git restore --staged <paths>`. A hook fix leaves
+  the old text staged, and the next commit would revert it.
 - Give each fix found in passing and each confirmed improvement its own commit.
 - A change that enables a release does not include the release. Never list a tag as its
   next step.
