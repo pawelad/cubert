@@ -47,6 +47,18 @@ def test_mise_exact_version_forms_pass(tmp_path: Path) -> None:
         assert check_pins.main([str(config)]) == 0, version
 
 
+def test_templated_version_fails_with_a_literal_pin_fix(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config = tmp_path / "mise.toml"
+    config.write_text(
+        "[tools]\npython = \"{{ exec(command='cat .python-version') | trim }}\"\n"
+    )
+    (tmp_path / "mise.lock").write_text('[[tools.python]]\nversion = "3.14.8"\n')
+    assert check_pins.main([str(config)]) == 1
+    assert "Fix: write the version literally" in capsys.readouterr().out
+
+
 def test_partial_request_does_not_match_its_resolved_patch(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

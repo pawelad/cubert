@@ -32,6 +32,14 @@ def _mise_failures(path: Path) -> list[str]:
         versions = spec if isinstance(spec, list) else [spec]
         for version in versions:
             value = version.get("version") if isinstance(version, dict) else version
+            if isinstance(value, str) and "{{" in value:
+                # mise renders a template at run time, so the lock cannot vouch for it.
+                failures.append(
+                    f"{path}: tool {name!r} has a templated version, which the lock"
+                    " cannot verify. Fix: write the version literally, and keep it in"
+                    " sync with a check:<area> task"
+                )
+                continue
             if not isinstance(value, str) or not PINNED.fullmatch(value):
                 failures.append(f"{path}: tool {name!r} has no pinned version")
                 continue

@@ -78,7 +78,9 @@ What an update does to a missing or removed file:
   `<tool> = "latest"` to `[tools]` and run `mise run setup`. `mise use --pin <tool>` can
   pick an installed release that the cutoff hides, then fail to lock it.
 - The `pins` check requires each request to match its version in `mise.lock`. A dotted
-  prefix such as `node = "24.22"` fails when it locks `24.22.2`.
+  prefix such as `node = "24.22"` fails when it locks `24.22.2`. A templated request,
+  such as one that reads `.python-version`, fails too: the lock cannot verify it. Write
+  the version literally, and keep a copy in sync with a `check:<area>` task.
 - Commit `.mise/locks/` with `mise.lock`. The `lockfile` check verifies native npm and
   Python dependency graphs and their digests, even when tools are already installed.
   `check:repo` also verifies them after edits that change only a graph.
