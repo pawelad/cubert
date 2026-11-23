@@ -27,7 +27,8 @@ pypi:copier[python=3.14]
 ruff
 [% endif %]
 [% if typescript %]
-biome
+# 2.6.0 added the Markdown and YAML settings that .config/biome.json turns off.
+biome>=2.6.0
 bun
 npm:typescript
 [% endif %]

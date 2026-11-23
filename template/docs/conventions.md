@@ -545,11 +545,11 @@ including nested backends.
 
 dprint formats Markdown, TOML, JSON and YAML. yamllint requires double-quoted strings.
 With the `typescript` option, Biome formats and lints JavaScript, TypeScript and CSS. It
-does not format JSON, so dprint stays the only JSON formatter. The `biome` step covers
-format, lint and import order, so there is no separate format step. hk runs `tsc` once
-per nearest `tsconfig.json`, so a monorepo needs no setup. `mise run format` skips
-`tsc`, which cannot fix anything. The hk builtins check trailing whitespace, final
-newlines and line endings from `.editorconfig`.
+does not format JSON, Markdown or YAML, so dprint stays the only formatter for them. The
+`biome` step covers format, lint and import order, so there is no separate format step.
+hk runs `tsc` once per nearest `tsconfig.json`, so a monorepo needs no setup.
+`mise run format` skips `tsc`, which cannot fix anything. The hk builtins check trailing
+whitespace, final newlines and line endings from `.editorconfig`.
 
 Every file type has the same maximum line length: 88 columns, the Black and ruff
 default. dprint wraps Markdown prose and formats the other files to it, and yamllint

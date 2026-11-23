@@ -18,6 +18,16 @@
       "enabled": false
     }
   },
+  "markdown": {
+    "formatter": {
+      "enabled": false
+    }
+  },
+  "yaml": {
+    "formatter": {
+      "enabled": false
+    }
+  },
   "assist": {
     "actions": {
       "source": {
