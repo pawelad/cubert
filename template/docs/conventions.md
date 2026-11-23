@@ -530,7 +530,10 @@ how many CI minutes a project spends, so each project sets its own.
 - `ci:check` runs `install`, `check`, then `test`. When other jobs run some
   `check:<area>` or `test:<area>` tasks, list them in `CI_CHECK_SKIP` under `[env]` in
   `mise.toml`, such as `CI_CHECK_SKIP = "check:visualizer test:e2e"`. Any other name,
-  such as a typo, fails the job. To replace the job, override the task in `mise.toml`:
+  such as a typo, fails the job. When other jobs also run hk steps that need app
+  dependencies, such as eslint or tsc, skip them on the task, not in `[env]`, so git
+  hooks keep them: `[tasks."ci:check"] env = { HK_SKIP_STEPS = "eslint,tsc" }`. To
+  replace the job, override the task in `mise.toml`:
   `[tasks."ci:check"] run = "mise run check:repo"`. Include `mise run install` in an
   override when its checks need project dependencies. `mise run ci:check` runs the same
   job locally.
