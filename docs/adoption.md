@@ -22,6 +22,9 @@ Copy from GitHub, not from a local clone. Copier records the source in
      `cubert-audit.yml` (see [conventions.md](../template/docs/conventions.md#ci)). Keep
      application jobs, image scans and deployment gates. When those jobs already run
      some `check:<area>` or `test:<area>` tasks, list them in `CI_CHECK_SKIP`.
+   - A path filter that lists `mise.toml` must also list `.config/**` and
+     `.python-version`. cubert moves shared mise settings to `.config/mise/`, and the
+     Python version, such as `UV_PYTHON`, to `.python-version`.
    - Restore project privacy rules and commit policies in `AGENTS.md`. Reconcile them
      with the shared defaults: a single task ends with a suggested commit message, and
      agents commit only in Batch mode or when asked.
