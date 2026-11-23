@@ -46,7 +46,6 @@ _skip_if_exists:
   - "[[ opentofu_dir ]]/versions.tf"
   - "[[ opentofu_dir ]]/mise.toml"
   - "[[ opentofu_dir ]]/fnox.toml"
-  - "[[ ansible_dir ]]/.gitkeep"
   - "openspec/changes/.gitkeep"
   - "openspec/specs/.gitkeep"
 

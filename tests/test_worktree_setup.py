@@ -105,6 +105,8 @@ def project(tmp_path_factory: pytest.TempPathFactory) -> Project:
     # Untracked files that only the primary checkout has.
     (primary / ".env").write_text("DEMO=1\n")
     (primary / "src/opentofu/.env").write_text("TOFU=1\n")
+    # No tracked file holds the Ansible directory open.
+    (primary / "src/ansible").mkdir(parents=True)
     (primary / "src/ansible/.vault_pass").write_text("vault\n")
     for name in AGENT_DIRS:
         (primary / name).mkdir()
