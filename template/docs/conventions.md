@@ -256,7 +256,9 @@ description. `fnox list` shows them. No `.env.example` exists. The file sets:
 - `if_missing = "error"`: a missing value stops the task and names it.
 - `env = "exec"`: `fnox activate` never exports the values into a shell.
 - `redact_exec = true`: piped output shows `[REDACTED]` for each value, so an agent that
-  reads a plan does not see it. A terminal shows the output unchanged.
+  reads a plan does not see it. A terminal shows the output unchanged. A value that is
+  not a secret, such as a URL or an account ID, sets `sensitive = false`. A plan diff on
+  it then shows the change.
 - `[daemon]`: a per-user daemon caches the values for one idle hour. Run
   `fnox daemon clear` after you rotate a value.
 
