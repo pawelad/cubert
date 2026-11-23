@@ -4,9 +4,15 @@ set -euo pipefail
 
 # `mise use --pin tool@latest` can pick an installed release that minimum_release_age
 # hides, then fail to lock it for other platforms. `mise latest` applies the cutoff.
+# A `tool>=version` request raises that release to its minimum: the cutoff can still
+# pick a broken release, such as fnox 1.48.0 on macOS 15.
 pin() {
-  local request tool version resolved requests=()
+  local request tool version minimum resolved requests=()
   for request in "$@"; do
+    minimum=""
+    case "$request" in
+      *">="*) minimum="${request##*>=}" request="${request%>=*}" ;;
+    esac
     tool="$request" version=""
     # The text after the last @ is a version unless it holds a /, as in npm:@scope/name.
     case "${request##*@}" in
@@ -19,6 +25,10 @@ pin() {
         if [ -z "$resolved" ]; then
           echo "setup: mise latest found no release of $tool" >&2
           return 1
+        fi
+        if [ -n "$minimum" ] \
+          && [ "$(printf '%s\n' "$minimum" "$resolved" | sort -V | head -n 1)" != "$minimum" ]; then
+          resolved="$minimum"
         fi
         requests+=("$tool@$resolved")
         ;;

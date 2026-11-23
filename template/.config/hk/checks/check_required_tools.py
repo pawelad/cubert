@@ -99,13 +99,19 @@ def missing_runtimes(required: str, config: str) -> list[tuple[str, str, str]]:
     return found
 
 
-def _request(name: str, version: str | None, runtime: str | None) -> str:
+def _request(
+    name: str, version: str | None, runtime: str | None, minimum: str | None = None
+) -> str:
     options = f"[python={runtime}]" if runtime else ""
-    return f"{name}{options}" + (f"@{version}" if version else "")
+    request = f"{name}{options}" + (f"@{version}" if version else "")
+    return request + (f">={minimum}" if minimum else "")
 
 
 def main(args: list[str]) -> int:
-    """Print each tool that `mise.toml` lacks or has too old. `--names` prints fixes."""
+    """Print each tool that `mise.toml` lacks or has too old. `--names` prints fixes.
+
+    A fix is a mise request, and a missing tool's minimum follows it as `>=version`.
+    """
     required, config = REQUIRED.read_text(), CONFIG.read_text()
     if args == ["--unpinned"]:
         print("\n".join(unpinned(config)))
@@ -115,9 +121,10 @@ def main(args: list[str]) -> int:
     runtimes = missing_runtimes(required, config)
     if args == ["--names"]:
         requirements = {
-            name: (channel, runtime)
-            for name, _, channel, runtime in _requirements(required)
+            name: (channel, runtime, minimum)
+            for name, minimum, channel, runtime in _requirements(required)
         }
+        # setup resolves an added tool to the latest release, raised to its minimum.
         added = [_request(tool, *requirements[tool]) for tool in tools]
         raised = [
             _request(name, minimum, requirements[name][1]) for name, minimum, _ in old

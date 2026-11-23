@@ -60,6 +60,17 @@ def test_minimum_is_not_part_of_the_tool_name() -> None:
     assert check_required_tools.missing("hk>=2.11.1\n", config) == []
 
 
+def test_names_mode_keeps_the_minimum_of_a_missing_tool(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / ".config/mise").mkdir(parents=True)
+    (tmp_path / ".config/mise/required-tools").write_text("fnox>=1.50.0\nuv\n")
+    (tmp_path / "mise.toml").write_text('[tools]\nuv = "1.0.0"\n')
+    monkeypatch.chdir(tmp_path)
+    status = check_required_tools.main(["--names"])
+    assert (status, capsys.readouterr().out) == (0, "fnox>=1.50.0\n")
+
+
 def test_names_mode_prints_the_pinned_minimum_of_an_outdated_tool(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

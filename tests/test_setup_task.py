@@ -30,10 +30,14 @@ def project(tmp_path: Path) -> Path:
     return render_template(tmp_path)
 
 
-def run_setup(tmp_path: Path, project: Path, config: str | None) -> list[list[str]]:
+def run_setup(
+    tmp_path: Path, project: Path, config: str | None, required: str = ""
+) -> list[list[str]]:
     """Run setup with the stub and return the `mise use` requests, one list per call."""
     if config is not None:
         (project / "mise.toml").write_text(config)
+    with (project / ".config/mise/required-tools").open("a") as file:
+        file.write(required)
     tools = tmp_path / "bin"
     tools.mkdir(exist_ok=True)
     (tools / "mise").write_text(STUB_MISE)
@@ -78,3 +82,14 @@ def test_setup_pins_added_tools_with_their_options_and_scopes(
     assert "node@1.0.0" in added
     assert "yamllint[python=3.14]@1.0.0" in added
     assert "npm:@fission-ai/openspec@1.0.0" in added
+
+
+# The stub's newest allowed fnox is 1.0.0, below the minimum that the list sets.
+def test_setup_raises_an_added_tool_to_its_minimum(
+    tmp_path: Path, project: Path
+) -> None:
+    requests = run_setup(tmp_path, project, '[tools]\nuv = "1.0.0"\n', "fnox>=1.50.0\n")
+
+    added = requests[-1]
+    assert "fnox@1.50.0" in added
+    assert "hk@2.12.0" in added
