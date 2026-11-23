@@ -398,6 +398,18 @@ enabled features). `hk.pkl` amends `cubert.pkl`:
   `import "package://.../Builtins.pkl" as hkb`. hk's evaluator cannot resolve a second
   import named `Builtins`, and `base.pkl` already has one.
 - hk 2.11.1 rejects a `Group` in `steps`. Give each step its own `dir` instead.
+- Keep a step out of `mise run check` when it calls a `check:<area>` task, which `check`
+  already runs. The `check` hook then skips it, and the git hooks keep it:
+
+  ```pkl
+  hooks {
+    ["check"] {
+      steps {
+        ["vector"] = (module.steps["vector"]) { condition = "false" }
+      }
+    }
+  }
+  ```
 
 In Cubert, change the hk package pins in `template/.config/hk/base.pkl` and
 `template/.config/hk/cubert.pkl.jinja` together. Projects receive those files as
