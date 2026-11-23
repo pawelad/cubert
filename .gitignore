@@ -17,5 +17,6 @@ tmp
 
 *.rej
 __pycache__/
+.DS_Store
 .venv/
 .ruff_cache/

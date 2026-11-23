@@ -17,6 +17,7 @@ tmp
 
 *.rej
 __pycache__/
+.DS_Store
 [% if python %]
 .venv/
 .mypy_cache/
@@ -35,6 +36,14 @@ node_modules/
 [[ opentofu_dir ]]/*.tfvars.json
 [[ opentofu_dir ]]/*.tfplan
 [[ opentofu_dir ]]/*.tofuplan
+# A crash log can hold credentials from the provider configuration.
+[[ opentofu_dir ]]/crash.log
+[[ opentofu_dir ]]/crash.*.log
+# Override files change the configuration on one machine only.
+[[ opentofu_dir ]]/override.tf
+[[ opentofu_dir ]]/override.tf.json
+[[ opentofu_dir ]]/*_override.tf
+[[ opentofu_dir ]]/*_override.tf.json
 [% endif %]
 [% if ansible %]
 [[ ansible_dir ]]/.vault_pass
