@@ -20,8 +20,8 @@ Copy from GitHub, not from a local clone. Copier records the source in
    - Copier keeps an existing `ci.yml` and `audit.yml`, because they are project-owned.
      Replace their check and audit jobs with calls to `cubert-check.yml` and
      `cubert-audit.yml` (see [conventions.md](../template/docs/conventions.md#ci)). Keep
-     application jobs, image scans and deployment gates. Override `ci:check` when those
-     jobs already run the application suites.
+     application jobs, image scans and deployment gates. When those jobs already run
+     some `check:<area>` or `test:<area>` tasks, list them in `CI_CHECK_SKIP`.
    - Restore project privacy rules and commit policies in `AGENTS.md`. Reconcile them
      with the shared defaults: a single task ends with a suggested commit message, and
      agents commit only in Batch mode or when asked.
@@ -73,4 +73,5 @@ Copy from GitHub, not from a local clone. Copier records the source in
    hash to `.git-blame-ignore-revs`.
 7. Fix what `mise run ci:check` and `mise run audit` report, then commit. Exercise
    application jobs and deployment gates before merging the adoption. A step that needs
-   a secret, such as an Ansible vault password, fails in CI too.
+   a secret fails in CI too. An Ansible vault password file is the exception: `ci:check`
+   supplies a throwaway one.

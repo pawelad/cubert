@@ -449,11 +449,16 @@ how many CI minutes a project spends, so each project sets its own.
   concurrency and a `workflow_call` trigger for a deploy gate go there too.
 - The weekly schedule is in `audit.yml`, so it does not start the CI jobs.
 - A caller sets `permissions`. A called workflow can only narrow them.
-- `ci:check` runs `install`, `check`, then `test`. When other jobs run the slow suites
-  with their services, replace it in `mise.toml`:
+- `ci:check` runs `install`, `check`, then `test`. When other jobs run some
+  `check:<area>` or `test:<area>` tasks, list them in `CI_CHECK_SKIP` under `[env]` in
+  `mise.toml`, such as `CI_CHECK_SKIP = "check:visualizer test:e2e"`. Any other name,
+  such as a typo, fails the job. To replace the job, override the task in `mise.toml`:
   `[tasks."ci:check"] run = "mise run check:repo"`. Include `mise run install` in an
   override when its checks need project dependencies. `mise run ci:check` runs the same
   job locally.
+- In CI, `ci:check` points `ANSIBLE_VAULT_PASSWORD_FILE` at a throwaway password file
+  when Ansible is installed. An `ansible.cfg` with `vault_password_file` then works
+  without the real file. A check that decrypts a value still fails.
 - `ci:check` sets `UV_LOCKED=1`, so a stale `uv.lock` fails CI. Bun installs with
   `--frozen-lockfile` everywhere. An override sets `UV_LOCKED=1` itself.
 
