@@ -411,6 +411,19 @@ JSON, are skipped. Paths named `fixtures`, `testdata`, `__snapshots__`, `generat
 `vendor` are skipped too. Skip another path with
 `steps { ["no-british-english"] { exclude = List("docs/legacy/**") } }`.
 
+Some strings in code and config files reach users, such as notification text in YAML or
+dashboard labels in Jinja templates. To check whole files of a type, add its glob to
+`no-em-dashes` and `no-british-english`:
+
+```pkl
+steps {
+  ["no-em-dashes"] { glob = super.glob + List("*.yaml", "*.j2") }
+  ["no-british-english"] { glob = super.glob + List("*.yaml", "*.j2") }
+}
+```
+
+The `no-em-dashes` fixer then rewrites strings in those files too.
+
 The `openspec` step runs `openspec validate --all --strict`. With `spec-driven`, an
 `[INFO]` or `[WARNING]` line fails it too, such as a requirement over 500 characters.
 `changes-only` changes always print an `[INFO]` line, so only the exit code counts

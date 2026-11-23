@@ -110,6 +110,7 @@ steps {
   }
   ["mixed-line-ending"] = Builtins.mixed_line_ending
   ["newlines"] = Builtins.newlines
+  // A project can add files whose strings users read, such as `*.yaml`, to the glob.
   ["no-british-english"] = new Step {
     glob = proseFiles
     exclude = frozen
@@ -131,6 +132,7 @@ steps {
       fi
       """
   }
+  // A project can add files whose strings users read, such as `*.yaml`, to the glob.
   ["no-em-dashes"] = new Step {
     glob = proseFiles
     exclude = frozen
