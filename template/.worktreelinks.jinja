@@ -1,8 +1,12 @@
 # Paths that `mise run worktree:setup` links from the primary checkout, one per line.
-# Use it for operator credentials that are the same on every branch.
+# Use it for paths that are the same on every branch, such as operator credentials.
+# A trailing / creates the directory in the primary checkout when it is missing.
 [% if opentofu and secrets_provider == 'none' %]
 [[ opentofu_dir ]]/.env
 [% endif %]
 [% if ansible %]
 [[ ansible_dir ]]/.vault_pass
+[% endif %]
+[% if openspec != 'none' and not openspec_changes_tracked %]
+openspec/changes/
 [% endif %]

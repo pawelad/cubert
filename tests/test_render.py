@@ -74,6 +74,24 @@ def test_description_with_quotes_renders_valid_pyproject(tmp_path: Path) -> None
     assert parsed["project"]["description"] == TRICKY
 
 
+# worktree:setup links openspec/changes into a worktree, and git must ignore the link.
+def test_untracked_openspec_changes_stay_out_of_git_as_a_dir_or_a_link(
+    tmp_path: Path,
+) -> None:
+    project = render_template(tmp_path, openspec_changes_tracked="false")
+    run(["git", "init", "--quiet"], project)
+
+    assert "openspec/changes/" in (project / ".worktreelinks").read_text().splitlines()
+    assert not (project / "openspec/changes/.gitkeep").exists()
+    (project / "openspec/changes/demo").mkdir(parents=True)
+    (project / "openspec/changes/demo/proposal.md").write_text("# Demo\n")
+    status = ["git", "status", "--porcelain", "-uall", "openspec/changes"]
+    assert run(status, project) == ""
+    shutil.move(project / "openspec/changes", tmp_path / "changes")
+    (project / "openspec/changes").symlink_to(tmp_path / "changes")
+    assert run(status, project) == ""
+
+
 @pytest.mark.parametrize("body", ["echo mine", "mise run worktree:setup"])
 def test_hooks_install_keeps_a_post_checkout_hook_that_is_not_cubert(
     tmp_path: Path,

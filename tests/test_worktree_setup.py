@@ -83,6 +83,8 @@ def project(tmp_path_factory: pytest.TempPathFactory) -> Project:
             "ansible=true",
             "-d",
             "ansible_dir=src/ansible",
+            "-d",
+            "openspec_changes_tracked=false",
             str(source),
             str(primary),
         ],
@@ -143,6 +145,15 @@ def test_worktreelinks_path_links_to_primary(project: Project, path: str) -> Non
     link = project.worktree / path
     assert link.is_symlink()
     assert link.resolve() == (project.primary / path).resolve()
+
+
+def test_worktreelinks_dir_missing_in_primary_is_created_and_linked(
+    project: Project,
+) -> None:
+    link = project.worktree / "openspec/changes"
+    assert link.is_symlink()
+    assert link.resolve() == (project.primary / "openspec/changes").resolve()
+    assert (project.primary / "openspec/changes").is_dir()
 
 
 def test_worktreeinclude_file_is_copied(project: Project) -> None:

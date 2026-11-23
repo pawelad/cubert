@@ -58,5 +58,9 @@ openspec/changes/archive/.gitkeep
 [% if openspec == 'changes-only' %]
 openspec/specs/
 [% endif %]
+[% if openspec != 'none' and not openspec_changes_tracked %]
+# Not `changes/`: in a worktree, the path is a link to the primary checkout's directory.
+openspec/changes
+[% endif %]
 
 # Project

@@ -37,10 +37,17 @@ for dir in tmp .agent .agents .claude .codex .gemini .opencode .pi .impeccable; 
   link "$dir"
 done
 
-# Operator credentials are the same for every branch, and copies drift.
+# Credentials and untracked OpenSpec changes are the same on every branch. Copies drift.
+# A trailing / creates the dir in the primary checkout. Otherwise the worktree would make
+# a real, ignored dir that `git worktree remove` deletes.
 if [ -f .worktreelinks ]; then
   while IFS= read -r path || [ -n "$path" ]; do
     case "$path" in "" | "#"*) continue ;; esac
+    case "$path" in */)
+      path="${path%/}"
+      mkdir -p "$primary/$path"
+      ;;
+    esac
     link "$path"
   done <.worktreelinks
 fi

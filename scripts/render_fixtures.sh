@@ -1,5 +1,5 @@
 # shellcheck shell=bash disable=SC2154
-# Sourced by render.sh, which sets ts_dirs, opentofu_dir and ansible_dir.
+# Sourced by render.sh, which sets ts_dirs, opentofu_dir, ansible_dir and changes_tracked.
 # Small projects and known errors for each render.
 # hk skips a step when no file matches its glob, so a bare render proves nothing.
 
@@ -238,7 +238,8 @@ expect_openspec_info() {
     echo "render: the advisory fixture did not produce INFO" >&2
     return 1
   }
-  expect_hook_failure openspec_info openspec
+  # An ignored change is never staged, so no commit hook sees it.
+  if [ "$changes_tracked" = true ]; then expect_hook_failure openspec_info openspec; fi
 }
 
 # Each case writes one known error. A check that stays green on it is not running.

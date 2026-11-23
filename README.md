@@ -55,6 +55,7 @@ Copier asks these questions:
 | `secrets_vault`, for `proton-pass`; `secrets_age_recipient`, for `age`     | none              |
 | `typescript` (`typescript_dirs`, a list of directories with package.json)  | `false` (`["."]`) |
 | `openspec`: `none`, `changes-only` or `spec-driven`                        | `changes-only`    |
+| `openspec_changes_tracked`, for `openspec`                                 | `true`            |
 | `changelog`                                                                | `false`           |
 
 `mise run setup` pins the seeded `latest` tool versions in `mise.toml`, so commit

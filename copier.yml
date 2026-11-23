@@ -22,6 +22,7 @@ _exclude:
   - ".git"
   - "[% if openspec == 'none' %]openspec[% endif %]"
   - "[% if openspec != 'spec-driven' %]openspec/specs[% endif %]"
+  - "[% if not openspec_changes_tracked %]openspec/changes/.gitkeep[% endif %]"
   - "[% if not opentofu_state_backup %].config/opentofu[% endif %]"
 
 # Created once, then owned by the project. Copier creates a deleted one again on update.
@@ -225,6 +226,13 @@ openspec:
     Changes only (proposal, design, tasks): "changes-only"
     Spec-driven (proposal, specs, design, tasks): "spec-driven"
   default: "changes-only"
+
+# Untracked changes stay in the primary checkout, and each worktree links them.
+openspec_changes_tracked:
+  type: "bool"
+  help: "Track OpenSpec changes in git (no: ignore them, and link them into worktrees)?"
+  default: true
+  when: "[[ openspec != 'none' ]]"
 
 changelog:
   type: "bool"

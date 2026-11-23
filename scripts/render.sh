@@ -19,6 +19,9 @@ opentofu_dir=opentofu ansible_dir=ansible
 # Alternate the state backup with docker, so both OpenTofu shapes render.
 state_backup=false
 if [ "$opentofu" = true ] && [ "$docker" = false ]; then state_backup=true; fi
+# Alternate tracked OpenSpec changes with docker too, so both shapes render.
+changes_tracked=true
+if [ "$docker" = true ]; then changes_tracked=false; fi
 # Alternate the directory list, so both the root and the monorepo shapes render.
 if [ "$python" = true ]; then ts_dirs='["apps/web", "apps/api"]'; else ts_dirs='["."]'; fi
 # Alternate the license, so both texts render without doubling the matrix.
@@ -57,6 +60,7 @@ run() {
     -d python="$python" -d docker="$docker" -d opentofu="$opentofu" \
     -d opentofu_state_backup="$state_backup" ${secrets[@]+"${secrets[@]}"} \
     -d ansible="$ansible" -d changelog="$changelog" -d openspec="$openspec" \
+    -d openspec_changes_tracked="$changes_tracked" \
     -d typescript="$typescript" -d typescript_dirs="$ts_dirs" \
     "$root" "$dest"
   cd "$dest"
@@ -73,6 +77,11 @@ run() {
   setup_one_at_a_time
   if [ "$typescript" = true ]; then typescript_dependency_fixture; fi
   git add --all
+  if [ "$openspec" != none ] && [ "$changes_tracked" = false ] \
+    && [ -n "$(git ls-files openspec/changes)" ]; then
+    echo "render: openspec_changes_tracked is false, but git tracks openspec/changes" >&2
+    exit 1
+  fi
   # A runner starts without application dependencies, unlike a checkout after setup.
   CI=true mise run ci:check
   if [ "$opentofu" = true ]; then

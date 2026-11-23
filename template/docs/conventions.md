@@ -445,6 +445,15 @@ The `openspec` step runs `openspec validate --all --strict`. With `spec-driven`,
 `changes-only` changes always print an `[INFO]` line, so only the exit code counts
 there.
 
+With `openspec_changes_tracked: false`, git ignores `openspec/changes/`. The changes
+stay in the primary checkout, and `worktree:setup` links the directory into each
+worktree. CI validates no change. A project that changes the answer to `false` later
+does two steps by hand:
+
+- It adds `openspec/changes/` to `.worktreelinks`, which is project-owned.
+- It runs `git rm -r --cached openspec/changes`. Git keeps tracking a file after an
+  ignore rule matches it.
+
 Three hk steps cover what the formatters and linters miss:
 
 - `typos` checks spelling in text files, and the prose rules keep American English. It
@@ -574,7 +583,9 @@ Every way to create a worktree runs `mise run worktree:setup`:
    so agent output outlives the worktree.
 2. Links each path in `.worktreelinks` to the primary checkout. Use it for operator
    credentials, which are the same on every branch (`<opentofu_dir>/.env` with
-   `secrets_provider: none`, and `<ansible_dir>/.vault_pass`).
+   `secrets_provider: none`, and `<ansible_dir>/.vault_pass`). A path with a trailing
+   `/` is a directory that setup creates in the primary checkout first, such as
+   `openspec/changes/`.
 3. Copies the gitignored files listed in `.worktreeinclude` (default `.env`).
 4. Runs `mise run install`.
 5. Writes the marker `cubert-worktree-setup-done` in the worktree's git dir.

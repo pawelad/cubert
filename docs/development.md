@@ -103,9 +103,10 @@ template, so wrap template lines the way dprint would, at 88 columns.
   which cover every pair of answer values. `test_render_pairwise.py` fails when a pair
   is missing. Names look like `p1d0t1a0c1s1_changes-only`: python, docker, opentofu,
   ansible, changelog, typescript, then openspec. A typescript render with python on
-  lists two directories. An opentofu render with docker off adds the state backup. An
-  opentofu render with ansible uses `secrets_provider: age`. Without ansible, changelog
-  selects `proton-pass`, and otherwise the render uses `none`.
+  lists two directories. An opentofu render with docker off adds the state backup, and
+  an openspec render with docker on ignores its changes. An opentofu render with ansible
+  uses `secrets_provider: age`. Without ansible, changelog selects `proton-pass`, and
+  otherwise the render uses `none`.
 - Each render adds a small project for each enabled feature
   (`scripts/render_fixtures.sh`). After `check` and `test`, it stages one known error
   per feature and expects the matching hk step to fail. A step that stays green on that
