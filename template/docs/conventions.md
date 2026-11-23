@@ -193,6 +193,25 @@ It uses the existing Jinja installation, Ansible's configured extensions and `#j
 delimiter overrides. It does not render values or resolve filters, so syntax checks need
 no runtime variables. A passing parse does not prove that a deployment will succeed.
 
+The private CLI Python puts a `python3.14` mise shim on `PATH` that refuses to run when
+the project pins another Python. Ansible's interpreter discovery picks it for local
+runs, such as `ansible localhost -c local` in CI. Point local tasks at Ansible's own
+Python on the command line, or on `localhost` in inventory. Quote the value: it holds
+spaces.
+
+```console
+$ ansible localhost -c local \
+    -e 'ansible_python_interpreter={{ ansible_playbook_python }}' -m ping
+```
+
+```yaml
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
+```
+
 The `python` option adds `test:python`. It runs `uv run pytest` and treats pytest's exit
 code 5 (no tests collected) as a pass, so a fresh project passes `mise run test`. A
 project without pytest in its dev group skips with a message. Add it with
