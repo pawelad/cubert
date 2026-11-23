@@ -30,6 +30,12 @@ package = false
 strict = true
 """
 
+# A host runs these files on its own Python, older than the project's.
+TARGETS = """
+[tool.ruff.per-file-target-version]
+"hosts/**/*.py" = "py311"
+"""
+
 
 def write(path: Path, text: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -71,6 +77,48 @@ def test_minimum_python_reads_the_lower_bound(
     assert check_mypy.minimum_python(metadata) == expected
 
 
+class TestPlainPython:
+    @pytest.fixture(autouse=True)
+    def project(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        check_mypy.ruff_targets.cache_clear()
+        monkeypatch.setattr(check_mypy, "mypy_minimum", lambda: "3.10")
+        monkeypatch.chdir(tmp_path)
+
+    def test_glob_selects_the_python(self) -> None:
+        write(Path("pyproject.toml"), PROJECT + TARGETS)
+
+        assert check_mypy.plain_python(Path("hosts/zapp/run.py")) == "3.11"
+        assert check_mypy.plain_python(Path("hosts/run.py")) == "3.11"
+        assert check_mypy.plain_python(Path("app/run.py")) is None
+
+    def test_leading_double_star_matches_a_root_file(self) -> None:
+        write(Path("ruff.toml"), '[per-file-target-version]\n"**/*.py" = "py311"\n')
+
+        assert check_mypy.plain_python(Path("run.py")) == "3.11"
+
+    def test_glob_matches_a_file_name_anywhere(self) -> None:
+        write(Path("ruff.toml"), '[per-file-target-version]\n"legacy.py" = "py311"\n')
+
+        assert check_mypy.plain_python(Path("a/b/legacy.py")) == "3.11"
+
+    def test_target_below_mypys_floor_checks_as_the_floor(self) -> None:
+        write(Path("ruff.toml"), '[per-file-target-version]\n"*.py" = "py38"\n')
+
+        assert check_mypy.plain_python(Path("old.py")) == "3.10"
+
+    # ruff reads the first config in a directory and ignores the rest.
+    def test_ruff_toml_takes_precedence_over_pyproject(self) -> None:
+        write(Path("pyproject.toml"), PROJECT + TARGETS)
+        write(Path("ruff.toml"), "line-length = 88\n")
+
+        assert check_mypy.plain_python(Path("hosts/zapp/run.py")) is None
+
+    def test_pyproject_without_a_ruff_table_is_skipped(self) -> None:
+        write(Path("pyproject.toml"), PROJECT)
+
+        assert check_mypy.plain_python(Path("run.py")) is None
+
+
 @pytest.mark.skipif(shutil.which("uv") is None, reason="needs uv on PATH")
 class TestMain:
     # The demo project has no uv.lock, so ci:check's UV_LOCKED would fail every uv call.
@@ -81,7 +129,12 @@ class TestMain:
             monkeypatch.delenv(name, raising=False)
         env = {k: v for k, v in check_mypy.BASE_ENV.items() if k not in unlocked}
         monkeypatch.setattr(check_mypy, "BASE_ENV", env)
-        write(tmp_path / "pyproject.toml", PROJECT)
+        # A fixed default, so a file outside the targets does not depend on uv's Python.
+        project = PROJECT.replace(
+            "strict = true", 'strict = true\npython_version = "3.12"'
+        )
+        write(tmp_path / "pyproject.toml", project + TARGETS)
+        check_mypy.ruff_targets.cache_clear()
         monkeypatch.chdir(tmp_path)
 
     def test_script_with_its_dependency_passes(self) -> None:
@@ -134,3 +187,11 @@ class TestMain:
 
         assert check_mypy.main(["ok.py"]) == 0
         assert check_mypy.main(["ok.py", "bad.py"]) == 1
+
+    # itertools.batched is new in 3.12, and ruff targets 3.11 for files under hosts/.
+    def test_plain_file_is_checked_for_its_ruff_target(self) -> None:
+        write(Path("app.py"), '"""Demo."""\n\nfrom itertools import batched\n')
+        write(Path("hosts/zapp/run.py"), "from itertools import batched\n")
+
+        assert check_mypy.main(["app.py"]) == 0
+        assert check_mypy.main(["app.py", "hosts/zapp/run.py"]) == 1

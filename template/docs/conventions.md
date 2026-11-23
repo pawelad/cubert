@@ -373,6 +373,9 @@ still apply.
 - ruff formats for the project's `requires-python`. For a script that allows an older
   Python, add it to `per-file-target-version` under `[tool.ruff]`, such as
   `"skills/**/scripts/*.py" = "py311"`. Otherwise mypy rejects ruff's newer syntax.
+- A plain file that matches `per-file-target-version` is checked for that Python. Use it
+  for a file that a host runs on an older system Python. A script's `requires-python`
+  still decides its own check.
 
 `scripts/` holds only code that is not a task: check scripts that hk calls with
 `{{files}}`, modules with tests, and git hook shims.
