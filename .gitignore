@@ -18,5 +18,6 @@ tmp
 *.rej
 __pycache__/
 .DS_Store
+!.python-version
 .venv/
 .ruff_cache/

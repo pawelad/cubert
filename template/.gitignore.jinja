@@ -18,6 +18,8 @@ tmp
 *.rej
 __pycache__/
 .DS_Store
+# A global gitignore often hides it, and uv reads the project's Python from it.
+!.python-version
 [% if python %]
 .venv/
 .mypy_cache/
