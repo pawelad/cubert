@@ -607,6 +607,9 @@ Notes:
 - `mise run upgrade` bumps the tools in `mise.toml`.
 - Dependabot bumps GitHub Actions and the package ecosystems monthly. It has no
   ecosystem for `mise.toml`.
+- `dependabot.yml` is merged. Put a project key, such as an `ignore` rule, in the shared
+  entry, below its `Project keys` marker. Dependabot rejects a second entry for the same
+  ecosystem and directory. Add a new ecosystem at the end of the file.
 - mise skips releases younger than 7 days (`minimum_release_age`), which matches the
   Dependabot cooldown. Installs from `mise.lock` and exact pins are not filtered.
 - `typescript:install` passes `--minimum-release-age=604800` (7 days) to `bun install`.

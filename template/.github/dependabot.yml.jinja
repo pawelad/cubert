@@ -1,6 +1,9 @@
 ---
 # Policy: monthly, with a cooldown that matches mise's minimum_release_age.
 # mise.toml has no Dependabot ecosystem: `mise run upgrade` bumps those tools.
+# Dependabot rejects a second entry for the same ecosystem and directory, so project
+# keys go in the shared entry, below its marker. The marker keeps updates from
+# conflicting. New ecosystems go at the end of the file.
 version: 2
 
 updates:
@@ -9,6 +12,7 @@ updates:
     directories:
       - "/"
       - "/.github/actions/*"
+    # Project keys for this entry, such as `ignore`, go below this line.
     schedule:
       interval: "monthly"
     cooldown:
@@ -24,6 +28,7 @@ updates:
 
   - package-ecosystem: "uv"
     directory: "/"
+    # Project keys for this entry, such as `ignore`, go below this line.
     schedule:
       interval: "monthly"
     cooldown:
@@ -44,6 +49,7 @@ updates:
 [% for dir in typescript_dirs %]
       - "/[[ '' if dir == '.' else dir ]]"
 [% endfor %]
+    # Project keys for this entry, such as `ignore`, go below this line.
     schedule:
       interval: "monthly"
     cooldown:
@@ -64,6 +70,7 @@ updates:
     directories:
       - "/"
       - "/**/*"
+    # Project keys for this entry, such as `ignore`, go below this line.
     schedule:
       interval: "monthly"
     cooldown:
@@ -81,6 +88,7 @@ updates:
     directories:
       - "/"
       - "/**/*"
+    # Project keys for this entry, such as `ignore`, go below this line.
     schedule:
       interval: "monthly"
     cooldown:
@@ -97,6 +105,7 @@ updates:
 
   - package-ecosystem: "opentofu"
     directory: "/[[ opentofu_dir ]]"
+    # Project keys for this entry, such as `ignore`, go below this line.
     schedule:
       interval: "monthly"
     cooldown:
