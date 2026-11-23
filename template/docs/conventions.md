@@ -403,8 +403,10 @@ enabled features). `hk.pkl` amends `cubert.pkl`:
   `import "package://.../Builtins.pkl" as hkb`. hk's evaluator cannot resolve a second
   import named `Builtins`, and `base.pkl` already has one.
 - hk 2.11.1 rejects a `Group` in `steps`. Give each step its own `dir` instead.
-- Keep a step out of `mise run check` when it calls a `check:<area>` task, which `check`
-  already runs. The `check` hook then skips it, and the git hooks keep it:
+- Give each linter one owner in `mise run check`. When a `check:<area>` task runs a
+  linter, such as an app's `check:backend` running ruff, or a step calls that task, keep
+  the step out of the `check` hook. `check:repo` then skips it, and the git hooks still
+  run it on changed files:
 
   ```pkl
   hooks {
