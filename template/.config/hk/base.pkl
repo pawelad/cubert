@@ -50,6 +50,19 @@ steps {
       betterleaks dir --redact --verbose --no-banner $config {{files}}
       """
   }
+  // Offline coverage only: `mise run audit` checks that GitHub would run each locked
+  // commit. No fixer: relocking calls the GitHub API, and `mise run format` stays offline.
+  // A lockfile entry also covers each action that a composite action calls.
+  ["actions-lock"] = new Step {
+    glob = List(".github/workflows/*.yml", ".github/workflows/*.yaml", ".github/workflows/actions.lock", "**/action.yml", "**/action.yaml")
+    check = """
+      if ! gh-actions-lock --verify-local; then
+        echo 'A workflow or action changed an action ref, such as a template update or a Dependabot bump.' >&2
+        echo 'Fix: gh-actions-lock (it needs a gh login or GH_TOKEN), then review and commit the diff.' >&2
+        exit 1
+      fi
+      """
+  }
   ["check-added-large-files"] = (Builtins.check_added_large_files) {
     exclude = List("**/*.lock")
   }

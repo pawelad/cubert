@@ -51,7 +51,7 @@ def template_tools(text: str) -> dict[str, str]:
 def required_tools(text: str) -> set[str]:
     """Return the tools that `check:repo` requires, across every feature block."""
     return {
-        re.sub(r"\[python=[0-9.]+\]|@[a-z]+$", "", line.partition(">=")[0])
+        re.sub(r"\[[^]]+\]|@[a-z]+$", "", line.partition(">=")[0])
         for line in text.splitlines()
         if line and not line.startswith(("[%", "#"))
     }
@@ -60,7 +60,7 @@ def required_tools(text: str) -> set[str]:
 def required_minimums(text: str) -> dict[str, str]:
     """Return the minimum version of each tool that the required list gives one."""
     return dict(
-        line.split(">=")
+        re.sub(r"\[[^]]+\]", "", line).split(">=")
         for line in text.splitlines()
         if ">=" in line and not line.startswith("#")
     )
@@ -111,9 +111,9 @@ def hk_minimum_failures(root: Path) -> list[str]:
 def action_failures(root: Path) -> list[str]:
     """Return each action in a `.jinja` workflow that Dependabot bumped elsewhere."""
     found: list[str] = []
-    # cubert's own workflows name tags and lock commits in actions.lock, so they differ.
     bumped: dict[str, str] = {}
-    for path in sorted(root.glob("template/.github/**/*.yml")):
+    # Not template/.github/actions/: composite actions keep SHA pins.
+    for path in sorted(root.glob("template/.github/workflows/*.yml")):
         bumped |= action_refs(path.read_text())
     # Not *.yml.jinja: a conditional name ends in `[% endif %].jinja`.
     for path in sorted(root.glob("template/.github/**/*.jinja")):

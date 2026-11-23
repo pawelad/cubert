@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: "Check out the repository"
-        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+        uses: "actions/checkout@v7.0.1"
         with:
           persist-credentials: false
 
@@ -25,7 +25,7 @@ jobs:
       # OpenTofu checks each provider against the lock file, so an older cache is safe.
       - name: "Cache OpenTofu providers"
         if: "hashFiles('**/.terraform.lock.hcl') != ''"
-        uses: "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9" # v6.1.0
+        uses: "actions/cache@v6.1.0"
         with:
           path: "~/.cache/opentofu/plugins"
           key: "opentofu-providers-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}"
@@ -35,7 +35,7 @@ jobs:
       # covers them, so a restore never puts back an old copy. Exact keys only.
       - name: "Cache Ansible collections"
         if: "hashFiles('**/requirements.yml') != ''"
-        uses: "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9" # v6.1.0
+        uses: "actions/cache@v6.1.0"
         with:
           path: |
             ~/.ansible/collections

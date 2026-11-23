@@ -84,10 +84,25 @@ def test_jinja_workflow_ignores_cubert_workflow_tags(
     files = {
         ".github/workflows/ci.yml": '- uses: "actions/upload-artifact@v7.0.2"\n',
         "template/.github/workflows/ci.yml.jinja": (
-            '- uses: "actions/upload-artifact@cf430e0" # v7.0.2\n'
+            '- uses: "actions/upload-artifact@v7.0.1"\n'
         ),
     }
     assert failures_in(tmp_path, files) == []
+
+
+def test_jinja_workflow_ignores_composite_action_sha_pins(tmp_path: Path) -> None:
+    files = {
+        "template/.github/actions/demo/action.yml": (
+            '- uses: "actions/cache@55cc834" # v6.1.0\n'
+        ),
+        "template/.github/workflows/ci.yml.jinja": '- uses: "actions/cache@v6.1.0"\n',
+    }
+    assert failures_in(tmp_path, files) == []
+
+
+def test_required_minimum_key_drops_tool_options() -> None:
+    minimums = check_versions.required_minimums("github:a/b[bin=b]>=0.5.1\n")
+    assert minimums == {"github:a/b": "0.5.1"}
 
 
 def test_repository_passes() -> None:

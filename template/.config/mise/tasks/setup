@@ -61,6 +61,21 @@ if [ -n "$missing" ]; then
 fi
 
 mise install
+
+# Workflows name tags, and GitHub runs the commits in actions.lock. Generated, not
+# rendered: its entries depend on the project's own workflows.
+if [ ! -f .github/workflows/actions.lock ] && compgen -G '.github/workflows/*.y*ml' >/dev/null; then
+  echo "setup: locking the workflow actions in .github/workflows/actions.lock"
+  # It reads GH_TOKEN, GITHUB_TOKEN or the gh login. Anonymous calls allow 60 an hour.
+  if [ -z "${GH_TOKEN:-}${GITHUB_TOKEN:-}" ] && [ -n "${MISE_GITHUB_TOKEN:-}" ]; then
+    export GITHUB_TOKEN="$MISE_GITHUB_TOKEN"
+  fi
+  if ! GH_ACTIONS_LOCK_REPO_ROOT="$PWD" mise x -- gh-actions-lock --no-interactive; then
+    echo "setup: gh-actions-lock failed. Fix: gh auth login, then mise run setup" >&2
+    exit 1
+  fi
+fi
+
 git config blame.ignoreRevsFile .git-blame-ignore-revs
 if [ -z "${CI:-}" ]; then
   mise run hooks:install

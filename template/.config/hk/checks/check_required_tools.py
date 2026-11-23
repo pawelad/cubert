@@ -20,24 +20,32 @@ CONFIG = Path("mise.toml")
 
 
 # `node@lts` adds the tool from a channel. A scoped npm name keeps its own `@`.
+# `[bin=x,python=3.14]` holds mise tool options, which `mise use` writes inline.
 LINE = re.compile(
-    r"(?P<name>.+?)(?:\[python=(?P<python>[0-9.]+)\])?"
+    r"(?P<name>.+?)(?:\[(?P<options>[^\]]+)\])?"
     r"(?:@(?P<channel>[a-z]+))?(?:>=(?P<minimum>.+))?"
 )
+PYTHON = re.compile(r"(?:^|,)python=(?P<python>[0-9.]+)(?:,|$)")
 
 
 def _requirements(
     required: str,
 ) -> list[tuple[str, str | None, str | None, str | None]]:
-    """Return the name, minimum, channel and private Python for each requirement."""
+    """Return the name, minimum, channel and mise options for each requirement."""
     found = []
     for raw in required.splitlines():
         line = raw.strip()
         if line and not line.startswith("#") and (match := LINE.fullmatch(line)):
             found.append(
-                (match["name"], match["minimum"], match["channel"], match["python"])
+                (match["name"], match["minimum"], match["channel"], match["options"])
             )
     return found
+
+
+def _python(options: str | None) -> str | None:
+    """Return the private Python that the options select, if any."""
+    match = PYTHON.search(options or "")
+    return match["python"] if match else None
 
 
 def _numbers(version: str) -> tuple[int, ...]:
@@ -90,7 +98,8 @@ def missing_runtimes(required: str, config: str) -> list[tuple[str, str, str]]:
     """Return fixes for private runtimes, preserving every configured tool version."""
     tools = tomllib.loads(config).get("tools", {})
     found = []
-    for name, _, _, runtime in _requirements(required):
+    for name, _, _, options in _requirements(required):
+        runtime = _python(options)
         if not runtime or name not in tools:
             continue
         specs = tools[name] if isinstance(tools[name], list) else [tools[name]]
@@ -106,10 +115,10 @@ def missing_runtimes(required: str, config: str) -> list[tuple[str, str, str]]:
 
 
 def _request(
-    name: str, version: str | None, runtime: str | None, minimum: str | None = None
+    name: str, version: str | None, options: str | None, minimum: str | None = None
 ) -> str:
-    options = f"[python={runtime}]" if runtime else ""
-    request = f"{name}{options}" + (f"@{version}" if version else "")
+    request = f"{name}[{options}]" if options else name
+    request += f"@{version}" if version else ""
     return request + (f">={minimum}" if minimum else "")
 
 
@@ -127,8 +136,8 @@ def main(args: list[str]) -> int:
     runtimes = missing_runtimes(required, config)
     if args == ["--names"]:
         requirements = {
-            name: (channel, runtime, minimum)
-            for name, minimum, channel, runtime in _requirements(required)
+            name: (channel, options, minimum)
+            for name, minimum, channel, options in _requirements(required)
         }
         # setup resolves an added tool to the latest release, raised to its minimum.
         added = [_request(tool, *requirements[tool]) for tool in tools]
@@ -137,8 +146,8 @@ def main(args: list[str]) -> int:
         ]
         changed = set(tools) | {name for name, _, _ in old}
         kept = [
-            _request(name, version, runtime)
-            for name, runtime, version in runtimes
+            _request(name, version, requirements[name][1])
+            for name, _, version in runtimes
             if name not in changed
         ]
         print("\n".join([*added, *raised, *kept]))

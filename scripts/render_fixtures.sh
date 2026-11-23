@@ -272,6 +272,12 @@ break_workflow() {
   printf 'on:\n  push:\n    branch: main\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: "true"\n' \
     >.github/workflows/broken.yml
 }
+# A Dependabot bump to setup-mise changes an action that the lockfile does not cover.
+break_action_lock() {
+  sed -i.bak 's|jdx/mise-action@[0-9a-f]*|jdx/mise-action@0000000000000000000000000000000000000000|' \
+    .github/actions/setup-mise/action.yml
+  rm .github/actions/setup-mise/action.yml.bak
+}
 break_opentofu() { printf 'output "greeting" {\nvalue = "hello"\n}\n' >"$opentofu_dir/main.tf"; }
 # Only the role changes, and the playbook that includes it stays as it is.
 break_ansible() {

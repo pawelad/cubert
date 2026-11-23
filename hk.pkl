@@ -18,16 +18,12 @@ steps {
     exclude = List("template/.config/hk/ansible_rules/**")
     check = ".config/hk/checks/check_mypy.py {{files}}"
   }
-  // The template's own workflows get the same audits. A `.github/**` glob would also
-  // pass zizmor.yml, which zizmor warns it cannot read as a workflow.
-  ["zizmor"] {
-    glob = super.glob + List("template/.github/workflows/*.yml")
-  }
-  // Offline coverage only: `mise run audit` checks that each locked commit is trustworthy.
-  // No fixer: relocking calls the GitHub API, and `mise run format` stays offline.
-  ["actions-lock"] = new Step {
-    glob = List(".github/workflows/*.yml", ".github/workflows/actions.lock", "template/.github/actions/**")
-    check = "gh-actions-lock --verify-local || { echo 'Fix: gh-actions-lock, then review the diff' >&2; exit 1; }"
+  // The template's own workflows get the same audits. zizmor reads only the lockfile at
+  // the git root, so their tag refs pass here and the renders check their lockfiles.
+  ["zizmor-template"] = (builtins.zizmor) {
+    glob = List("template/.github/workflows/*.yml")
+    check { command { argv = List("zizmor", "--no-progress", "--config", ".config/zizmor-template.yml", "{{files}}") } }
+    fix { command { argv = List("zizmor", "--no-progress", "--config", ".config/zizmor-template.yml", "--fix", "{{files}}") } }
   }
   // lychee.toml excludes template/, and lychee warns on each excluded file that hk passes.
   ["lychee"] {

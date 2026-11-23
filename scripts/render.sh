@@ -118,6 +118,7 @@ run() {
   expect_hook_failure link lychee
   expect_hook_failure secret betterleaks
   expect_hook_failure workflow jactionlint
+  expect_hook_failure action_lock actions-lock "Fix: gh-actions-lock"
   if [ "$python" = true ]; then
     expect_hook_failure python mypy
     expect_hook_failure script_dependency mypy 'module named "rich'

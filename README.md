@@ -7,18 +7,18 @@ so a fix lands once in cubert and reaches each project with `mise run template:u
 
 ## What a project gets
 
-| Area         | What it does                                                                                                             |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| Tools, tasks | [mise] pins every tool and runs every task, locally and in CI. A new project starts with releases at least 7 days old.   |
-| Git hooks    | [hk] runs formatting, linting, pinned versions, prose rules and Conventional Commits.                                    |
-| Formatting   | [dprint] formats Markdown, TOML, JSON and YAML.                                                                          |
-| Linting      | [yamllint], [ShellCheck], [shfmt], [jactionlint] and [zizmor] check YAML, shell and GitHub Actions.                      |
-| Hygiene      | [typos] checks spelling, [betterleaks] scans for secrets and [lychee] checks links offline, all in the git hooks.        |
-| Audits       | `mise run audit` and a weekly CI job: [osv-scanner] for `uv.lock` and `bun.lock`, zizmor online audits and online links. |
-| Agents       | An `AGENTS.md` with shared rules for coding agents, and a section for project rules.                                     |
-| Worktrees    | Setup that runs once for [Worktrunk], plain `git worktree add` and the agent apps built on it.                           |
-| CI           | GitHub Actions CI, a PR title check and [Dependabot].                                                                    |
-| Optional     | [Python], TypeScript with [Bun], [Docker], [OpenTofu], [Ansible], [OpenSpec] and a [git-cliff] changelog.                |
+| Area         | What it does                                                                                                                                    |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tools, tasks | [mise] pins every tool and runs every task, locally and in CI. A new project starts with releases at least 7 days old.                          |
+| Git hooks    | [hk] runs formatting, linting, pinned versions, prose rules and Conventional Commits.                                                           |
+| Formatting   | [dprint] formats Markdown, TOML, JSON and YAML.                                                                                                 |
+| Linting      | [yamllint], [ShellCheck], [shfmt], [jactionlint] and [zizmor] check YAML, shell and GitHub Actions.                                             |
+| Hygiene      | [typos] checks spelling, [betterleaks] scans for secrets and [lychee] checks links offline, all in the git hooks.                               |
+| Audits       | `mise run audit` and a weekly CI job: [osv-scanner] for `uv.lock` and `bun.lock`, zizmor online audits, locked action commits and online links. |
+| Agents       | An `AGENTS.md` with shared rules for coding agents, and a section for project rules.                                                            |
+| Worktrees    | Setup that runs once for [Worktrunk], plain `git worktree add` and the agent apps built on it.                                                  |
+| CI           | GitHub Actions CI, a PR title check and [Dependabot]. [gh-actions-lock] locks each action tag to a commit in `actions.lock`.                    |
+| Optional     | [Python], TypeScript with [Bun], [Docker], [OpenTofu], [Ansible], [OpenSpec] and a [git-cliff] changelog.                                       |
 
 [`template/docs/conventions.md`](./template/docs/conventions.md) describes the shared
 tooling in detail. Every project gets that file as `docs/conventions.md`.
@@ -58,8 +58,9 @@ Copier asks these questions:
 | `openspec_changes_tracked`, for `openspec`                                 | `true`            |
 | `changelog`                                                                | `false`           |
 
-`mise run setup` pins the seeded `latest` tool versions in `mise.toml`, so commit
-`mise.toml`, `mise.lock` and `.mise/locks/` after it.
+`mise run setup` pins the seeded `latest` tool versions in `mise.toml` and generates
+`.github/workflows/actions.lock`. Commit `mise.toml`, `mise.lock`, `.mise/locks/` and
+`actions.lock` after it.
 
 Feature directories stay inside the project. Their names use ASCII letters, numbers,
 periods, underscores, hyphens and slashes. Write a path as `infra/opentofu`, with no
@@ -76,7 +77,8 @@ $ mise run template:update   # updates to the latest tag
 `template:update` needs a clean tree. It keeps your answers and lists every file with a
 conflict. `-d <question>=<answer>` changes one answer, such as `-d changelog=true`.
 Resolve them, run `mise run setup` and `mise run check`, then commit the update as one
-commit.
+commit. When the update changes an action ref, the `actions-lock` check fails. Run
+`gh-actions-lock` and commit `actions.lock` with the update.
 
 ## Adopt cubert in an existing repository
 
@@ -101,6 +103,7 @@ Released under the [Mozilla Public License 2.0][license].
 [dependabot]: https://docs.github.com/en/code-security/dependabot
 [docker]: https://www.docker.com/
 [dprint]: https://dprint.dev/
+[gh-actions-lock]: https://github.com/github/gh-actions-lock
 [git-cliff]: https://git-cliff.org/
 [hk]: https://hk.jdx.dev/
 [jactionlint]: https://github.com/jdx/jactionlint

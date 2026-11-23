@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-#MISE description="Run the checks that need the network: dependency and action advisories, and links"
+#MISE description="Run the checks that need the network: dependency and action advisories, action locks and links"
 #MISE depends=["audit:*"]
 set -euo pipefail

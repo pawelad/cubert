@@ -25,6 +25,8 @@ worktrunk = "latest"
 yamllint = { version = "latest", python = "3.14" }
 zizmor = "latest"
 "pypi:copier" = { version = "latest", python = "3.14" }
+# Its release assets are bare binaries named after the platform, such as `linux-amd64`.
+"github:github/gh-actions-lock" = { version = "latest", bin = "gh-actions-lock" }
 [% if python %]
 ruff = "latest"
 [% endif %]

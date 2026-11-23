@@ -62,7 +62,7 @@ jobs:
 
       - name: "Audit the dependencies, actions and links"
         env:
-          # zizmor needs it for its online audits. lychee uses it to avoid rate limits.
+          # zizmor and gh-actions-lock need it for their online checks. lychee uses it to avoid rate limits.
           GITHUB_TOKEN: "${{ github.token }}"
         run: "mise run audit"
 

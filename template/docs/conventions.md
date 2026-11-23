@@ -59,19 +59,32 @@ What an update does to a missing or removed file:
 - The `typescript` option seeds `bun`, `biome` and `npm:typescript` (the `tsc`
   compiler). Bun runs the tests and installs packages. The project does not list
   `typescript` in `package.json`.
-- A GitHub Action is pinned to a commit SHA, with its version in a comment:
-  `uses: "actions/checkout@<sha>" # v7.0.1`. A tag can move, and a SHA cannot.
-  Dependabot updates both. zizmor enforces the pin and audits workflows for injection
-  and credential leaks. jactionlint checks workflow syntax, with its `correctness`
-  profile, so the two tools never report the same finding.
+- A workflow names each action by its full tag, such as
+  `uses: "actions/checkout@v7.0.1"`. A tag can move, so `.github/workflows/actions.lock`
+  holds the commit that GitHub runs. `mise run setup` generates the lockfile when it is
+  missing, and the project commits it. Copier never writes it, because its entries
+  depend on the project's own workflows.
+- `gh-actions-lock` writes the lockfile. It also rewrites a SHA pin in a workflow to its
+  tag. Run it after you change an action ref by hand, then review the diff. The
+  `actions-lock` hk step checks coverage offline, and `audit:actions-lock` checks each
+  locked commit online. Dependabot updates the tag and the lockfile together.
+- A template update or a Dependabot bump to a composite action, such as `setup-mise`,
+  leaves the lockfile stale. The `actions-lock` step then fails. Run `gh-actions-lock`
+  and commit the result.
+- A composite action (`action.yml`) and a reusable workflow call from another repository
+  cannot use the lockfile. Pin them to a commit SHA, with the version in a comment:
+  `uses: "actions/cache@<sha>" # v6.1.0`. Dependabot updates both.
+- zizmor enforces the pins and accepts a tag that the lockfile covers. It also audits
+  workflows for injection and credential leaks. jactionlint checks workflow syntax, with
+  its `correctness` profile, so the two tools never report the same finding.
 - An action or reusable workflow in the same repository uses `$/`, such as
   `uses: "$/.github/actions/setup-mise"`. Unlike `./`, it always loads the running
   commit, never a file that an earlier step wrote.
 - mise calls the GitHub API to resolve and lock tools. GitHub limits calls without a
   token. With `gh` logged in, run
   `mise settings set github.credential_command "gh auth token"` once per machine. mise
-  ignores this setting in a project's config. `audit:actions` and `audit:links` use the
-  `gh` token too.
+  ignores this setting in a project's config. `audit:actions`, `audit:actions-lock`,
+  `audit:links` and gh-actions-lock in `setup` use the `gh` token too.
 - A new project's `mise.toml` seeds `latest` (`lts` for Node). The first
   `mise run setup` pins each one to the newest release that `minimum_release_age`
   allows, so cubert holds no tool versions except that Python line. To add a tool, add
@@ -114,6 +127,7 @@ path, so `check/repo` is `check:repo`:
 | `ci:check`           | Runs `install`, `check`, then `test`: the CI check job                   |
 | `audit`              | Runs every `audit:*` task. Needs the network, so `check` skips it        |
 | `audit:actions`      | Runs zizmor's online audits, such as actions with known vulnerabilities  |
+| `audit:actions-lock` | Checks that GitHub would run each commit in `actions.lock`               |
 | `audit:deps`         | Scans `uv.lock`, `bun.lock` and script locks for known vulnerabilities   |
 | `audit:links`        | Checks every link in the Markdown files, URLs included                   |
 | `test`               | Runs every `test:*` task. Rejects file paths                             |
@@ -596,20 +610,20 @@ how many CI minutes a project spends, so each project sets its own.
 ## Audits
 
 `mise run audit` runs the checks that need the network: osv-scanner on `uv.lock`,
-`bun.lock` and script locks, zizmor's online audits, and lychee on every URL. The zizmor
-hk step runs offline, so only the audit finds actions with known vulnerabilities,
-impostor commits and version comments that do not match the pinned SHA. Hooks and
-`mise run check` skip them, so they stay fast and work offline. A new advisory then
-fails the audit and never an unrelated commit. CI runs it from `audit.yml`, on each push
-and pull request and once a week. Run it locally before a release or after a dependency
-change. lychee retries a timeout or a server error four times, with waits that grow from
-5 seconds, so a brief outage does not fail the audit. Every project gets osv-scanner,
-because the Python tools also have `uv.lock` files in `.mise/locks/`. The scan includes
-those files and application lockfiles, including nested backends. When app tasks audit
-their own locks with another scanner, list those locks in `AUDIT_DEPS_EXCLUDE` under
-`[env]` in `mise.toml`, such as `AUDIT_DEPS_EXCLUDE = "apps/*/uv.lock apps/*/bun.lock"`.
-One advisory then needs one ignore list. A pattern that matches no lock fails the task.
-`*` also matches `/`.
+`bun.lock` and script locks, zizmor's online audits, `gh-actions-lock --verify` and
+lychee on every URL. The zizmor hk step runs offline, so only the audit finds actions
+with known vulnerabilities, impostor commits and version comments that do not match the
+pinned SHA. Hooks and `mise run check` skip them, so they stay fast and work offline. A
+new advisory then fails the audit and never an unrelated commit. CI runs it from
+`audit.yml`, on each push and pull request and once a week. Run it locally before a
+release or after a dependency change. lychee retries a timeout or a server error four
+times, with waits that grow from 5 seconds, so a brief outage does not fail the audit.
+Every project gets osv-scanner, because the Python tools also have `uv.lock` files in
+`.mise/locks/`. The scan includes those files and application lockfiles, including
+nested backends. When app tasks audit their own locks with another scanner, list those
+locks in `AUDIT_DEPS_EXCLUDE` under `[env]` in `mise.toml`, such as
+`AUDIT_DEPS_EXCLUDE = "apps/*/uv.lock apps/*/bun.lock"`. One advisory then needs one
+ignore list. A pattern that matches no lock fails the task. `*` also matches `/`.
 
 ## Formatting
 
@@ -723,7 +737,9 @@ names the tool when it is too old. Other pins above the minimum stay as they are
 adds a missing tool at its newest allowed release, or at the minimum when that is newer.
 A line such as `node@lts` adds a missing tool from that channel, as a new project seeds
 it. A selector such as `yamllint[python=3.14]` also repairs the tool's private runtime
-without changing its configured version. `setup` preserves other inline tool options.
+without changing its configured version. Other options, such as
+`github:github/gh-actions-lock[bin=gh-actions-lock]`, go into the entry that setup adds.
+`setup` preserves other inline tool options.
 
 Run Copier only through this task. Copier commits in temporary repos, and global hk
 hooks there drop `mise.lock` from the update. The task runs Copier with `HK=0`.

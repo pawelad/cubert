@@ -1,0 +1,8 @@
+---
+# cubert's zizmor config for template/.github/workflows. zizmor reads actions.lock only
+# at the git root, and cubert's lockfile covers its own workflows, not the template's.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        "*": "ref-pin"

@@ -4,6 +4,7 @@
 # configures one below its minimum. hk needs a minimum: an older hk cannot load the
 # shared config.
 # `[python=3.14]` selects a private runtime; setup repairs a missing selector.
+# Other `[key=value]` options, such as `bin`, go into the entry that setup adds.
 betterleaks
 dprint
 hk>=2.11.1
@@ -23,6 +24,8 @@ worktrunk
 yamllint[python=3.14]
 zizmor
 pypi:copier[python=3.14]
+# Releases before 0.5.1 rewrite the SHA pins in .github/actions/, which the template owns.
+github:github/gh-actions-lock[bin=gh-actions-lock]>=0.5.1
 [% if python %]
 ruff
 [% endif %]

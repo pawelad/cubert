@@ -166,6 +166,30 @@ def test_seeded_latest_tool_carries_its_minimum() -> None:
     ]
 
 
+def test_names_mode_adds_a_missing_tool_with_its_options(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / ".config/mise").mkdir(parents=True)
+    required = "github:github/gh-actions-lock[bin=gh-actions-lock]>=0.5.1\n"
+    (tmp_path / ".config/mise/required-tools").write_text(required)
+    (tmp_path / "mise.toml").write_text("[tools]\n")
+    monkeypatch.chdir(tmp_path)
+    assert check_required_tools.main(["--names"]) == 0
+    assert capsys.readouterr().out == required
+
+
+def test_runtime_repair_keeps_the_other_options(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / ".config/mise").mkdir(parents=True)
+    required = "pypi:demo[bin=demo,python=3.14]\n"
+    (tmp_path / ".config/mise/required-tools").write_text(required)
+    (tmp_path / "mise.toml").write_text('[tools]\n"pypi:demo" = "1.0.0"\n')
+    monkeypatch.chdir(tmp_path)
+    assert check_required_tools.main(["--names"]) == 0
+    assert capsys.readouterr().out == "pypi:demo[bin=demo,python=3.14]@1.0.0\n"
+
+
 def test_missing_tool_retains_its_private_runtime_selector() -> None:
     assert check_required_tools.missing("yamllint[python=3.14]\n", "[tools]\n") == [
         "yamllint"

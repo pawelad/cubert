@@ -47,10 +47,21 @@ uv run --isolated --no-project --python 3.11 --exclude-newer "7 days" --with pyt
   tests/test_check_lockfile.py tests/test_check_mypy.py
 """
 
-[tasks."audit:actions-lock"]
-description = "Check that actions.lock covers every workflow and that GitHub would run each locked commit (needs the network)"
-# It reads the `gh auth login` token itself. CI's audit job sets GITHUB_TOKEN.
-run = "gh-actions-lock --verify"
+[tasks."audit:actions"]
+description = "Run zizmor's online audits on workflows and actions, such as known vulnerabilities (needs the network)"
+# zizmor reads actions.lock only at the git root, so the template's workflows take the
+# tag policy, as in the zizmor-template hk step.
+run = '''
+if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null && token="$(gh auth token 2>/dev/null)"; then
+  export GITHUB_TOKEN="$token"
+fi
+if [ -z "${GITHUB_TOKEN:-}" ]; then
+  echo "audit:actions: zizmor needs a GitHub token for its online audits. Fix: gh auth login" >&2
+  exit 1
+fi
+zizmor --no-progress .github/workflows/*.yml .github/dependabot.yml template/.github/actions/*/action.yml
+zizmor --no-progress --config .config/zizmor-template.yml template/.github/workflows/*.yml
+'''
 
 [tasks.upgrade]
 description = "Upgrade cubert's tools and the template's dprint plugins"

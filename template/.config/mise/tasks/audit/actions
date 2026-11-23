@@ -2,7 +2,7 @@
 #MISE description="Run zizmor's online audits on workflows and actions, such as known vulnerabilities (needs the network)"
 set -euo pipefail
 
-# The same inputs as the zizmor hk step. Nested .github dirs count, such as cubert's template/.
+# The same inputs as the zizmor hk step. Nested .github dirs count too.
 files=()
 while IFS= read -r file; do
   files+=("$file")
