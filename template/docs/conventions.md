@@ -619,7 +619,10 @@ Notes:
   Apple Git, which has no config-based hooks.
 - An existing project hook stays in place. `hooks:install` writes `post-checkout.cubert`
   and prints the delegation command to add. `check:repo` accepts that command, with
-  optional `exec`, when the delegated copy is executable and current.
+  optional `exec`, when the delegated copy is executable and current. A hook that only
+  ran worktree setup, such as one from before cubert, goes with
+  `mise run hooks:install --replace`. It moves the old hook to `post-checkout.bak`, and
+  stops when that backup already exists.
 - A real directory blocks its link. Move its contents to the primary checkout, then run
   `mise run worktree:setup --force`.
 

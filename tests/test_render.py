@@ -132,6 +132,44 @@ def test_hooks_install_keeps_a_post_checkout_hook_that_is_not_cubert(
     assert "mise run worktree:setup" in ours.read_text()
 
 
+def test_hooks_install_replace_moves_a_project_hook_to_a_backup(
+    tmp_path: Path,
+) -> None:
+    project = render_template(tmp_path)
+    run(["git", "init", "--quiet", "--initial-branch", "main"], project)
+    hooks = project / ".git/hooks"
+    (hooks / "post-checkout").write_text("#!/bin/sh\nmise run worktree:setup\n")
+    run(["bash", ".config/mise/tasks/hooks/install"], project)
+    env = project_env()
+    env["usage_replace"] = "true"
+
+    run(["bash", ".config/mise/tasks/hooks/install"], project, env)
+
+    assert "mise run worktree:setup" in (hooks / "post-checkout.bak").read_text()
+    assert "Template-owned" in (hooks / "post-checkout").read_text()
+    assert not (hooks / "post-checkout.cubert").exists()
+
+
+def test_hooks_install_replace_keeps_an_earlier_backup(tmp_path: Path) -> None:
+    project = render_template(tmp_path)
+    run(["git", "init", "--quiet", "--initial-branch", "main"], project)
+    hooks = project / ".git/hooks"
+    (hooks / "post-checkout").write_text("#!/bin/sh\necho new\n")
+    (hooks / "post-checkout.bak").write_text("#!/bin/sh\necho old\n")
+    env = project_env()
+    env["usage_replace"] = "true"
+
+    command = ["bash", ".config/mise/tasks/hooks/install"]
+    result = subprocess.run(  # noqa: S603
+        command, cwd=project, env=env, capture_output=True, text=True, check=False
+    )
+
+    assert result.returncode != 0
+    assert "post-checkout.bak exists" in result.stderr
+    assert (hooks / "post-checkout.bak").read_text() == "#!/bin/sh\necho old\n"
+    assert (hooks / "post-checkout").read_text() == "#!/bin/sh\necho new\n"
+
+
 def test_hooks_install_replaces_its_own_post_checkout_hook(tmp_path: Path) -> None:
     project = render_template(tmp_path)
     run(["git", "init", "--quiet", "--initial-branch", "main"], project)

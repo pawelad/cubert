@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Install the hk git hooks and the post-checkout worktree hook"
+#USAGE flag "--replace" help="Replace a project post-checkout hook, and keep it as post-checkout.bak"
 set -euo pipefail
 
 # hk skips this when ~/.gitconfig already has global hk hooks.
@@ -11,9 +12,20 @@ mkdir -p "$hooks_dir"
 target="$hooks_dir/post-checkout"
 # shellcheck disable=SC2016
 if [ -e "$target" ] && ! head -n 2 "$target" | grep -qFx '# Template-owned. `mise run hooks:install` copies it to the git hooks dir.'; then
-  target="$hooks_dir/post-checkout.cubert"
-  echo "hooks:install: $hooks_dir/post-checkout exists and is not cubert's." >&2
-  echo "hooks:install: add this line to it so new worktrees get set up: \"$target\" \"\$@\"" >&2
+  if [ "${usage_replace:-false}" = "true" ]; then
+    if [ -e "$target.bak" ]; then
+      echo "hooks:install: $target.bak exists. Move or delete it, then run again." >&2
+      exit 1
+    fi
+    mv "$target" "$target.bak"
+    rm -f "$target.cubert"
+    echo "hooks:install: moved the project post-checkout hook to $target.bak." >&2
+  else
+    target="$hooks_dir/post-checkout.cubert"
+    echo "hooks:install: $hooks_dir/post-checkout exists and is not cubert's." >&2
+    echo "hooks:install: add this line to it so new worktrees get set up: \"$target\" \"\$@\"" >&2
+    echo "hooks:install: or, if it only ran worktree setup: mise run hooks:install --replace" >&2
+  fi
 fi
 cp .config/git/post-checkout "$target"
 chmod +x "$target"
