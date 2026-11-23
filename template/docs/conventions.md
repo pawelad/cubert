@@ -409,6 +409,22 @@ enabled features). `hk.pkl` amends `cubert.pkl`:
   `import "package://.../Builtins.pkl" as hkb`. hk's evaluator cannot resolve a second
   import named `Builtins`, and `base.pkl` already has one.
 - hk 2.11.1 rejects a `Group` in `steps`. Give each step its own `dir` instead.
+- Run a command before a shared step with a step of your own and `depends`. Expo route
+  types, for example, must exist before `tsc`:
+
+  ```pkl
+  steps {
+    ["expo-types"] = new Step {
+      glob = List(
+        "apps/frontend/**/*.ts", "apps/frontend/**/*.tsx",
+        "apps/frontend/**/*.mts", "apps/frontend/**/*.cts",
+        "apps/frontend/**/tsconfig*.json"
+      )
+      check = "cd apps/frontend && bun x expo customize tsconfig.json >/dev/null"
+    }
+    ["tsc"] { depends = "expo-types" }
+  }
+  ```
 - Give each linter one owner in `mise run check`. When a `check:<area>` task runs a
   linter, such as an app's `check:backend` running ruff, or a step calls that task, keep
   the step out of the `check` hook. `check:repo` then skips it, and the git hooks still
