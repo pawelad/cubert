@@ -2,17 +2,39 @@
 #MISE description="Scan uv.lock, bun.lock and script locks for known vulnerabilities (needs the network)"
 set -euo pipefail
 
+# A project whose app tasks audit their own locks lists them here, so one advisory
+# needs one ignore list. A pattern that matches no lock fails, so a typo skips nothing.
+excludes=()
+read -r -d '' -a excludes <<<"${AUDIT_DEPS_EXCLUDE:-}" || true
+locks="$(git ls-files --cached --others --exclude-standard | grep -E '(^|/)(uv|bun)\.lock$|\.py\.lock$' || true)"
+for pattern in ${excludes[@]+"${excludes[@]}"}; do
+  matched=false
+  while IFS= read -r lock; do
+    # shellcheck disable=SC2053
+    if [ -n "$lock" ] && [[ $lock == $pattern ]]; then matched=true; fi
+  done <<<"$locks"
+  if [ "$matched" = false ]; then
+    echo "audit:deps: AUDIT_DEPS_EXCLUDE names $pattern, which matches no lock" >&2
+    exit 2
+  fi
+done
+
 args=()
 while IFS= read -r lock; do
+  [ -n "$lock" ] || continue
+  for pattern in ${excludes[@]+"${excludes[@]}"}; do
+    # shellcheck disable=SC2053
+    if [[ $lock == $pattern ]]; then continue 2; fi
+  done
   case "$lock" in
     # A PEP 723 script lock (`uv lock --script`) is a uv.lock under another name.
     *.py.lock) args+=(--lockfile "uv.lock:$lock") ;;
     *) args+=(--lockfile "$lock") ;;
   esac
-done < <(git ls-files --cached --others --exclude-standard | grep -E '(^|/)(uv|bun)\.lock$|\.py\.lock$' || true)
+done <<<"$locks"
 
 if [ "${#args[@]}" -eq 0 ]; then
-  echo "audit:deps: no uv.lock, bun.lock or script lock, so nothing to scan."
+  echo "audit:deps: no uv.lock, bun.lock or script lock to scan."
   exit 0
 fi
 if ! command -v osv-scanner >/dev/null; then

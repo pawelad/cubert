@@ -546,7 +546,11 @@ and pull request and once a week. Run it locally before a release or after a dep
 change. lychee retries a timeout or a server error four times, with waits that grow from
 5 seconds, so a brief outage does not fail the audit. Every project gets osv-scanner,
 because the Python tools also have `uv.lock` files in `.mise/locks/`. The scan includes
-those files and application lockfiles, including nested backends.
+those files and application lockfiles, including nested backends. When app tasks audit
+their own locks with another scanner, list those locks in `AUDIT_DEPS_EXCLUDE` under
+`[env]` in `mise.toml`, such as `AUDIT_DEPS_EXCLUDE = "apps/*/uv.lock apps/*/bun.lock"`.
+One advisory then needs one ignore list. A pattern that matches no lock fails the task.
+`*` also matches `/`.
 
 ## Formatting
 
