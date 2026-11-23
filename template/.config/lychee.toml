@@ -1,7 +1,9 @@
 # Template-owned. The lychee hk step (offline) and `mise run audit` (online) share it.
 # 429 means rate limited, so the link may still be fine.
 accept = ["200..=299", "429"]
-max_retries = 2
+# A timeout or 5xx is often transient. lychee doubles the wait after each retry.
+max_retries = 4
+retry_wait_time = 5
 timeout = 20
 # The paths that the prose rules call frozen: text that another program wrote.
 exclude_path = [

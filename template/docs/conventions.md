@@ -543,9 +543,10 @@ impostor commits and version comments that do not match the pinned SHA. Hooks an
 `mise run check` skip them, so they stay fast and work offline. A new advisory then
 fails the audit and never an unrelated commit. CI runs it from `audit.yml`, on each push
 and pull request and once a week. Run it locally before a release or after a dependency
-change. Every project gets osv-scanner, because the Python tools also have `uv.lock`
-files in `.mise/locks/`. The scan includes those files and application lockfiles,
-including nested backends.
+change. lychee retries a timeout or a server error four times, with waits that grow from
+5 seconds, so a brief outage does not fail the audit. Every project gets osv-scanner,
+because the Python tools also have `uv.lock` files in `.mise/locks/`. The scan includes
+those files and application lockfiles, including nested backends.
 
 ## Formatting
 
