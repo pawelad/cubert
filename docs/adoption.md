@@ -6,7 +6,23 @@ These steps bring an existing repository onto cubert. A new project follows
 Copy from GitHub, not from a local clone. Copier records the source in
 `.copier-answers.yml`, and a local path breaks updates on other machines.
 
-1. Start on a clean branch.
+1. Start on a clean branch. Before Copier runs, write an inventory, such as
+   `tmp/reports/<date>-cubert-adoption.md`. Later steps check against it:
+   - The files that Copier replaces or adds. Render a fresh copy in `/tmp`, and list
+     each of its files that the repository already has.
+   - The tasks that a shared task replaces or the naming rules rename, with every caller
+     of each: docs, CI, hooks, scripts and other tasks.
+   - The project's hk steps, and which of them the shared steps replace.
+   - Each credential, where it lives, and where it goes.
+   - The ignored files, as a baseline. `--directory` lists an ignored directory, such as
+     `node_modules/`, once:
+
+     ```console
+     $ mkdir -p tmp
+     $ git ls-files --others --ignored --exclude-standard --directory >tmp/ignored-before.txt
+     ```
+
+     After the adoption, a path that drops out of the list is no longer ignored.
 2. Copy over the existing files, answering the questions for this project:
 
    ```console
