@@ -40,10 +40,12 @@ jobs:
           RCLONE_CONFIG_R2_ACCESS_KEY_ID: "${{ secrets.RCLONE_CONFIG_R2_ACCESS_KEY_ID }}"
           RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: "${{ secrets.RCLONE_CONFIG_R2_SECRET_ACCESS_KEY }}"
           RCLONE_CONFIG_R2_ENDPOINT: "${{ secrets.RCLONE_CONFIG_R2_ENDPOINT }}"
-        # Dependabot does not read `docker run`: bump the tag and digest by hand.
+        # Dependabot does not read `docker run`: bump the tag and digest by hand. The
+        # script checks a local copy of the state in /tmp, the one writable path.
         run: |
           docker run --rm \
             --read-only --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp \
             --env STATE_BUCKET \
             --env BACKUP_BUCKET \
             --env HEALTHCHECKS_PING_URL \

@@ -300,7 +300,8 @@ The `opentofu_state_backup` option keeps an offsite copy of the encrypted state.
 state lives in the R2 bucket `opentofu_state_bucket`, as `terraform.tfstate`. The
 `opentofu-state-backup.yml` workflow copies it to the B2 bucket `<bucket>-backups`. It
 runs on Mondays at 04:00 UTC, and `opentofu:apply` dispatches it after a state change.
-The workflow reads ciphertext only and never gets the state passphrase.
+The workflow reads ciphertext only and never gets the state passphrase. It refuses to
+copy a state that is not encrypted.
 
 With this option, `opentofu:apply` runs these steps:
 

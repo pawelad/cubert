@@ -26,17 +26,30 @@ def stub(directory: Path, name: str, body: str, interpreter: str = "sh") -> None
 
 
 def run_backup(
-    tmp_path: Path, *, fail_copy: bool = False, ping_url: str = PING_URL
+    tmp_path: Path,
+    *,
+    fail_copy: bool = False,
+    ping_url: str = PING_URL,
+    state: str = ENCRYPTED,
 ) -> tuple[subprocess.CompletedProcess[str], list[str]]:
+    """Run the script with stubs. The rclone stub logs each call with `<local>`."""
     calls = tmp_path / "calls"
     calls.touch()
+    (tmp_path / "state").write_text(state)
     stub(tmp_path, "wget", 'printf "ping %s\\n" "$6" >> "$CALLS"\n')
-    stub(tmp_path, "rclone", 'printf "%s\\n" "$*" >> "$CALLS"\n[ -z "$FAIL_COPY" ]\n')
+    stub(
+        tmp_path,
+        "rclone",
+        '[ -z "$FAIL_COPY" ] || exit 1\n'
+        'case "$3" in /*) cp "$STATE" "$3" ;; esac\n'
+        'printf "%s\\n" "$*" | sed "s|/[^ ]*/terraform.tfstate|<local>|" >> "$CALLS"\n',
+    )
     result = subprocess.run(  # noqa: S603
         ["sh", str(BACKUP_SCRIPT)],  # noqa: S607
         env={
             "PATH": f"{tmp_path}:{os.defpath}",
             "CALLS": str(calls),
+            "STATE": str(tmp_path / "state"),
             "FAIL_COPY": "1" if fail_copy else "",
             "HEALTHCHECKS_PING_URL": ping_url,
             "STATE_BUCKET": "demo-opentofu-state",
@@ -57,12 +70,33 @@ def test_backup_copies_only_the_state_object_and_pings_success(
     assert result.returncode == 0, result.stderr
     assert calls == [
         f"ping {PING_URL}/start",
+        "copyto r2:demo-opentofu-state/terraform.tfstate <local>",
         (
-            "copyto r2:demo-opentofu-state/terraform.tfstate "
-            "b2:demo-opentofu-state-backups/terraform.tfstate --ignore-times"
+            "copyto <local> b2:demo-opentofu-state-backups/terraform.tfstate "
+            "--ignore-times"
         ),
         f"ping {PING_URL}",
     ]
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        json.dumps({"version": 4, "resources": []}),
+        json.dumps({"encryption_version": "v0", "encrypted_data": ""}),
+        json.dumps({"encrypted_data": "abc"}),
+        json.dumps({"resources": [{"encrypted_data": "a", "encryption_version": "b"}]}),
+    ],
+)
+def test_backup_refuses_a_state_that_is_not_encrypted(
+    tmp_path: Path, state: str
+) -> None:
+    result, calls = run_backup(tmp_path, state=state)
+
+    assert result.returncode == 1
+    assert "not encrypted" in result.stderr
+    assert not any(call.startswith("copyto <local> b2:") for call in calls)
+    assert calls[-1] == f"ping {PING_URL}/fail"
 
 
 def test_failed_backup_pings_failure(tmp_path: Path) -> None:
