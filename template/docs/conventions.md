@@ -517,10 +517,10 @@ The `openspec` step runs `openspec validate --all --strict`. With `spec-driven`,
 `changes-only` changes always print an `[INFO]` line, so only the exit code counts
 there.
 
-With `openspec_changes_tracked: false`, git ignores `openspec/changes/`. The changes
-stay in the primary checkout, and `worktree:setup` links the directory into each
-worktree. CI validates no change. A project that changes the answer to `false` later
-does two steps by hand:
+With `openspec_changes_tracked: false`, git ignores `openspec/changes`. The changes stay
+in the primary checkout, and `worktree:setup` links the directory into each worktree. CI
+validates no change. A project that changes the answer to `false` later does two steps
+by hand:
 
 - It adds `openspec/changes/` to `.worktreelinks`, which is project-owned.
 - It runs `git rm -r --cached openspec/changes`. Git keeps tracking a file after an
