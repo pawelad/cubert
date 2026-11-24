@@ -173,6 +173,7 @@ them. Five more tests read the template itself:
 - zizmor reads `actions.lock` only at the git root, and cubert's lockfile does not cover
   `template/.github/workflows/`. The `zizmor-template` hk step and cubert's
   `audit:actions` override accept tag refs there, through `.config/zizmor-template.yml`.
+  That policy also accepts a SHA pin, so the `template-versions` hk step fails on one.
   Each render generates its own lockfile, and its `check` runs zizmor with the full pin
   rule.
 - cubert's CI runs the template's `setup-mise`, so the lockfile also lists its actions,

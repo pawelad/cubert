@@ -100,6 +100,20 @@ def test_jinja_workflow_ignores_composite_action_sha_pins(tmp_path: Path) -> Non
     assert failures_in(tmp_path, files) == []
 
 
+@pytest.mark.parametrize("name", ["ci.yml", "ci.yml.jinja"])
+def test_template_workflow_must_name_an_action_tag(tmp_path: Path, name: str) -> None:
+    sha = "55cc8345863c7cc4c66a329aec7e433d2d1c52a9"
+    files = {f"template/.github/workflows/{name}": f'- uses: "actions/cache@{sha}"\n'}
+    assert len(failures_in(tmp_path, files)) == 1
+
+
+def test_template_workflow_may_pin_a_reusable_workflow_to_a_sha(tmp_path: Path) -> None:
+    sha = "55cc8345863c7cc4c66a329aec7e433d2d1c52a9"
+    uses = f'uses: "octo/repo/.github/workflows/ci.yml@{sha}"\n'
+    files = {"template/.github/workflows/ci.yml": uses}
+    assert failures_in(tmp_path, files) == []
+
+
 def test_required_minimum_key_drops_tool_options() -> None:
     minimums = check_versions.required_minimums("github:a/b[bin=b]>=0.5.1\n")
     assert minimums == {"github:a/b": "0.5.1"}

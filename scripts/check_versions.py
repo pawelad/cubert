@@ -8,7 +8,8 @@ The template seeds `latest` (or `lts`), and the project's `mise run setup` pins 
 `check:repo` requires each seeded tool. The hk package and the hk minimum in the
 required list must match cubert's own hk tool.
 Dependabot skips `.jinja` workflows, so their actions must match the versions in the
-template workflows that it bumps.
+template workflows that it bumps. Template workflows name tags, which the project's
+`actions.lock` locks.
 """
 
 from __future__ import annotations
@@ -31,6 +32,7 @@ TOOL_LINE = re.compile(
     r'^"?(?P<name>[^"=\s]+)"? = (?:\{ version = )?"(?P<version>[^"]+)"(?:,.*\})?$'
 )
 USES = re.compile(r'uses:\s*"?(?P<action>[^"@\s.][^"@\s]*)@(?P<ref>[^"\s#]+)')
+SHA = re.compile(r"[0-9a-f]{40}")
 HK_PACKAGE = re.compile(r"hk/releases/download/v(?P<tag>[^/]+)/hk@(?P<version>[^#]+)#")
 
 
@@ -126,6 +128,21 @@ def action_failures(root: Path) -> list[str]:
     return found
 
 
+def sha_pin_failures(root: Path) -> list[str]:
+    """Return each action that a template workflow pins to a commit instead of a tag."""
+    found: list[str] = []
+    # A project's setup rewrites the pin to a tag, so each update would conflict.
+    for path in sorted(root.glob("template/.github/workflows/*")):
+        for action, ref in action_refs(path.read_text()).items():
+            # A reusable workflow from another repository cannot use the lockfile.
+            if SHA.fullmatch(ref) and "/.github/workflows/" not in action:
+                found.append(
+                    f"{path.relative_to(root)}: {action}@{ref} is a SHA pin."
+                    " Fix: name its tag, such as @v1.2.3"
+                )
+    return found
+
+
 def failures(root: Path) -> list[str]:
     """Return every failure in the repository at `root`."""
     return (
@@ -133,6 +150,7 @@ def failures(root: Path) -> list[str]:
         + hk_failures(root)
         + hk_minimum_failures(root)
         + action_failures(root)
+        + sha_pin_failures(root)
     )
 
 
