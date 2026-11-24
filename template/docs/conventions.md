@@ -498,6 +498,18 @@ steps {
 }
 ```
 
+Pkl rejects a second entry for one step in a `steps` block. With the loop above, set the
+glob inside the loop:
+
+```pkl
+[name] {
+  exclude = super.exclude + frozen
+  when (name == "no-em-dashes" || name == "no-british-english") {
+    glob = super.glob + List("*.yaml", "*.j2")
+  }
+}
+```
+
 The `no-em-dashes` fixer then rewrites strings in those files too.
 
 The `openspec` step runs `openspec validate --all --strict`. With `spec-driven`, an
