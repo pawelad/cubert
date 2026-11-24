@@ -33,7 +33,7 @@ link() {
 }
 
 # Agent output (reports, critiques) then outlives the worktree.
-for dir in tmp .agent .agents .claude .codex .gemini .opencode .pi .impeccable; do
+for dir in tmp .agent .agents .claude .codex .gemini .opencode .pi; do
   link "$dir"
 done
 

@@ -630,8 +630,8 @@ $ openspec update
 
 A new worktree links the agent dirs from the primary checkout, so it needs neither step.
 `openspec init` writes skills from the pinned CLI. Before you add another skill
-installer, check what it installs: `impeccable update` takes the latest skills, not the
-version that `mise.toml` pins.
+installer, check what it installs: some fetch the latest skills, not the version that
+`mise.toml` pins.
 
 In a repository that publishes skills, `npx skills add ./ --list` also lists the skills
 in the agent dirs, such as OpenSpec's. A clone has no agent dirs, so
