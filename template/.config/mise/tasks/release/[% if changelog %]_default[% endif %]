@@ -36,7 +36,8 @@ run_hook() { env -u usage_version -u usage_no_push mise run "$@"; }
 if has_task release:publish; then
   publish="mise run release:publish ${tag}"
 else
-  publish="gh release create ${tag} --verify-tag --notes-from-tag"
+  # With no title, GitHub shows "<tag>: <first line of the tag message>".
+  publish="gh release create ${tag} --title ${tag} --verify-tag --notes-from-tag"
 fi
 
 # A tag reaches every project that updates, so the commit under it must have passed CI.
@@ -68,10 +69,31 @@ else
   ' CHANGELOG.md >CHANGELOG.md.new
   mv CHANGELOG.md.new CHANGELOG.md
 fi
+# GitHub renders each newline in a release body as a line break, so the tag message
+# joins the lines that dprint wrapped at 88 columns.
+unwrap() {
+  awk '
+    function flush() { if (buf != "") print buf; buf = "" }
+    /^[[:space:]]*```/ { flush(); fence = !fence; print; next }
+    fence || /^[[:space:]]*$/ { flush(); print; next }
+    {
+      text = $0
+      sub(/^[[:space:]]+/, "", text)
+      if (buf == "" || heading || text ~ /^(#+ |[-*+] |[0-9]+[.)] |> |\|.*\|$)/) {
+        flush()
+        buf = $0
+        heading = text ~ /^#+ /
+      } else {
+        buf = buf " " text
+      }
+    }
+    END { flush() }
+  '
+}
 notes="$(awk -v heading="## [${version}]" '
   /^## / { if (found) exit; if (index($0, heading) == 1) found = 1; next }
   found { print }
-' CHANGELOG.md | sed -e '/./,$!d')"
+' CHANGELOG.md | sed -e '/./,$!d' | unwrap)"
 [ -n "${notes//[[:space:]]/}" ] || fail "git-cliff wrote no CHANGELOG.md section for ${version}"
 
 # One commit, so the version files and the changelog never drift apart.
@@ -109,5 +131,5 @@ git push --atomic origin main "$tag"
 if has_task release:publish; then
   run_hook release:publish "$tag" || fail "pushed ${tag}, but release:publish failed. Retry: ${publish}"
 else
-  gh release create "$tag" --verify-tag --notes-from-tag || fail "pushed ${tag}, but the GitHub Release failed. Retry: ${publish}"
+  gh release create "$tag" --title "$tag" --verify-tag --notes-from-tag || fail "pushed ${tag}, but the GitHub Release failed. Retry: ${publish}"
 fi

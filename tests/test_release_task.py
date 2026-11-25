@@ -162,7 +162,7 @@ def test_first_release_is_an_initial_release_section_commit_and_tag(
     assert not (project.parent / "gh-calls").exists()
 
 
-def test_second_release_keeps_one_header_and_lists_only_new_commits(
+def test_second_release_tags_with_its_section_on_unwrapped_lines(
     project: Path,
 ) -> None:
     assert release(project, "0.1.0").returncode == 0
@@ -181,7 +181,9 @@ def test_second_release_keeps_one_header_and_lists_only_new_commits(
     assert message.startswith("### Features")
     repo = "https://github.com/pawelad/demo"
     assert f"- Add a PR ([#7]({repo}/pull/7))" in message
-    assert f"- Repair a thing\n  ([{commit[:7]}]({repo}/commit/{commit}))" in message
+    # CHANGELOG.md wraps the long link, but GitHub would render that break.
+    assert f"- Repair a thing\n  ([{commit[:7]}]" in changelog
+    assert f"- Repair a thing ([{commit[:7]}]({repo}/commit/{commit}))" in message
     assert "Add the first feature" not in message
 
 
@@ -289,7 +291,7 @@ def test_confirmed_push_publishes_with_the_hook_in_place_of_the_github_release(
     assert result.returncode == 0, result.stderr
     assert "v0.1.0" in git(project, "ls-remote", "--tags", "origin")
     calls = (project.parent / "gh-calls").read_text()
-    assert ("release create v0.1.0" in calls) != hooks
+    assert ("release create v0.1.0 --title v0.1.0" in calls) != hooks
     published = project.parent / "published"
     assert published.exists() == hooks
     if hooks:
@@ -331,7 +333,7 @@ def test_local_release_names_the_publish_step_that_a_push_would_run(
 
     assert result.returncode == 0, result.stderr
     assert ("mise run release:publish v0.1.0" in result.stdout) == hooks
-    assert ("gh release create v0.1.0" in result.stdout) != hooks
+    assert ("gh release create v0.1.0 --title v0.1.0" in result.stdout) != hooks
     assert not (project.parent / "published").exists()
 
 
