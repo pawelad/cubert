@@ -148,6 +148,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   the render here.
 - A template file uses `[[ ]]` and `[% %]`, not `{{ }}`. See
   [docs/development.md](./docs/development.md).
+- Projects mark their workarounds with `cubert-gap:` comments. When a fix closes such a
+  gap, name the workaround it retires in the commit body.
 
 ### Done
 
