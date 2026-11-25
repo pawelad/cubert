@@ -27,8 +27,9 @@ cubert follows its own template, at the working tree and not at a release:
 - `hk.pkl`, `dprint.json`, `.yamllint` and `lychee.toml` layer on the template's files,
   as a project's files do.
 - `cliff.toml` and `CHANGELOG.md` are project-owned copies. cubert's `cliff.toml` hides
-  only the `agents`, `docs` and `e2e` scopes, because its tooling is what projects get.
-  Its `areas` are the surfaces that a project sees, such as `checks`, `ci` and `tasks`.
+  only the `docs` and `e2e` scopes, because its tooling and agent rules are what
+  projects get. Its `areas` are the surfaces that a project sees, such as `checks`, `ci`
+  and `tasks`.
 
 A new shared task needs a link here too. Run `mise run setup` after you clone cubert.
 

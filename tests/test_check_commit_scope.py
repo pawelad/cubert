@@ -72,6 +72,12 @@ def test_rejects_changelog_subjects_without_an_area(
     assert "commit needs an area scope: map, spots" in capsys.readouterr().err
 
 
+def test_cubert_lists_agent_rules_and_hides_only_docs_and_e2e() -> None:
+    areas, tooling = check.load_scopes(ROOT / "cliff.toml")
+    assert "agents" in areas
+    assert tooling == ["docs", "e2e"]
+
+
 def test_reads_the_scope_of_an_area_with_a_heading(tmp_path: Path) -> None:
     cliff = cliff_with_areas(tmp_path, '"map", "ci:CI", "tofu:OpenTofu"')
     areas, _ = check.load_scopes(cliff)
