@@ -593,12 +593,12 @@ how many CI minutes a project spends, so each project sets its own.
   `mise.toml`, such as `CI_CHECK_SKIP = "check:visualizer test:e2e"`. Any other name,
   such as a typo, fails the job. When other jobs install app dependencies, set
   `CI_CHECK_SKIP_INSTALL = "1"` and `HK_SKIP_STEPS` on the `ci:check` task:
-  `[tasks."ci:check"] env = { CI_CHECK_SKIP_INSTALL = "1", HK_SKIP_STEPS = "tsc" }`.
-  Setting `HK_SKIP_STEPS` on the task, not in `[env]`, keeps those steps in the git
-  hooks. To replace the job, override the task in `mise.toml`:
-  `[tasks."ci:check"] run = "mise run check:repo"`. Include `mise run install` in an
-  override when its checks need project dependencies. `mise run ci:check` runs the same
-  job locally.
+  `[tasks."ci:check"] env = { CI_CHECK_SKIP_INSTALL = "1", HK_SKIP_STEPS = "eslint,tsc" }`.
+  `HK_SKIP_STEPS` separates step names with commas, not spaces. Setting `HK_SKIP_STEPS`
+  on the task, not in `[env]`, keeps those steps in the git hooks. To replace the job,
+  override the task in `mise.toml`: `[tasks."ci:check"] run = "mise run check:repo"`.
+  Include `mise run install` in an override when its checks need project dependencies.
+  `mise run ci:check` runs the same job locally.
 - In CI, `ci:check` points `ANSIBLE_VAULT_PASSWORD_FILE` at a throwaway password file
   when Ansible is installed. An `ansible.cfg` with `vault_password_file` then works
   without the real file. A check that decrypts a value still fails.
