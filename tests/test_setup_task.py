@@ -16,11 +16,13 @@ pytestmark = pytest.mark.skipif(
     reason="needs copier and uv on PATH",
 )
 
-# `mise latest` applies the cutoff. hk 2.12.0 stands in for the newest allowed release.
+# `mise latest` applies the cutoff. hk 2.12.0 stands in for the newest allowed release,
+# and young-tool has no release that old.
 STUB_MISE = """#!/bin/sh
 printf '%s\\n' "$*" >> "$CALLS"
 case "$1" in
-  latest) case "$2" in hk*) echo 2.12.0 ;; *) echo 1.0.0 ;; esac ;;
+  latest)
+    case "$2" in hk*) echo 2.12.0 ;; young-tool*) exit 1 ;; *) echo 1.0.0 ;; esac ;;
 esac
 """
 
@@ -101,3 +103,13 @@ def test_setup_raises_a_seeded_tool_to_its_minimum_in_one_pass(
     [requests] = run_setup(tmp_path, project, None, "dprint>=2.0.0\n")
 
     assert "dprint@2.0.0" in requests
+
+
+def test_setup_pins_the_minimum_when_the_cutoff_hides_every_release(
+    tmp_path: Path, project: Path
+) -> None:
+    requests = run_setup(
+        tmp_path, project, '[tools]\nuv = "1.0.0"\n', "young-tool>=3.0.0\n"
+    )
+
+    assert "young-tool@3.0.0" in requests[-1]

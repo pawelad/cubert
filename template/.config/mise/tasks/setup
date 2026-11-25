@@ -21,8 +21,9 @@ pin() {
     esac
     case "$version" in
       "" | latest | lts)
-        resolved="$(mise latest "$tool${version:+@$version}")"
-        if [ -z "$resolved" ]; then
+        # The cutoff hides every release of a tool that is younger than its window.
+        resolved="$(mise latest "$tool${version:+@$version}" || true)"
+        if [ -z "$resolved" ] && [ -z "$minimum" ]; then
           echo "setup: mise latest found no release of $tool" >&2
           return 1
         fi
