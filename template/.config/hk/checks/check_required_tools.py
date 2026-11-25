@@ -56,8 +56,9 @@ def missing(required: str, config: str) -> list[str]:
     return [name for name, _, _, _ in _requirements(required) if name not in tools]
 
 
-def unpinned(config: str) -> list[str]:
+def unpinned(config: str, required: str = "") -> list[str]:
     """Return seeded requests, preserving inline options through mise's own writer."""
+    minimums = {name: minimum for name, minimum, _, _ in _requirements(required)}
     found: list[str] = []
     for name, spec in tomllib.loads(config).get("tools", {}).items():
         specs = spec if isinstance(spec, list) else [spec]
@@ -65,7 +66,12 @@ def unpinned(config: str) -> list[str]:
             item.get("version") if isinstance(item, dict) else item for item in specs
         ]
         if any(version in ("latest", "lts") for version in versions):
-            found.extend(f"{name}@{version}" for version in versions)
+            minimum = minimums.get(name)
+            suffix = f">={minimum}" if minimum else ""
+            found.extend(
+                f"{name}@{version}{suffix if version in ('latest', 'lts') else ''}"
+                for version in versions
+            )
     return found
 
 
@@ -114,7 +120,7 @@ def main(args: list[str]) -> int:
     """
     required, config = REQUIRED.read_text(), CONFIG.read_text()
     if args == ["--unpinned"]:
-        print("\n".join(unpinned(config)))
+        print("\n".join(unpinned(config, required)))
         return 0
     tools = missing(required, config)
     old = outdated(required, config)

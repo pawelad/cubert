@@ -93,3 +93,11 @@ def test_setup_raises_an_added_tool_to_its_minimum(
     added = requests[-1]
     assert "fnox@1.50.0" in added
     assert "hk@2.12.0" in added
+
+
+def test_setup_raises_a_seeded_tool_to_its_minimum_in_one_pass(
+    tmp_path: Path, project: Path
+) -> None:
+    [requests] = run_setup(tmp_path, project, None, "dprint>=2.0.0\n")
+
+    assert "dprint@2.0.0" in requests

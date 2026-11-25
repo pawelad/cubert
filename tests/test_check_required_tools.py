@@ -159,6 +159,13 @@ def test_seeded_version_list_preserves_its_pinned_versions() -> None:
     assert check_required_tools.unpinned(config) == ["node@24.22.2", "node@lts"]
 
 
+def test_seeded_latest_tool_carries_its_minimum() -> None:
+    config = '[tools]\nfnox = "latest"\n'
+    assert check_required_tools.unpinned(config, "fnox>=1.50.0\n") == [
+        "fnox@latest>=1.50.0"
+    ]
+
+
 def test_missing_tool_retains_its_private_runtime_selector() -> None:
     assert check_required_tools.missing("yamllint[python=3.14]\n", "[tools]\n") == [
         "yamllint"
