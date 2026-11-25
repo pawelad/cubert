@@ -76,9 +76,9 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   - Claude Code offers Antigravity: `agy --model gemini-4-carbon-high -p="<prompt>"`.
   - Antigravity offers Claude Code:
     `claude -p --model claude-opus-5-5 --permission-mode plan "<prompt>"`.
-- Use this prompt: "Review the work in this worktree: the commits not yet on main and
-  any uncommitted changes. Did we miss anything? Can we do anything better? Do you agree
-  with the change? Be critical and help me get this right. Cite each finding as
+- Use this prompt: "Review the work in this worktree: the commits not yet on origin/main
+  and any uncommitted changes. Did we miss anything? Can we do anything better? Do you
+  agree with the change? Be critical and help me get this right. Cite each finding as
   file:line. Do not edit files."
 - Run the review in the background. It can outlast the shell timeout.
 - Do not pass `--mode plan` to agy. Headless plan mode denies every shell command.
