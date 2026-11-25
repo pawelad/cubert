@@ -42,7 +42,7 @@ main() {
   # Without --exclude-standard: .gitignore ignores *.rej.
   rejects="$(git ls-files --others -- '*.rej')"
   if [ -n "$conflicts$rejects" ]; then
-    echo "template:update: resolve these conflicts, then commit:" >&2
+    echo "template:update: resolve these conflicts, run mise run setup and mise run check, then commit:" >&2
     printf '%s\n%s\n' "$conflicts" "$rejects" | sed '/^$/d; s/^/  /' >&2
     list_gaps
     exit 1
