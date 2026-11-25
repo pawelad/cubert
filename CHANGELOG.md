@@ -4,6 +4,15 @@ All notable changes to this project are documented here.
 [git-cliff](https://git-cliff.org) generates them from the Conventional Commits history.
 Do not edit past entries by hand.
 
+## [0.2.1] - 2026-11-25
+
+### Bug Fixes
+
+#### CI
+
+- Stop uv warning that a script has no lockfile in each CI check and test
+  ([bf5b54e](https://github.com/pawelad/cubert/commit/bf5b54e4feee38cb955fbc4bc713fe85f02f3d3a))
+
 ## [0.2.0] - 2026-11-25
 
 ### Features
