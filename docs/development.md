@@ -213,4 +213,5 @@ git-cliff pipes its output through dprint, so the changelog keeps the 88-column 
 The `cliff.toml` header is wrapped the same way, so `--prepend` finds it and keeps one.
 
 Before 1.0, a breaking change bumps the minor version. A breaking change is one that
-makes `template:update` conflict or need a manual step.
+makes `template:update` conflict or need a manual step. Mark its commit with `!`, such
+as `feat(tasks)!:`, so git-cliff lists it under Breaking Changes.
