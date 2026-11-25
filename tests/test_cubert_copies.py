@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -10,12 +9,10 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def test_pr_title_workflow_matches_the_template() -> None:
     # A copy, not a link: GitHub does not follow a symlink in .github/workflows.
-    # cubert names each action by its tag and locks the commit in actions.lock.
     own = (ROOT / ".github/workflows/pr-title.yml").read_text()
     shipped = (ROOT / "template/.github/workflows/pr-title.yml").read_text()
-    pin = re.compile(r'@[0-9a-f]{40}" # (v[^\s]+)')
 
-    assert own == pin.sub(r'@\1"', shipped)
+    assert own == shipped
 
 
 def test_gitignore_holds_every_unconditional_template_entry() -> None:
