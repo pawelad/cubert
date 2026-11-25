@@ -69,6 +69,21 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   deliberate behavior change, and say which.
 - Name a test after the behavior it asserts. Never call it a "regression" test.
 
+### Review
+
+- On "final review", ask which model reviews the work. Offer the other provider first,
+  then skip:
+  - Claude Code offers Antigravity: `agy --model gemini-4-carbon-high -p="<prompt>"`.
+  - Antigravity offers Claude Code:
+    `claude -p --model claude-opus-5-5 --permission-mode plan "<prompt>"`.
+- Use this prompt: "Review the work in this worktree: the commits not yet on main and
+  any uncommitted changes. Did we miss anything? Can we do anything better? Do you agree
+  with the change? Be critical and help me get this right. Cite each finding as
+  file:line. Do not edit files."
+- Run the review in the background. It can outlast the shell timeout.
+- Do not pass `--mode plan` to agy. Headless plan mode denies every shell command.
+- agy exits 0 when it denies a tool. Treat "no output produced" as a failed review.
+
 ### Commit
 
 - Conventional Commits with a kebab-case scope. A `feat`, `fix` or `perf` subject
