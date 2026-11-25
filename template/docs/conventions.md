@@ -537,8 +537,8 @@ validates no change. A project that changes the answer to `false` later does two
 by hand:
 
 - It adds `openspec/changes/` to `.worktreelinks`, which is project-owned.
-- It runs `git rm -r --cached openspec/changes`. Git keeps tracking a file after an
-  ignore rule matches it.
+- It runs `git rm -r --cached --ignore-unmatch openspec/changes`. Git keeps tracking a
+  file after an ignore rule matches it.
 
 Three hk steps cover what the formatters and linters miss:
 
