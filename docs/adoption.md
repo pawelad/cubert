@@ -165,10 +165,12 @@ the files each commit touches, then rebase onto `main`:
    $ git rebase main
    ```
 
-   Read the exec output: a formatter error there leaves that commit partly formatted. A
-   commit can still conflict on a file that an earlier exec reformatted. Take the
-   commit's side with `git checkout --theirs -- <file>`, then `git add` it and run
-   `git rebase --continue`. The exec after that commit formats the file again.
+   Read the exec output: a formatter error there leaves that commit partly formatted. In
+   the first rebase, a commit can still conflict on a file that an earlier exec
+   reformatted. Take the commit's side with `git checkout --theirs -- <file>`, then
+   `git add` it and run `git rebase --continue`. The exec after that commit formats the
+   file again. In `git rebase main`, resolve each conflict by hand: `--theirs` there
+   drops the change that `main` made.
 
 4. Run `mise run format`, in case `main` changed a formatter since the reformat. Commit
    any change. Then run `mise run check` and `mise run test`, and delete
