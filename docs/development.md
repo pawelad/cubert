@@ -133,7 +133,7 @@ template, so wrap template lines the way dprint would, at 88 columns.
 - The e2e tasks are not `test:*` tasks, so `mise run test` stays fast.
 
 The unit tests in `tests/` cover the template's check scripts, so projects do not test
-them. Five more tests read the template itself:
+them. These tests read the template itself:
 
 - `test_file_ownership.py` fails when the ownership table in `conventions.md`, the
   `_skip_if_exists` list or `template/` disagree.
@@ -142,6 +142,8 @@ them. Five more tests read the template itself:
 - `test_cubert_copies.py` fails when cubert's copies of the PR title workflow,
   `CODEOWNERS`, `.gitignore` or `.config/wt.toml` drift from the template's.
 - `test_render.py` renders a project with awkward answers and parses the output.
+- `test_conventions_hk_snippets.py` renders a project and evaluates each `hk.pkl`
+  snippet in `conventions.md` with hk and Pkl.
 - `test_worktree_setup.py` renders a project and runs `git worktree add`. It skips when
   `git`, `mise`, `copier` or `wt` is missing.
 
