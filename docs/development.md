@@ -198,10 +198,11 @@ tag, so a tag is a release. git-cliff generates the release notes from the commi
    needs a passing CI run on `main`, then asks before it pushes and publishes the GitHub
    Release. With no terminal, it keeps the commit and tag local and prints the publish
    command.
-4. Append any manual update steps to the GitHub Release, keeping its changelog:
+4. Append any manual update steps to the GitHub Release, keeping its changelog. Write
+   each paragraph of `<file>` on one line: GitHub renders each newline as a break.
 
    ```console
-   $ { gh release view vX.Y.Z --json body -q .body; cat <file>; } \
+   $ { gh release view vX.Y.Z --json body -q .body; echo; cat <file>; } \
        | gh release edit vX.Y.Z --notes-file -
    ```
 
