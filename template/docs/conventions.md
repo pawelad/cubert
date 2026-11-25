@@ -728,6 +728,10 @@ conflict markers. `-d <question>=<answer>` changes an answer, and you can repeat
 Resolve them, run `mise run setup` (the update can change tools and hooks) and
 `mise run check`, then commit the result as one commit.
 
+A `cubert-gap:` comment marks a project workaround for something that cubert lacks.
+After an update, the task lists each marker, so you can remove each workaround that
+cubert now covers.
+
 An update cannot add a tool to the project-owned `mise.toml`.
 `.config/mise/required-tools` lists the tools that the shared steps and tasks call.
 `mise run setup` adds each missing one to `mise.toml`, pinned. The `required-tools` hk

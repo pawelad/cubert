@@ -15,8 +15,8 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
   cubert, then run `mise run template:update`.
 - Mark each workaround for a cubert gap with a `cubert-gap:` comment that names the gap.
   List new gaps in a `tmp/reports/` report for cubert.
-- After `mise run template:update`, grep for `cubert-gap:`. Remove each workaround that
-  cubert now covers.
+- After `mise run template:update`, check each `cubert-gap:` marker that it lists.
+  Remove each workaround that cubert now covers.
 - Reports: `tmp/reports/YYYY-MM-DD-<topic>.md`. Scratch work: `tmp/<task>/`.
 [% if openspec != 'none' %]
 - Change proposals: `openspec/changes/`.
