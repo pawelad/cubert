@@ -121,7 +121,7 @@ class TestPlainPython:
 
 @pytest.mark.skipif(shutil.which("uv") is None, reason="needs uv on PATH")
 class TestMain:
-    # The demo project has no uv.lock, so ci:check's UV_LOCKED would fail every uv call.
+    # The demo project has no uv.lock, so an exported UV_LOCKED would fail each uv call.
     @pytest.fixture(autouse=True)
     def project(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         unlocked = {"UV_LOCKED", "UV_FROZEN"}
@@ -143,7 +143,7 @@ class TestMain:
 
         assert check_mypy.main(["s/ok.py"]) == 0
 
-    # ci:check sets UV_LOCKED, and `uv sync --script` would then demand a script lock.
+    # A project can export UV_LOCKED, and `uv sync --script` would then demand a lock.
     def test_unlocked_script_syncs_under_uv_locked(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

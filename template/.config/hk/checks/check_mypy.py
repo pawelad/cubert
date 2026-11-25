@@ -155,7 +155,7 @@ def _numbers(version: str) -> tuple[int, ...]:
 def script_python(path: Path) -> str | None:
     """Sync the script's env and return its interpreter, or None when uv fails."""
     command = ["uv", "sync", "--quiet", "--script", str(path)]
-    # A check must not rewrite a lock, and `UV_LOCKED` (ci:check) fails with no lock.
+    # A check must not rewrite a lock. An exported `UV_LOCKED` fails an unlocked script.
     locked = path.with_name(f"{path.name}.lock").exists()
     env = {k: v for k, v in BASE_ENV.items() if k not in {"UV_LOCKED", "UV_FROZEN"}}
     sync = subprocess.run(  # noqa: S603

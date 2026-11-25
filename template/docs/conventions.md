@@ -604,8 +604,11 @@ how many CI minutes a project spends, so each project sets its own.
   without the real file. A check that decrypts a value still fails.
 - The `Check` job caches mise's tools, the OpenTofu providers and the Ansible
   collections from `requirements.yml`.
-- `ci:check` sets `UV_LOCKED=1`, so a stale `uv.lock` fails CI. Bun installs with
-  `--frozen-lockfile` everywhere. An override sets `UV_LOCKED=1` itself.
+- `ci:check` runs `install` with `UV_LOCKED=1`, so a stale `uv.lock` fails CI. With
+  `CI_CHECK_SKIP_INSTALL`, it runs `uv lock --check` on the root `uv.lock` instead. The
+  checks and tests do not get `UV_LOCKED`, because uv warns on each `uv run` of a script
+  with no lock. An override that installs runs `UV_LOCKED=1 mise run install`. Bun
+  installs with `--frozen-lockfile` everywhere.
 
 ## Audits
 
