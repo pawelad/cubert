@@ -187,6 +187,35 @@ def test_second_release_tags_with_its_section_on_unwrapped_lines(
     assert "Add the first feature" not in message
 
 
+def test_areas_group_entries_under_their_headings_and_the_rest_under_other(
+    project: Path,
+) -> None:
+    cliff = project / "cliff.toml"
+    cliff.write_text(
+        cliff.read_text().replace(
+            "{% set areas = [] %}", '{% set areas = ["map", "api:API"] %}'
+        )
+    )
+    git(project, "commit", "--quiet", "--all", "-m", "chore: add areas")
+    git(project, "push", "--quiet", "origin", "main")
+    assert release(project, "0.1.0").returncode == 0
+    for subject in [
+        "feat(api): add a route",
+        "feat(map): add a pin",
+        "feat: add a page",
+    ]:
+        git(project, "commit", "--quiet", "--allow-empty", "-m", subject)
+    git(project, "push", "--quiet", "origin", "main")
+
+    result = release(project, "0.2.0")
+
+    assert result.returncode == 0, result.stderr
+    message = git(project, "tag", "--list", "v0.2.0", "--format=%(contents)")
+    headings = [line for line in message.splitlines() if line.startswith("#")]
+    assert headings == ["### Features", "#### Map", "#### API", "#### Other"]
+    assert message.count("Add a route") == 1
+
+
 @pytest.mark.parametrize(
     ("setup", "version", "error"),
     [

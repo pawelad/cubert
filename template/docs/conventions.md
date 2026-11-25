@@ -275,11 +275,11 @@ the file starts with the exact header text.
 
 `areas` in `cliff.toml` lists the scopes that users see, such as `map` or `spots`, in
 display order. Each changelog group then lists its entries by area, and the rest under
-Other. With areas, the `changelog-scope` commit hook and the PR title job reject a
-`feat`, `fix`, `perf` or breaking commit without an area scope or a tooling scope. A
-breaking commit has a `!` or a `BREAKING CHANGE:` footer, of any type. The tooling
-scopes are the ones that the `commit_parsers` skip. An empty list, the default, checks
-nothing.
+Other. An entry such as `ci:CI` sets the heading. A plain entry capitalizes its scope.
+With areas, the `changelog-scope` commit hook and the PR title job reject a `feat`,
+`fix`, `perf` or breaking commit without an area scope or a tooling scope. A breaking
+commit has a `!` or a `BREAKING CHANGE:` footer, of any type. The tooling scopes are the
+ones that the `commit_parsers` skip. An empty list, the default, checks nothing.
 
 ### Operator credentials
 

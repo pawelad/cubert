@@ -72,6 +72,28 @@ def test_rejects_changelog_subjects_without_an_area(
     assert "commit needs an area scope: map, spots" in capsys.readouterr().err
 
 
+def test_reads_the_scope_of_an_area_with_a_heading(tmp_path: Path) -> None:
+    cliff = cliff_with_areas(tmp_path, '"map", "ci:CI", "tofu:OpenTofu"')
+    areas, _ = check.load_scopes(cliff)
+    assert areas == ["map", "ci", "tofu"]
+
+
+@pytest.mark.parametrize("areas", ["'map'", '"Map"', '"map:"', '"open_tofu:OpenTofu"'])
+def test_rejects_a_malformed_area_instead_of_skipping_it(
+    tmp_path: Path, areas: str
+) -> None:
+    cliff = cliff_with_areas(tmp_path, f'"spots", {areas}')
+    assert run(tmp_path, cliff, "feat(spots): add a thing") == 1
+
+
+def test_rejects_a_heading_area_with_a_body_from_before_headings(
+    tmp_path: Path,
+) -> None:
+    cliff = cliff_with_areas(tmp_path, '"map", "ci:CI"')
+    cliff.write_text(cliff.read_text().replace("area_scopes", "areas"))
+    assert run(tmp_path, cliff, "feat(map): add a thing") == 1
+
+
 def test_template_default_has_no_areas_and_accepts_any_scope(tmp_path: Path) -> None:
     path = tmp_path / "cliff.toml"
     path.write_text(CLIFF)

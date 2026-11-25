@@ -8,6 +8,7 @@ Do not edit past entries by hand.
 """
 # `areas` lists the changelog scopes in display order. With areas, each group lists its
 # entries by area, and `.config/hk/checks/check_commit_scope.py` requires an area scope.
+# An entry such as "ci:CI" sets the heading. A plain entry capitalizes its scope.
 # A squash merge ends its subject with `(#N)`. The entry links that PR, or the commit.
 body = """
 {% macro entry(commit, repo) %}\
@@ -30,12 +31,17 @@ body = """
 {% if commits | length == 0 %}
     No user-facing changes.
 {% endif %}\
+{% set_global area_scopes = [] %}\
+{% for area in areas %}\
+    {% set_global area_scopes = area_scopes | concat(with=area | split(pat=":") | first) %}\
+{% endfor %}\
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim | upper_first }}
     {% for area in areas %}\
-        {% set area_commits = commits | filter(attribute="scope", value=area) %}\
+        {% set parts = area | split(pat=":") %}\
+        {% set area_commits = commits | filter(attribute="scope", value=parts | first) %}\
         {% if area_commits | length > 0 %}
-            #### {{ area | upper_first }}
+            #### {% if parts | length > 1 %}{{ parts | slice(start=1) | join(sep=":") }}{% else %}{{ area | upper_first }}{% endif %}
             {% for commit in area_commits %}
                 - {{ self::entry(commit=commit, repo=repo) }}\
             {% endfor %}
@@ -43,7 +49,7 @@ body = """
     {% endfor %}\
     {% set_global other = [] %}\
     {% for commit in commits %}\
-        {% if not commit.scope or commit.scope not in areas %}{% set_global other = other | concat(with=commit) %}{% endif %}\
+        {% if not commit.scope or commit.scope not in area_scopes %}{% set_global other = other | concat(with=commit) %}{% endif %}\
     {% endfor %}\
     {% if other | length > 0 %}
         {% if areas | length > 0 %}#### Other{% endif %}
