@@ -9,7 +9,7 @@ if [ "${usage_all:-false}" = "true" ]; then
   args+=(--all)
 fi
 
-# tsc has no fixer, and its type errors would abort the fixers that run after it.
+# tsc has no fixer, so it would only slow format and fail it on type errors.
 # Skip it only when configured: hk warns when --skip-step names a missing step.
 if [ -f hk.pkl ] \
   && [ "$(pkl eval -x 'steps.containsKey("tsc")' hk.pkl 2>/dev/null || true)" = "true" ]; then
