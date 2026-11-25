@@ -190,8 +190,12 @@ tag, so a tag is a release. git-cliff generates the release notes from the commi
    needs a passing CI run on `main`, then asks before it pushes and publishes the GitHub
    Release. With no terminal, it keeps the commit and tag local and prints the publish
    command.
-4. Add each step that a project must take by hand to the GitHub Release, with
-   `gh release edit vX.Y.Z --notes-file <file>`.
+4. Append any manual update steps to the GitHub Release, keeping its changelog:
+
+   ```console
+   $ { gh release view vX.Y.Z --json body -q .body; cat <file>; } \
+       | gh release edit vX.Y.Z --notes-file -
+   ```
 
 git-cliff pipes its output through dprint, so the changelog keeps the 88-column limit.
 The `cliff.toml` header is wrapped the same way, so `--prepend` finds it and keeps one.
