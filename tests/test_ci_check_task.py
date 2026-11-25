@@ -46,7 +46,11 @@ def run_task(
         (tools / name).chmod(0o755)
     calls = tmp_path / "calls"
     calls.touch()
-    full = {k: v for k, v in os.environ.items() if k not in {"CI", "CI_CHECK_SKIP"}}
+    full = {
+        k: v
+        for k, v in os.environ.items()
+        if k not in {"CI", "CI_CHECK_SKIP", "CI_CHECK_SKIP_INSTALL"}
+    }
     full.update(PATH=f"{tools}{os.pathsep}{os.environ['PATH']}", CALLS=str(calls))
     full.update(env)
     full.pop("ANSIBLE_VAULT_PASSWORD_FILE", None)
@@ -93,3 +97,20 @@ def test_ci_with_ansible_gets_a_throwaway_vault_password(tmp_path: Path) -> None
     assert result.returncode == 0, result.stderr
     assert (tmp_path / "calls.vault").read_text().strip()
     assert not Path((tmp_path / "calls.vault_path").read_text().strip()).exists()
+
+
+def test_skip_install_omits_install_while_running_checks_and_tests(
+    tmp_path: Path,
+) -> None:
+    result, calls = run_task(tmp_path, CI_CHECK_SKIP_INSTALL="1")
+
+    assert result.returncode == 0, result.stderr
+    assert calls == ["run check", "run test"]
+
+
+def test_invalid_skip_install_value_fails(tmp_path: Path) -> None:
+    result, calls = run_task(tmp_path, CI_CHECK_SKIP_INSTALL="invalid")
+
+    assert result.returncode == 2
+    assert "CI_CHECK_SKIP_INSTALL" in result.stderr
+    assert calls == []
