@@ -94,11 +94,12 @@ This file holds the rules that no tool checks. Rationale lives in `docs/`.
 
 ### Review
 
-- On "final review", ask which model reviews the work. Offer the other provider first,
-  then skip:
-  - Claude Code offers Antigravity: `agy --model gemini-4-carbon-high -p="<prompt>"`.
-  - Antigravity offers Claude Code:
-    `claude -p --model claude-opus-5-5 --permission-mode plan "<prompt>"`.
+- On "final review", ask which model reviews the work. Offer all options and skip. Put
+  the other tool first. Antigravity lists Claude Code first. The options:
+  - Antigravity with Gemini: `agy --model gemini-4-carbon-high -p="<prompt>"`.
+  - Antigravity with Opus: `agy --model claude-opus-5-5-high -p="<prompt>"`.
+  - Claude Code with Opus:
+    `claude -p --model claude-opus-5-5 --effort high --permission-mode plan "<prompt>"`.
 - Use this prompt: "Review the work in this worktree: the commits not yet on origin/main
   and any uncommitted changes. Did we miss anything? Can we do anything better? Do you
   agree with the change? Be critical and help me get this right. Cite each finding as
