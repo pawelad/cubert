@@ -21,7 +21,7 @@ body = """
     {% endif %}\
 {% endmacro %}\
 {% set repo = "https://github.com/pawelad/cubert" %}\
-{% set areas = [] %}\
+{% set areas = ["checks", "ci", "tasks", "release", "audit", "opentofu", "ansible", "openspec", "template"] %}\
 {% if version %}\
     ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
 {% else %}\
@@ -77,7 +77,7 @@ link_parsers = [
 sort_commits = "oldest"
 
 # The changelog lists what shipped. The HTML comments set the group order.
-# cubert's tooling is what projects get, so only cubert's own docs and tests are hidden.
+# cubert's tooling is what projects get. Only its agent rules, docs and e2e tests are hidden.
 commit_parsers = [
   { message = "^chore\\(release\\)", skip = true },
   { field = "breaking", pattern = "true", group = "<!-- 0 -->Breaking Changes" },
