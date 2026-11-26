@@ -553,7 +553,9 @@ Three hk steps cover what the formatters and linters miss:
 - `typos` checks spelling in text files, and the prose rules keep American English. It
   only reports, with no fixer, so a false positive is never rewritten. A project adds
   words in a root `typos.toml`, which layers on `.config/typos.toml`. A line that ends
-  in a `spellchecker:disable-line` comment is skipped.
+  in a `spellchecker:disable-line` comment is skipped. The American English and em dash
+  rules skip it too, and their fixers leave it as written. Use it for a value that an
+  external API defines, such as a color name in British English.
 - `betterleaks` scans for tokens, passwords and keys. A false positive gets a
   `betterleaks:allow` comment on the line, or a fingerprint in `.betterleaksignore`. A
   fingerprint holds the line number, so an edit above the line brings the finding back.
