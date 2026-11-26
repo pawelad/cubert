@@ -67,7 +67,9 @@ Each template file is one of three kinds. The table in
   a tool needs it elsewhere.
 - **Merged**: also a plain file. Copier merges the project's edits on update. Keep the
   shared part short and stable, so the merge rarely conflicts.
-- **Project-owned**: listed in `_skip_if_exists`. Copier creates it once.
+- **Project-owned**: listed in `_skip_if_exists`. Copier creates it once. Start each
+  entry with `/`: Copier matches entries as `.gitignore` does, so `biome.json` would
+  also skip `.config/biome.json`.
 
 Moving a file to another kind breaks updates for existing projects. Treat it as a
 breaking change, and say what projects must do in the release notes.
@@ -136,7 +138,7 @@ The unit tests in `tests/` cover the template's check scripts, so projects do no
 them. These tests read the template itself:
 
 - `test_file_ownership.py` fails when the ownership table in `conventions.md`, the
-  `_skip_if_exists` list or `template/` disagree.
+  `_skip_if_exists` list or `template/` disagree, or when an entry lacks its `/`.
 - `test_update_ownership.py` renders two releases and checks what an update does to an
   edited, deleted and removed file of each kind.
 - `test_cubert_copies.py` fails when cubert's copies of the PR title workflow,

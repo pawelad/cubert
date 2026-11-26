@@ -48,20 +48,28 @@ def table_rows() -> dict[str, list[str]]:
     return rows
 
 
-def skip_if_exists() -> list[str]:
-    """Read `_skip_if_exists` from copier.yml. Copier needs no YAML parser here."""
+def raw_skip_if_exists() -> list[str]:
+    """Read `_skip_if_exists` from copier.yml as written. No YAML parser needed."""
     entries = []
     in_list = False
     for line in (ROOT / "copier.yml").read_text().splitlines():
         if line.startswith("_skip_if_exists:"):
             in_list = True
         elif in_list and (match := re.match(r'\s+- "(.+)"', line)):
-            entry = match.group(1)
-            for name in ("opentofu_dir", "ansible_dir"):
-                entry = entry.replace(f"[[ {name} ]]", f"<{name}>")
-            entries.append(entry)
+            entries.append(match.group(1))
         elif in_list and line.strip() and not line.lstrip().startswith("#"):
             break
+    return entries
+
+
+def skip_if_exists() -> list[str]:
+    """Return each `_skip_if_exists` entry as a project path."""
+    entries = []
+    for entry in raw_skip_if_exists():
+        path = entry.removeprefix("/")
+        for name in ("opentofu_dir", "ansible_dir"):
+            path = path.replace(f"[[ {name} ]]", f"<{name}>")
+        entries.append(path)
     return entries
 
 
@@ -111,3 +119,9 @@ def test_project_owned_row_matches_skip_if_exists() -> None:
     assert in_row == skipped & set(files)
     stale = skipped - set(files)
     assert not stale, f"_skip_if_exists lists files that template/ lacks: {stale}"
+
+
+def test_every_skip_if_exists_entry_is_anchored_to_the_project_root() -> None:
+    # Copier matches like .gitignore: `biome.json` also skips `.config/biome.json`.
+    unanchored = [entry for entry in raw_skip_if_exists() if not entry.startswith("/")]
+    assert not unanchored, f"Start each entry with /: {unanchored}"

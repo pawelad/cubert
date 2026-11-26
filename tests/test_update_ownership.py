@@ -36,7 +36,8 @@ def updated(tmp_path_factory: pytest.TempPathFactory) -> Path:
     source.mkdir()
     release1 = snapshot_template(source)
     project = base / "project"
-    copy_project(source, release1, project)
+    # TypeScript adds `.config/biome.json`, which shares a name with a project file.
+    copy_project(source, release1, project, typescript="true")
     run(["git", "-c", "init.defaultBranch=main", "init", "--quiet"], project)
     commit_all(project, "chore: render release 1")
 
@@ -45,6 +46,9 @@ def updated(tmp_path_factory: pytest.TempPathFactory) -> Path:
     prepend(template / ".config/yamllint.yaml", "# release 2")
     prepend(template / "CONTRIBUTING.md", "<!-- release 2 -->")
     (template / ".shellcheckrc").unlink()
+    for name in ("[% if typescript %]biome.json[% endif %]", "dprint.json"):
+        path = template / ".config" / name
+        path.write_text(path.read_text().replace("{", '{\n  "$release": 2,', 1))
     release2 = commit_all(source, "chore: release 2")
 
     # The project edits the same spots, deletes two files and edits the removed one.
@@ -68,6 +72,13 @@ def test_edit_to_a_template_owned_file_conflicts_with_the_template(
     assert "<<<<<<<" in text
     assert "# release 2" in text
     assert "# local edit" in text
+
+
+@pytest.mark.parametrize("name", ["biome.json", "dprint.json"])
+def test_template_change_reaches_config_file_named_like_a_project_owned_file(
+    updated: Path, name: str
+) -> None:
+    assert '"$release": 2' in (updated / ".config" / name).read_text()
 
 
 def test_edit_to_a_project_owned_file_stays_and_ignores_the_template(
