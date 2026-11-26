@@ -4,6 +4,45 @@ All notable changes to this project are documented here.
 [git-cliff](https://git-cliff.org) generates them from the Conventional Commits history.
 Do not edit past entries by hand.
 
+## [0.4.0] - 2026-11-26
+
+### Breaking Changes
+
+#### Template
+
+- Update .config/biome.json and .config/dprint.json, which template:update skipped as
+  project-owned
+  ([ec93303](https://github.com/pawelad/cubert/commit/ec9330339aab9388acda5d31711350d114a73f6f))
+
+### Features
+
+#### Checks
+
+- Fail when a project file task has the same name as a shared task, which mise skips
+  with no warning
+  ([faf80e2](https://github.com/pawelad/cubert/commit/faf80e27f00548ed2df1441d9ff0d3964ee00850))
+
+#### Tasks
+
+- Keep the tools in UPGRADE_EXCLUDE at their versions in mise run upgrade
+  ([5ca9ddd](https://github.com/pawelad/cubert/commit/5ca9ddd3338f20175d9cb5d7e936363b27675ce4))
+- Skip every hk step with no fix command in mise run format, not only tsc
+  ([b667eb6](https://github.com/pawelad/cubert/commit/b667eb67ba8887170a3d0d254f0ba8bacfc99c59))
+
+### Bug Fixes
+
+#### Checks
+
+- Run each comment-only prose step after its full-file step, so a widened glob no longer
+  rewrites one file twice in parallel
+  ([af1b0a1](https://github.com/pawelad/cubert/commit/af1b0a180e9a8e4b27575d9180a2a7253a94265e))
+
+#### Tasks
+
+- Keep mise run upgrade to the project's tools, so it no longer bumps the global mise
+  config
+  ([fa21d75](https://github.com/pawelad/cubert/commit/fa21d757174a925391f51d6d01c37bdad2c2d47d))
+
 ## [0.3.0] - 2026-11-26
 
 ### Breaking Changes
