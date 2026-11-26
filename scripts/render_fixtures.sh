@@ -95,7 +95,17 @@ typescript_fixture() {
 }
 
 docker_fixture() {
-  printf 'FROM debian:12.11-slim\nCMD ["sleep", "infinity"]\n' >Dockerfile
+  # Unpinned apt and apk packages, which the shared hadolint step allows.
+  cat >Dockerfile <<'DOCKERFILE'
+FROM alpine:3.22 AS tools
+RUN apk add --no-cache curl
+
+FROM debian:12.11-slim
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
+CMD ["sleep", "infinity"]
+DOCKERFILE
   cat >compose.yaml <<'YAML'
 ---
 services:

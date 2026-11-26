@@ -37,8 +37,10 @@ steps {
   }
 [% endif %]
 [% if docker %]
+  // Distro package pins break when the mirror drops the old version. The base image tag
+  // pins them instead: DL3008 for apt, DL3018 for apk.
   ["hadolint"] = (builtins.hadolint) {
-    check = "hadolint --ignore DL3008 {{files}}"
+    check = "hadolint --ignore DL3008 --ignore DL3018 {{files}}"
   }
   // Its fixer drops leading comments in compose files, so fix by hand.
   ["dclint"] = (builtins.dclint) {
