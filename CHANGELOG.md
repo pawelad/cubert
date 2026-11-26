@@ -4,6 +4,33 @@ All notable changes to this project are documented here.
 [git-cliff](https://git-cliff.org) generates them from the Conventional Commits history.
 Do not edit past entries by hand.
 
+## [0.2.2] - 2026-11-26
+
+### Features
+
+#### Checks
+
+- Fail when a Dockerfile ARG `<TOOL>_VERSION` default drifts from its mise.toml pin
+  ([1068482](https://github.com/pawelad/cubert/commit/10684824e643b2216e4f459e962f003cab2e6fc6))
+
+#### Agent rules
+
+- Ask before writing an OpenSpec change proposal
+  ([ac938e9](https://github.com/pawelad/cubert/commit/ac938e993e7b11ae022b92366ba930629365573f))
+
+### Bug Fixes
+
+#### Checks
+
+- Check plain files that share a module name, such as copies of a shared module
+  ([d913c72](https://github.com/pawelad/cubert/commit/d913c72f3020c67a86d6e1aa4bc7843a722eff02))
+
+#### Release
+
+- Code-quote placeholders such as `<area>` in changelog entries, which GitHub drops as
+  HTML tags
+  ([a3b08cd](https://github.com/pawelad/cubert/commit/a3b08cd86694af6f0fe36f0207bd4accc64a2444))
+
 ## [0.2.1] - 2026-11-25
 
 ### Bug Fixes
