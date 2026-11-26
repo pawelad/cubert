@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #MISE description="Render every feature combination, then run setup, check and test in each"
 #USAGE flag "-j --jobs <n>" default="4" help="Renders to run in parallel"
-#USAGE flag "--filter <regex>" help="Only render the combinations whose name matches"
+#USAGE flag "--filter <regex>" help="Only render the combinations whose name matches, such as ^p1 for python (p d t a c s: python docker opentofu ansible changelog typescript, then _openspec)"
 #USAGE flag "--all" help="Render every combination (weekly CI does; locally, only when asked)"
 #USAGE flag "--pairwise" help="Render only the combinations in scripts/render_pairwise.txt"
 #USAGE flag "--out <dir>" help="Write the renders here (default: a new temp dir)"
@@ -39,6 +39,8 @@ fi
 
 if [ "${#names[@]}" -eq 0 ]; then
   echo "e2e:render: --filter '$usage_filter' matches no combination, such as p1d0t0a0c0s0_none." >&2
+  echo "Each letter is a feature, set to 1 or 0: python, docker, opentofu, ansible, changelog," >&2
+  echo "typescript. The openspec mode follows the _. For python on, pass --filter '^p1'." >&2
   exit 2
 fi
 echo "Rendering ${#names[@]} combinations into $out"
