@@ -552,30 +552,24 @@ Loop over `shared.steps`, not `super.steps`. hk's evaluator skips a loop over
 
 Some strings in code and config files reach users, such as notification text in YAML or
 dashboard labels in Jinja templates. To check whole files of a type, add its glob to
-`no-em-dashes` and `no-british-english`. Exclude it from their `-comments` twins, or
-each comment error prints twice:
+`no-em-dashes` and `no-british-english`:
 
 ```pkl
 local userText = List("*.yaml", "*.j2")
 
 steps {
   ["no-em-dashes"] { glob = super.glob + userText }
-  ["no-em-dashes-comments"] { exclude = super.exclude + userText }
   ["no-british-english"] { glob = super.glob + userText }
-  ["no-british-english-comments"] { exclude = super.exclude + userText }
 }
 ```
 
-Pkl rejects a second entry for one step in a `steps` block. With the loop above, define
-`userText` next to `frozenPaths` and set both inside the loop:
+In `mise run check`, each `-comments` twin then skips those globs, so an error prints
+once. Pkl rejects a second entry for one step in a `steps` block. With the loop above,
+define `userText` next to `frozenPaths` and set the glob inside the loop:
 
 ```pkl
 [name] {
-  exclude = super.exclude + frozenPaths + (
-    if (name == "no-em-dashes-comments" || name == "no-british-english-comments")
-      userText
-    else List()
-  )
+  exclude = super.exclude + frozenPaths
   when (name == "no-em-dashes" || name == "no-british-english") {
     glob = super.glob + userText
   }

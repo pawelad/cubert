@@ -234,8 +234,32 @@ steps {
   ["zizmor"] = Builtins.zizmor
 }
 
+// A project can widen a full-file prose glob. `mise run check` turns off fail-fast, so
+// each `-comments` twin would repeat those errors. hk's evaluator cannot read one step
+// from another, so the `check` hook drops the widened globs from each twin.
+local commentTwins = Map(
+  "fix-smart-quotes-comments", "fix-smart-quotes",
+  "no-british-english-comments", "no-british-english",
+  "no-em-dashes-comments", "no-em-dashes",
+  "no-emojis-comments", "no-emojis"
+)
+local function globList(glob: Any): List<String> =
+  if (glob is String) List(glob) else if (glob is List<String>) glob else List()
+
 // `check`, `fix` and `pre-commit` are implicit hooks built from `steps`.
 hooks {
+  ["check"] {
+    steps {
+      for (twin, full in commentTwins) {
+        when (module.steps[twin].exclude is List) {
+          [twin] = (module.steps[twin]) {
+            exclude = super.exclude
+              + globList(module.steps[full].glob).filter((g) -> !proseFiles.contains(g))
+          }
+        }
+      }
+    }
+  }
   // No implicit pre-push hook exists, so reuse the steps. `module` binds late, so project steps count.
   ["pre-push"] {
     steps = module.steps

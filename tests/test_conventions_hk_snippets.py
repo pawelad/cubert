@@ -116,34 +116,72 @@ def test_hk_skips_the_frozen_loop_paths(project: Path, snippets: list[str]) -> N
 def test_glob_snippet_checks_whole_files_of_a_type(
     project: Path, snippets: list[str]
 ) -> None:
-    steps = evaluate(project, snippet(snippets, '["no-em-dashes"] { glob'))["steps"]
+    config = evaluate(project, snippet(snippets, '["no-em-dashes"] { glob'))
 
     for full in ("no-em-dashes", "no-british-english"):
-        assert "*.j2" in steps[full]["glob"]
-        assert "*.j2" in steps[f"{full}-comments"]["exclude"]
-        assert "**/vendor/**" in steps[f"{full}-comments"]["exclude"]
+        assert "*.j2" in config["steps"][full]["glob"]
+        twin = config["hooks"]["check"]["steps"][f"{full}-comments"]
+        assert "*.j2" in twin["exclude"]
+        assert "**/vendor/**" in twin["exclude"]
 
 
-def test_loop_fragment_sets_the_glob_inside_the_frozen_loop(
-    project: Path, snippets: list[str]
-) -> None:
+def loop_with_user_text(snippets: list[str]) -> str:
+    """Return the frozen loop with the glob fragment in it, as the text describes."""
     loop = snippet(snippets, "for (name, step in shared.steps)")
-    fragment = snippet(
-        snippets, "[name] {\n  exclude = super.exclude + frozenPaths + ("
-    )
+    fragment = snippet(snippets, "[name] {\n  exclude = super.exclude + frozenPaths\n")
     assert FRAGMENT_LOOP in loop
     body = loop.replace(FRAGMENT_LOOP, textwrap.indent(fragment, "      ").strip())
     # The text asks for the glob snippet's userText next to frozenPaths.
     glob = snippet(snippets, '["no-em-dashes"] { glob')
     [user_text] = [line for line in glob.splitlines() if "local userText" in line]
-    body = body.replace("\nsteps {", f"\n{user_text}\n\nsteps {{", 1)
+    return body.replace("\nsteps {", f"\n{user_text}\n\nsteps {{", 1)
 
-    steps = evaluate(project, body)["steps"]
 
+def test_loop_fragment_sets_the_glob_inside_the_frozen_loop(
+    project: Path, snippets: list[str]
+) -> None:
+    config = evaluate(project, loop_with_user_text(snippets))
+
+    steps = config["steps"]
+    check = config["hooks"]["check"]["steps"]
     assert "*.j2" in steps["no-em-dashes"]["glob"]
     assert "docs/legacy/**" in steps["no-em-dashes"]["exclude"]
-    assert "*.j2" in steps["no-em-dashes-comments"]["exclude"]
-    assert "*.j2" not in steps["no-emojis-comments"]["exclude"]
+    assert "*.j2" in check["no-em-dashes-comments"]["exclude"]
+    assert "docs/legacy/**" in check["no-em-dashes-comments"]["exclude"]
+    assert "*.j2" not in check["no-emojis-comments"]["exclude"]
+
+
+def test_check_prints_a_comment_error_in_a_widened_glob_once(
+    project: Path, snippets: list[str]
+) -> None:
+    # mise run check passes --no-fail-fast, so a matching twin would report it too.
+    evaluate(project, loop_with_user_text(snippets))
+    run(["git", "init", "--quiet"], project)
+    (project / "card.j2").write_text("{# One \u2014 two. #}\n-- One \u2014 two.\n")
+
+    result = subprocess.run(
+        [  # noqa: S607
+            "hk",
+            "check",
+            "--no-fail-fast",
+            "--step",
+            "no-em-dashes",
+            "--step",
+            "no-em-dashes-comments",
+            "card.j2",
+        ],
+        cwd=project,
+        env=project_env(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, output
+    # hk marks each failed step with a cross and an en dash.
+    failed = re.findall(r"^\u2717 (\S+) \u2013 ERROR", output, re.MULTILINE)
+    assert failed == ["no-em-dashes"], output
 
 
 def test_change_step_snippet_adds_to_the_shared_excludes(project: Path) -> None:
