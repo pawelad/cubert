@@ -407,8 +407,11 @@ again with `gh workflow enable opentofu-state-backup.yml`.
 A TOML task in `mise.toml` merges with the file task of the same name. Each field that
 the TOML task sets wins, and the rest come from the file. Give an override its own
 `run`: an override with only `depends` still runs the shared body after them. Replace
-`install` this way, or `setup` if the project needs more steps. A file task in
-`mise-tasks/` does not replace a shared task: the `.config/mise/tasks/` file wins.
+`install` this way, or `setup` if the project needs more steps.
+
+A file task does not override a shared task. mise runs one file task per name and picks
+it by directory, with no warning. The `.config/mise/tasks/` file beats `mise-tasks/`.
+The `task-names` hk step fails when two task directories define the same name.
 
 mise runs only one `postinstall` hook, and the hook in `.config/mise/config.toml` wins.
 Put project install steps in the `install` task.

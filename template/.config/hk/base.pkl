@@ -191,6 +191,13 @@ steps {
     check = ".config/hk/checks/check_lockfile.py"
   }
   ["pkl"] = Builtins.pkl
+  ["task-names"] = new Step {
+    glob = List(
+      "mise-tasks/**", ".mise-tasks/**", "mise/tasks/**", ".mise/tasks/**",
+      ".config/mise/tasks/**"
+    )
+    check = ".config/hk/checks/check_task_names.py"
+  }
   ["required-tools"] = new Step {
     glob = List("mise.toml", ".config/mise/required-tools")
     check = ".config/hk/checks/check_required_tools.py"

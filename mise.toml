@@ -46,7 +46,7 @@ uv run --isolated --no-project --python 3.11 --exclude-newer "7 days" --with pyt
   tests/test_check_pins.py tests/test_check_required_tools.py \
   tests/test_check_lockfile.py tests/test_check_mypy.py \
   tests/test_check_commit_scope.py tests/test_check_docker_pins.py \
-  tests/test_check_collections.py
+  tests/test_check_collections.py tests/test_check_task_names.py
 """
 
 [tasks."audit:actions"]
