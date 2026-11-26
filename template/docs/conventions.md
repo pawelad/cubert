@@ -208,6 +208,8 @@ Keep playbook entrypoints outside them.
 The `yamllint` hook checks Ansible YAML with the project's `.yamllint`, so the
 `ansible-lint` hook skips its own `yaml` rule. Do not pass `--yamllint-file`: yamllint
 resolves `extends` from the working directory, and ansible-lint runs in `<ansible_dir>`.
+The hook runs ansible-lint with `--offline`, so it lints against the collections that
+`ansible:install` installed and never downloads them.
 
 `ansible:install` installs exactly the collections that `<ansible_dir>/requirements.yml`
 pins, into `<ansible_dir>/collections`. Each pin needs an exact version, such as
