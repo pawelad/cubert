@@ -1,4 +1,4 @@
-"""Check that the prose rules honor the `spellchecker:disable-line` marker."""
+"""Check the prose rules: the `spellchecker:disable-line` marker and the step order."""
 
 from __future__ import annotations
 
@@ -86,3 +86,18 @@ def test_em_dash_fixer_leaves_marked_lines_as_written(
     assert run_step(steps[step]["fix"], path).returncode == 0
 
     assert path.read_text() == f"{marked}\n{line.replace(EM_DASH, '-')}\n"
+
+
+@pytest.mark.parametrize(
+    ("twin", "full"),
+    [
+        ("fix-smart-quotes-comments", "fix-smart-quotes"),
+        ("no-british-english-comments", "no-british-english"),
+        ("no-em-dashes-comments", "no-em-dashes"),
+        ("no-emojis-comments", "no-emojis"),
+    ],
+)
+def test_comment_twin_runs_after_its_full_file_step(
+    steps: dict[str, dict[str, Any]], twin: str, full: str
+) -> None:
+    assert steps[twin]["depends"] == [full]

@@ -531,23 +531,32 @@ steps {
 
 Some strings in code and config files reach users, such as notification text in YAML or
 dashboard labels in Jinja templates. To check whole files of a type, add its glob to
-`no-em-dashes` and `no-british-english`:
+`no-em-dashes` and `no-british-english`. Exclude it from their `-comments` twins, or
+each comment error prints twice:
 
 ```pkl
+local userText = List("*.yaml", "*.j2")
+
 steps {
-  ["no-em-dashes"] { glob = super.glob + List("*.yaml", "*.j2") }
-  ["no-british-english"] { glob = super.glob + List("*.yaml", "*.j2") }
+  ["no-em-dashes"] { glob = super.glob + userText }
+  ["no-em-dashes-comments"] { exclude = super.exclude + userText }
+  ["no-british-english"] { glob = super.glob + userText }
+  ["no-british-english-comments"] { exclude = super.exclude + userText }
 }
 ```
 
-Pkl rejects a second entry for one step in a `steps` block. With the loop above, set the
-glob inside the loop:
+Pkl rejects a second entry for one step in a `steps` block. With the loop above, define
+`userText` next to `frozen` and set both inside the loop:
 
 ```pkl
 [name] {
-  exclude = super.exclude + frozen
+  exclude = super.exclude + frozen + (
+    if (name == "no-em-dashes-comments" || name == "no-british-english-comments")
+      userText
+    else List()
+  )
   when (name == "no-em-dashes" || name == "no-british-english") {
-    glob = super.glob + List("*.yaml", "*.j2")
+    glob = super.glob + userText
   }
 }
 ```

@@ -18,6 +18,8 @@ local smartQuote = "[\(smartSingleQuote)\(smartDoubleQuote)]"
 
 // Prose rules apply to prose in full, and to comments in code. They skip string values,
 // identifiers and config values: those can name an external API or a fixture.
+// Each `-comments` twin depends on its full-file step. A project can widen the full-file
+// glob, and then both fixers would rewrite one file in parallel.
 local proseFiles = List("*.md", "*.txt")
 local codeFiles = List("*.py", "*.sh", "*.ts", "*.tsx", "*.js", "*.mjs", "*.toml", "*.yaml", "*.yml", "*.pkl", "*.tf", "*.j2", "*.sql")
 local commentFiles = codeFiles + List("*.css")
@@ -119,6 +121,7 @@ steps {
   ["fix-smart-quotes-comments"] = new Step {
     glob = commentFiles
     exclude = frozen
+    depends = "fix-smart-quotes"
     check = "perl -CSD -ne 'if (m{\(commentLine)} && /\(smartQuote)/) { print \"$ARGV:$.: $_\"; $bad = 1 } close ARGV if eof; END { exit($bad ? 1 : 0) }' {{files}}"
     fix = "perl -CSD -pi -e 'if (m{\(commentLine)}) { tr/\(smartSingleQuote)/\\x27/; tr/\(smartDoubleQuote)/\"/ }' {{files}}"
   }
@@ -145,6 +148,7 @@ steps {
   ["no-british-english-comments"] = new Step {
     glob = commentFiles
     exclude = frozen
+    depends = "no-british-english"
     check = "grep -inHE '\(commentLine).*(\(britishEnglish))' {{files}} \(skipAllowed) && exit 1 || exit 0"
   }
   // A run of # counts only alone on its line: `###### Fine print` is a Markdown heading.
@@ -169,6 +173,7 @@ steps {
   ["no-em-dashes-comments"] = new Step {
     glob = commentFiles
     exclude = frozen
+    depends = "no-em-dashes"
     check = "grep -nHE '\(commentLine).*\(emDash)' {{files}} \(skipAllowed) && exit 1 || exit 0"
     fix = "perl -pi -e 's/\(emDash)/-/g if m{\(commentLine)} && !m{\(allowLine)}' {{files}}"
   }
@@ -180,6 +185,7 @@ steps {
   ["no-emojis-comments"] = new Step {
     glob = commentFiles
     exclude = frozen
+    depends = "no-emojis"
     check = "perl -CSD -ne 'if (m{\(commentLine)} && /\(emoji)/) { print \"$ARGV:$.: $_\"; $bad = 1 } close ARGV if eof; END { exit($bad ? 1 : 0) }' {{files}}"
   }
   ["pins"] = new Step {

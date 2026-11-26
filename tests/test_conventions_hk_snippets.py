@@ -82,23 +82,32 @@ def test_frozen_loop_snippet_excludes_the_paths_from_shared_steps(
 def test_glob_snippet_checks_whole_files_of_a_type(
     project: Path, snippets: list[str]
 ) -> None:
-    config = evaluate(project, snippet(snippets, '["no-em-dashes"] { glob'))
+    steps = evaluate(project, snippet(snippets, '["no-em-dashes"] { glob'))["steps"]
 
-    assert "*.j2" in config["steps"]["no-british-english"]["glob"]
+    for full in ("no-em-dashes", "no-british-english"):
+        assert "*.j2" in steps[full]["glob"]
+        assert "*.j2" in steps[f"{full}-comments"]["exclude"]
+        assert "**/vendor/**" in steps[f"{full}-comments"]["exclude"]
 
 
 def test_loop_fragment_sets_the_glob_inside_the_frozen_loop(
     project: Path, snippets: list[str]
 ) -> None:
     loop = snippet(snippets, "for (name, step in shared.steps)")
-    fragment = snippet(snippets, "[name] {\n  exclude = super.exclude + frozen\n  when")
+    fragment = snippet(snippets, "[name] {\n  exclude = super.exclude + frozen + (")
     assert FRAGMENT_LOOP in loop
     body = loop.replace(FRAGMENT_LOOP, textwrap.indent(fragment, "      ").strip())
+    # The text asks for the glob snippet's userText next to frozen.
+    glob = snippet(snippets, '["no-em-dashes"] { glob')
+    [user_text] = [line for line in glob.splitlines() if "local userText" in line]
+    body = body.replace("\nsteps {", f"\n{user_text}\n\nsteps {{", 1)
 
     steps = evaluate(project, body)["steps"]
 
     assert "*.j2" in steps["no-em-dashes"]["glob"]
     assert "docs/legacy/**" in steps["no-em-dashes"]["exclude"]
+    assert "*.j2" in steps["no-em-dashes-comments"]["exclude"]
+    assert "*.j2" not in steps["no-emojis-comments"]["exclude"]
 
 
 def test_change_step_snippet_adds_to_the_shared_excludes(project: Path) -> None:
