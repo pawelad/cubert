@@ -75,6 +75,10 @@ filter_unconventional = true
 split_commits = false
 protect_breaking_commits = true
 filter_commits = false
+# GitHub drops a placeholder such as <area> as an unknown HTML tag, so code-quote it.
+commit_preprocessors = [
+  { pattern = "([^\\s`]*<[A-Za-z_-]+>[^\\s,.;:)`]*)", replace = "`${1}`" },
+]
 tag_pattern = "v[0-9]*"
 # Only the subject: a squash body lists the PR's commits, which can name other PRs.
 link_parsers = [

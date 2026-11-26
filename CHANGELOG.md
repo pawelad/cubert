@@ -109,7 +109,7 @@ Do not edit past entries by hand.
 - Make setup add a missing required tool at its minimum when the newest allowed release
   is older
   ([7cef547](https://github.com/pawelad/cubert/commit/7cef5477dbce075e04078f0982ff2ffa2a067756))
-- Make test run the suites when every test:<area> task is hidden
+- Make test run the suites when every `test:<area>` task is hidden
   ([279fff1](https://github.com/pawelad/cubert/commit/279fff167a48ccf5cc8a8497a62a1673a80e5316))
 - Skip tsc in the format task only when hk.pkl defines a tsc step
   ([83aa3b9](https://github.com/pawelad/cubert/commit/83aa3b915d76ed625138237629159d95ad7c4e25))
@@ -160,7 +160,7 @@ Do not edit past entries by hand.
 
 #### Agent rules
 
-- Unstage the paths after git commit -- <paths>, so a hook fix is not reverted
+- Unstage the paths after git commit -- `<paths>`, so a hook fix is not reverted
   ([1756b41](https://github.com/pawelad/cubert/commit/1756b41ca48e2e12f3c2c20dc3aabc65f5d711f2))
 - Keep checkboxes out of OpenSpec workflow follow-up bullets
   ([019575e](https://github.com/pawelad/cubert/commit/019575ed68432f9c299671529992052f6df90f2a))
