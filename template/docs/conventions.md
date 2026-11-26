@@ -461,7 +461,8 @@ enabled features). `hk.pkl` amends `cubert.pkl`:
   `steps { ["typos"] { exclude = super.exclude + List("gen/**") } }`. `super` keeps the
   shared excludes.
 - Turn a shared step off: `skip_steps = List("file-length")`.
-- Add a step: `steps { ["name"] = new Step { ... } }`.
+- Add a step: `steps { ["name"] = new Step { ... } }`. A new step with the name of a
+  shared step replaces that step whole, with no warning. Pick a name of your own.
 - Import the hk builtins under a name of your own:
   `import "package://.../Builtins.pkl" as hkb`. hk's evaluator cannot resolve a second
   import named `Builtins`, and `base.pkl` already has one.
