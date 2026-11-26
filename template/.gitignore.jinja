@@ -49,6 +49,8 @@ node_modules/
 [% if ansible %]
 [[ ansible_dir ]]/.vault_pass
 [[ ansible_dir ]]/collections/
+# ansible-lint's cache, which holds another copy of the collections.
+[[ ansible_dir ]]/.ansible/
 [% endif %]
 [% if openspec != 'none' %]
 # `openspec init` creates these placeholders in every clone.
