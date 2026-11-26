@@ -443,7 +443,9 @@ hk runs the git hooks (`pre-commit`, `pre-push`, `commit-msg`). The shared steps
 `.config/hk/base.pkl` (every project) and `.config/hk/cubert.pkl` (the steps for the
 enabled features). `hk.pkl` amends `cubert.pkl`:
 
-- Change a shared step: `steps { ["dprint"] { exclude = List("gen/**") } }`.
+- Change a shared step:
+  `steps { ["typos"] { exclude = super.exclude + List("gen/**") } }`. `super` keeps the
+  shared excludes.
 - Turn a shared step off: `skip_steps = List("file-length")`.
 - Add a step: `steps { ["name"] = new Step { ... } }`.
 - Import the hk builtins under a name of your own:

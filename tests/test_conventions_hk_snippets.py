@@ -99,3 +99,14 @@ def test_loop_fragment_sets_the_glob_inside_the_frozen_loop(
 
     assert "*.j2" in steps["no-em-dashes"]["glob"]
     assert "docs/legacy/**" in steps["no-em-dashes"]["exclude"]
+
+
+def test_change_step_snippet_adds_to_the_shared_excludes(project: Path) -> None:
+    text = (project / "docs/conventions.md").read_text()
+    [body] = re.findall(r"Change a shared step:\s*`(steps \{.*?\} \})`", text)
+
+    config = evaluate(project, body + "\n")
+
+    exclude = config["steps"]["typos"]["exclude"]
+    assert "gen/**" in exclude
+    assert "**/vendor/**" in exclude
