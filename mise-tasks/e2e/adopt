@@ -204,6 +204,9 @@ infra() {
   # A nested mise.toml in a subdirectory is the project's own.
   printf '[env]\nTF_VAR_environment = "dev"\n' >opentofu/mise.toml
   printf '[defaults]\nroles_path = roles\ncollections_path = collections\n' >ansible/ansible.cfg
+  # A Galaxy pin next to the tracked collection: ansible:install must keep demo.util.
+  printf -- '---\ncollections:\n  - name: "ansible.posix"\n    version: "2.2.2"\n' \
+    >ansible/requirements.yml
   printf -- '---\nnamespace: "demo"\nname: "util"\nversion: "1.0.0"\nreadme: "README.md"\nauthors:\n  - "demo"\n' \
     >ansible/collections/ansible_collections/demo/util/galaxy.yml
   printf '# util\n' >ansible/collections/ansible_collections/demo/util/README.md
@@ -216,6 +219,8 @@ infra() {
     -platform=darwin_arm64 -platform=darwin_amd64 -platform=linux_amd64 -platform=linux_arm64 \
     >/dev/null)
   commit_existing
+  # Step 4 merges the fresh mise.toml, whose install task runs ansible:install.
+  after_copy() { printf '\n[tasks.install]\nrun = "mise run ansible:install"\n' >>mise.toml; }
 
   snapshot
   # ci:check then lints the state backup workflow and the opentofu:apply that dispatches it.
@@ -230,6 +235,10 @@ infra() {
   # Tool entries can include private runtime options; required-tools checks their values.
   grep -q '^"pypi:ansible-lint" = ' mise.toml || fail "setup did not add ansible-lint to mise.toml"
   .config/hk/checks/check_required_tools.py
+  [ -f ansible/collections/ansible_collections/ansible/posix/MANIFEST.json ] \
+    || fail "ansible:install did not install the pinned collection"
+  [ -f ansible/collections/ansible_collections/demo/util/galaxy.yml ] \
+    || fail "ansible:install removed the tracked collection"
   [ ! -e opentofu/.terraform ] || fail "setup or check ran tofu init against the backend"
   grep -q 'configuration is valid' "$out/$layout-check.log" || fail "check:opentofu did not validate"
   git add --all

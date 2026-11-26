@@ -62,17 +62,16 @@ def test_nested_feature_directory_is_used_by_its_install_task(
         init = (project / ".config/mise/tasks/opentofu/init").read_text()
         assert f'#MISE dir="{directory}"' in init.splitlines()
     else:
-        config = tomllib.loads((project / "mise.toml").read_text())
-        assert f'cd "{directory}"' in config["tasks"]["ansible:install"]["run"]
+        install = (project / ".config/mise/tasks/ansible/install").read_text()
+        assert f'dir="{directory}"' in install.splitlines()
 
 
 # A new project has no Ansible directory until its first playbook.
 def test_ansible_install_passes_without_the_ansible_directory(tmp_path: Path) -> None:
     project = render_template(tmp_path, ansible="true")
-    config = tomllib.loads((project / "mise.toml").read_text())
 
     assert not (project / "ansible").exists()
-    run(["bash", "-euc", config["tasks"]["ansible:install"]["run"]], project)
+    run([".config/mise/tasks/ansible/install"], project)
 
 
 def test_description_with_quotes_renders_valid_pyproject(tmp_path: Path) -> None:

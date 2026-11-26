@@ -140,6 +140,7 @@ path, so `check/repo` is `check:repo`:
 | `test:python`        | Python option: runs `uv run pytest` on the given files, or all tests     |
 | `test:typescript`    | TypeScript option: runs each directory's test script, or `bun test`      |
 | `typescript:install` | TypeScript option: runs `bun install` in each directory                  |
+| `ansible:install`    | Ansible option: installs exactly the pinned collections                  |
 | `release`            | Changelog option: changelog, commit and tag, then push after you confirm |
 | `release:preview`    | Changelog option: prints the entries since the last release tag          |
 | `format`             | Runs the hk fixers on changed files (`--all` for every file)             |
@@ -207,6 +208,17 @@ Keep playbook entrypoints outside them.
 The `yamllint` hook checks Ansible YAML with the project's `.yamllint`, so the
 `ansible-lint` hook skips its own `yaml` rule. Do not pass `--yamllint-file`: yamllint
 resolves `extends` from the working directory, and ansible-lint runs in `<ansible_dir>`.
+
+`ansible:install` installs exactly the collections that `<ansible_dir>/requirements.yml`
+pins, into `<ansible_dir>/collections`. Each pin needs an exact version, such as
+`version: "1.2.3"`. Pin each dependency of a pinned collection too, or the task stops
+and lists it with its version. The task skips the download when the installed set
+matches. It installs into a staging directory first, so a failed download keeps the old
+set. It removes a collection that is no longer pinned, and every installed one when
+`requirements.yml` is gone. A collection with no `MANIFEST.json`, such as one in git,
+stays. Ansible must look in that directory first, so `ansible.cfg` needs
+`collections_path = ./collections` under `[defaults]`. The `ansible-collections` hook
+fails when the installed set differs from the pins.
 
 The `ansible-template` hook parses changed `.j2` files with a custom ansible-lint rule.
 It uses the existing Jinja installation, Ansible's configured extensions and `#jinja2:`

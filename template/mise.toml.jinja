@@ -80,15 +80,3 @@ run = [
 ]
 [% endif %]
 [% endif %]
-[% if ansible %]
-
-# Not `dir`, which must exist: the Ansible directory can wait for its first file.
-[tasks."ansible:install"]
-description = "Install the Ansible collections from requirements.yml"
-run = '''
-if [ -f "[[ ansible_dir ]]/requirements.yml" ]; then
-  cd "[[ ansible_dir ]]"
-  ansible-galaxy collection install -r requirements.yml
-fi
-'''
-[% endif %]

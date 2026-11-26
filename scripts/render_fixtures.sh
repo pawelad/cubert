@@ -310,6 +310,11 @@ break_ansible() {
   printf -- '- name: "Say hello"\n  ansible.builtin.no_such_module:\n    msg: "hello"\n' \
     >"$ansible_dir/roles/demo/tasks/main.yml"
 }
+# A pin that ansible:install never installed. The check needs no network.
+break_ansible_collections() {
+  printf -- '---\ncollections:\n  - name: "demo.pinned"\n    version: "1.0.0"\n' \
+    >"$ansible_dir/requirements.yml"
+}
 break_ansible_template_expression() {
   printf '{{ greeting\n' >"$ansible_dir/roles/demo/templates/config.j2"
 }

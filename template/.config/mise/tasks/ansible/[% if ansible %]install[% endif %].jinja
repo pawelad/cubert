@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+#MISE description="Install exactly the Ansible collections that requirements.yml pins"
+set -euo pipefail
+# The check script has no lock, and `ci:check` exports UV_LOCKED, so uv would warn.
+unset UV_LOCKED UV_FROZEN
+
+# Not `#MISE dir`, which must exist: the Ansible directory can wait for its first file.
+# The tag sits in a string, so shfmt and shellcheck can read this file as it is.
+dir="[[ ansible_dir ]]"
+[ -d "$dir" ] || exit 0
+check="$PWD/.config/hk/checks/check_collections.py"
+cd "$dir"
+stage=collections/.staging
+live=collections/ansible_collections
+
+# An installed collection has a MANIFEST.json. A collection that the project keeps in
+# git has none, so it stays.
+remove_installed() {
+  local manifest
+  for manifest in "$live"/*/*/MANIFEST.json; do
+    if [ -e "$manifest" ]; then rm -rf "$(dirname "$manifest")"; fi
+  done
+  rm -rf "$live"/*.info
+  if [ -d "$live" ]; then find "$live" -mindepth 1 -maxdepth 1 -type d -empty -delete; fi
+}
+
+if [ ! -f requirements.yml ]; then
+  remove_installed
+  exit 0
+fi
+
+# The swap below replaces the collections in this directory. A shared path, such as
+# ~/.ansible/collections, also holds other projects' collections.
+if ! config="$(ANSIBLE_NOCOLOR=1 ansible-config dump 2>&1)"; then
+  printf 'ansible:install: ansible-config dump failed:\n%s\n' "$config" >&2
+  exit 1
+fi
+first="$(sed -n "s/^COLLECTIONS_PATHS([^)]*) = \['\([^']*\)'.*/\1/p" <<<"$config")"
+if [ "$first" != "$(pwd -P)/collections" ]; then
+  echo "ansible:install: Ansible looks in ${first:-no path} first, not $dir/collections." >&2
+  echo "Fix: add 'collections_path = ./collections' under [defaults] in $dir/ansible.cfg." >&2
+  exit 1
+fi
+
+# No download, and no network, when the installed set already matches.
+status=0
+"$check" --quiet . || status=$?
+if [ "$status" -eq 0 ]; then
+  echo "ansible:install: the collections match requirements.yml."
+  exit 0
+fi
+# Exit 2: a pin or the setup is wrong, and a download cannot fix it.
+[ "$status" -eq 1 ] || "$check" .
+
+# A failed download or an unpinned dependency leaves the installed set alone. Galaxy
+# skips a pin that it finds in any configured path, so the staging directory is the
+# only one.
+rm -rf "$stage"
+trap 'rm -rf "$stage"' EXIT
+ANSIBLE_COLLECTIONS_PATH="$PWD/$stage" \
+  ansible-galaxy collection install -r requirements.yml -p "$stage"
+"$check" --staged "$stage" .
+
+remove_installed
+mkdir -p "$live"
+for collection in "$stage"/ansible_collections/*/*/; do
+  [ -d "$collection" ] || continue
+  namespace="$(basename "$(dirname "$collection")")"
+  mkdir -p "$live/$namespace"
+  mv "$collection" "$live/$namespace/"
+done
+for info in "$stage"/ansible_collections/*.info; do
+  if [ -e "$info" ]; then mv "$info" "$live/"; fi
+done
+"$check" .

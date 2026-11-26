@@ -101,6 +101,16 @@ steps {
       fi
       """
   }
+  // Lint and playbooks load the installed collections, so check them whenever the
+  // Ansible steps run, a tracked collection included.
+  ["ansible-collections"] = new Step {
+    dir = "[[ ansible_dir ]]"
+    glob = List(
+      "requirements.yml", "playbooks/**/*.yml", "playbooks/**/*.yaml", "roles/**/*.yml",
+      "roles/**/*.yaml", "collections/**/*.yml", "collections/**/*.yaml"
+    )
+    check = "\"$(git rev-parse --show-toplevel)/.config/hk/checks/check_collections.py\" ."
+  }
   ["ansible-template"] = new Step {
     dir = "[[ ansible_dir ]]"
     glob = List("**/*.j2")

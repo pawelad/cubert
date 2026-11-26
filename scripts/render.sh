@@ -132,6 +132,7 @@ run() {
   if [ "$opentofu" = true ]; then expect_hook_failure opentofu "tofu-fmt"; fi
   if [ "$ansible" = true ]; then
     expect_hook_failure ansible "ansible-syntax-check"
+    expect_hook_failure ansible_collections ansible-collections "demo.pinned: not installed"
     expect_hook_failure ansible_template_expression "ansible-template" "cubert-jinja:"
     expect_hook_failure ansible_template_statement "ansible-template" "cubert-jinja:"
     expect_hook_failure ansible_template_custom "ansible-template" "cubert-jinja:"
