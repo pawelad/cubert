@@ -73,7 +73,9 @@ What an update does to a missing or removed file:
   and commit the result.
 - A composite action (`action.yml`) and a reusable workflow call from another repository
   cannot use the lockfile. Pin them to a commit SHA, with the version in a comment:
-  `uses: "actions/cache@<sha>" # v6.1.0`. Dependabot updates both.
+  `uses: "actions/cache@<sha>" # v6.1.0`. Dependabot updates both. A workflow that uses
+  the same action by tag, as `cubert-check.yml` does, then has two lockfile entries for
+  it. Both hold the same commit.
 - zizmor enforces the pins and accepts a tag that the lockfile covers. It also audits
   workflows for injection and credential leaks. jactionlint checks workflow syntax, with
   its `correctness` profile, so the two tools never report the same finding.
