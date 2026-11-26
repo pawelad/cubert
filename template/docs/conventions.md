@@ -94,6 +94,12 @@ What an update does to a missing or removed file:
   prefix such as `node = "24.22"` fails when it locks `24.22.2`. A templated request,
   such as one that reads `.python-version`, fails too: the lock cannot verify it. Write
   the version literally, and keep a copy in sync with a `check:<area>` task.
+- Docker option: pin an image of a mise tool with `ARG <TOOL>_VERSION=<pin>`, and read
+  it in `FROM`, such as `FROM node:${NODE_VERSION}-slim`. The tool name is uppercase,
+  with `-` as `_`. The Python option pins Python in `.python-version`, which the check
+  does not read. The `docker-pins` check fails when a default differs from `mise.toml`.
+  Dependabot cannot bump these tags, so `mise run upgrade` rewrites them. Write other
+  images, such as `redis:8.10`, literally, so Dependabot bumps them.
 - Commit `.mise/locks/` with `mise.lock`. The `lockfile` check verifies native npm and
   Python dependency graphs and their digests, even when tools are already installed.
   `check:repo` also verifies them after edits that change only a graph.
@@ -139,7 +145,7 @@ path, so `check/repo` is `check:repo`:
 | `format`             | Runs the hk fixers on changed files (`--all` for every file)             |
 | `clean`              | Runs every `clean:*` task, `clean:worktree` among them                   |
 | `clean:worktree`     | Empties the worktrunk trash                                              |
-| `upgrade`            | Bumps the tools in `mise.toml` (`mise upgrade --bump`)                   |
+| `upgrade`            | Bumps the tools in `mise.toml`. Docker option: also the Dockerfile ARGs  |
 | `hooks:install`      | Installs the hk hooks and the `post-checkout` worktree hook              |
 | `template:update`    | Updates the template-owned and merged files from cubert                  |
 | `template:check`     | Fails if a newer cubert version exists                                   |
@@ -711,7 +717,8 @@ Notes:
 
 ## Upgrades
 
-- `mise run upgrade` bumps the tools in `mise.toml`.
+- `mise run upgrade` bumps the tools in `mise.toml` (`mise upgrade --bump`), then, with
+  the Docker option, the Dockerfile `ARG <TOOL>_VERSION` defaults that copy them.
 - Dependabot bumps GitHub Actions and the package ecosystems monthly. It has no
   ecosystem for `mise.toml`.
 - `dependabot.yml` is merged. Put a project key, such as an `ignore` rule, in the shared

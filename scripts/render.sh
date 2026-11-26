@@ -76,6 +76,7 @@ run() {
   if [ "$openspec" != none ]; then openspec_fixture; fi
   setup_one_at_a_time
   if [ "$typescript" = true ]; then typescript_dependency_fixture; fi
+  if [ "$docker" = true ]; then docker_pin_fixture; fi
   git add --all
   if [ "$openspec" != none ] && [ "$changes_tracked" = false ] \
     && [ -n "$(git ls-files openspec/changes)" ]; then
@@ -124,7 +125,10 @@ run() {
     expect_hook_failure script_dependency mypy 'module named "rich'
   fi
   if [ "$typescript" = true ]; then expect_hook_failure typescript "tsc"; fi
-  if [ "$docker" = true ]; then expect_hook_failure docker "hadolint"; fi
+  if [ "$docker" = true ]; then
+    expect_hook_failure docker "hadolint"
+    expect_hook_failure docker_pin docker-pins "Fix: ARG HADOLINT_VERSION="
+  fi
   if [ "$opentofu" = true ]; then expect_hook_failure opentofu "tofu-fmt"; fi
   if [ "$ansible" = true ]; then
     expect_hook_failure ansible "ansible-syntax-check"

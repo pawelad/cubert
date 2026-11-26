@@ -44,6 +44,12 @@ steps {
   ["dclint"] = (builtins.dclint) {
     fix = null
   }
+  // A mise.toml bump drifts every Dockerfile, so the script scans them all. No hk
+  // fix: it would revert an ARG that someone bumped by hand.
+  ["docker-pins"] = new Step {
+    glob = List("mise.toml", "**/Dockerfile*", "**/*.Dockerfile")
+    check = ".config/hk/checks/check_docker_pins.py"
+  }
   ["compose-file-name"] = new Step {
     glob = List("**/docker-compose.yml", "**/docker-compose.yaml")
     check = "echo 'Rename to compose.yaml, the name that Docker Compose prefers:' {{files}} >&2; exit 1"

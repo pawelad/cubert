@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Upgrade the tools in mise.toml (all, or the named ones)[% if docker %], and the Dockerfile ARG pins[% endif %]"
+#USAGE arg "[tools]..." help="Tools to upgrade"
+set -euo pipefail
+
+# mise passes usage args only as usage_* variables, and the list must split into words.
+# shellcheck disable=SC2086
+mise upgrade --bump ${usage_tools:-}
+# Dependabot cannot bump a FROM tag that reads an ARG, so the tool bump carries it.
+# Quoted, the answer keeps this file valid shell for shellcheck and shfmt.
+docker="[[ docker | lower ]]"
+if [ "$docker" = true ]; then .config/hk/checks/check_docker_pins.py --fix; fi

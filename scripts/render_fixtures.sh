@@ -107,6 +107,18 @@ services:
 YAML
 }
 
+# A mise tool image reads its pin from an ARG, which must match mise.toml. Setup pins
+# hadolint, so this runs after it.
+docker_pin_fixture() {
+  local pin
+  pin="$(sed -n 's/^hadolint = "\(.*\)"$/\1/p' mise.toml)"
+  # Docker expands the ARG in FROM, not the shell.
+  # shellcheck disable=SC2016
+  printf 'ARG HADOLINT_VERSION=%s\nFROM hadolint/hadolint:${HADOLINT_VERSION} AS lint\n' "$pin" \
+    | cat - Dockerfile >Dockerfile.new
+  mv Dockerfile.new Dockerfile
+}
+
 # A local dependency tests installation without adding a registry or another tool.
 typescript_dependency_fixture() {
   local dir
@@ -268,6 +280,10 @@ break_typescript() {
   printf 'export const bad: number = "text";\n' >"$dir/src/bad.ts"
 }
 break_docker() { printf 'FROM debian\n' >Dockerfile; }
+break_docker_pin() {
+  sed -i.bak 's/^ARG HADOLINT_VERSION=.*/ARG HADOLINT_VERSION=0.0.1/' Dockerfile
+  rm Dockerfile.bak
+}
 break_workflow() {
   printf 'on:\n  push:\n    branch: main\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: "true"\n' \
     >.github/workflows/broken.yml
