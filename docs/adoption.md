@@ -146,7 +146,7 @@ the files each commit touches, then rebase onto `main`:
    ```bash
    #!/usr/bin/env bash
    # Rebase exec: reformat only the files this commit touches, then amend.
-   # No -e: check-only hk steps can exit non-zero after the formatters finish.
+   # No -e: a fixer that also lints, such as jactionlint, can exit non-zero.
    set -uo pipefail
    export GIT_LITERAL_PATHSPECS=1
    mise run format --all >/dev/null

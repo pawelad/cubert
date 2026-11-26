@@ -486,6 +486,21 @@ enabled features). `hk.pkl` amends `cubert.pkl`:
     ["tsc"] { depends = "expo-types" }
   }
   ```
+
+  `mise run format` skips both, because neither has a `fix` command. hk still runs a
+  step whose dependency was skipped. A step that writes files for a fixer, such as
+  `biome`, needs `fix = check`, so format runs it first:
+
+  ```pkl
+  steps {
+    ["api-types"] = new Step {
+      glob = List("apps/backend/openapi.json")
+      check = "cd apps/frontend && bun x openapi-typescript ../backend/openapi.json -o src/api/types.ts"
+      fix = check
+    }
+    ["biome"] { depends = "api-types" }
+  }
+  ```
 - Give each linter one owner in `mise run check`. When a `check:<area>` task runs a
   linter, such as an app's `check:backend` running ruff, or a step calls that task, keep
   the step out of the `check` hook. `check:repo` then skips it, and the git hooks still
@@ -674,8 +689,9 @@ With the `typescript` option, Biome formats and lints JavaScript, TypeScript and
 does not format JSON, Markdown or YAML, so dprint stays the only formatter for them. The
 `biome` step covers format, lint and import order, so there is no separate format step.
 hk runs `tsc` once per nearest `tsconfig.json`, so a monorepo needs no setup.
-`mise run format` skips `tsc`, which cannot fix anything. The hk builtins check trailing
-whitespace, final newlines and line endings from `.editorconfig`.
+`mise run format` skips each step with no `fix` command, such as `tsc` and `shellcheck`.
+`mise run check` still runs them. The hk builtins check trailing whitespace, final
+newlines and line endings from `.editorconfig`.
 
 Every file type has the same maximum line length: 88 columns, the Black and ruff
 default. dprint wraps Markdown prose and formats the other files to it, and yamllint

@@ -351,14 +351,18 @@ expect_stale_uv_lock() {
   git checkout --quiet -- pyproject.toml
 }
 
-# One failing check step must not stop the fixers that run after it.
+# Format skips check-only steps, so a fixer must fail here: jactionlint cannot fix the
+# key typo. That failure must not stop the other fixers.
 expect_format_despite_failure() {
-  break_prose
+  break_workflow
   printf '{"a":1}\n' >format.json
   git add --all
-  mise run format --all >/dev/null 2>&1 || true
+  if mise run format --all >/dev/null 2>&1; then
+    echo "render: format --all passed on a workflow error that jactionlint cannot fix" >&2
+    return 1
+  fi
   if [ "$(cat format.json)" = '{"a":1}' ]; then
-    echo "render: a failing check step stopped format --all" >&2
+    echo "render: a failing fixer stopped format --all" >&2
     return 1
   fi
   git reset --quiet --hard HEAD

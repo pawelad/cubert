@@ -3,17 +3,24 @@
 #USAGE flag "--all" help="Fix every file in the repository"
 set -euo pipefail
 
-# --no-fail-fast: one failing check step would otherwise abort every fixer after it.
+# --no-fail-fast: a fixer that fails on an error it cannot fix would abort the others.
 args=(--no-fail-fast)
 if [ "${usage_all:-false}" = "true" ]; then
   args+=(--all)
 fi
 
-# tsc has no fixer, so it would only slow format and fail it on type errors.
-# Skip it only when configured: hk warns when --skip-step names a missing step.
-if [ -f hk.pkl ] \
-  && [ "$(pkl eval -x 'steps.containsKey("tsc")' hk.pkl 2>/dev/null || true)" = "true" ]; then
-  args+=(--skip-step tsc)
+# A step with no fixer, such as tsc, would only slow format and fail it on findings.
+# The names come from hk.pkl: hk warns when --skip-step names a missing step.
+if [ -f hk.pkl ]; then
+  query='steps.toMap().filter((_, step) -> step.fix == null).keys.join("\n")'
+  if steps="$(pkl eval -x "$query" hk.pkl 2>&1)"; then
+    while IFS= read -r step; do
+      if [ -n "$step" ]; then args+=(--skip-step "$step"); fi
+    done <<<"$steps"
+  else
+    echo "format: pkl cannot list the steps with no fixer, so format runs them too:" >&2
+    echo "$steps" >&2
+  fi
 fi
 
 hk fix "${args[@]}"

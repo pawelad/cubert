@@ -63,6 +63,16 @@ def test_depends_snippet_runs_expo_types_before_tsc(
     assert config["steps"]["tsc"]["depends"] == ["expo-types"]
 
 
+def test_generator_snippet_gives_the_step_a_fixer_that_runs_before_biome(
+    project: Path, snippets: list[str]
+) -> None:
+    config = evaluate(project, snippet(snippets, '["api-types"]'))
+
+    step = config["steps"]["api-types"]
+    assert step["fix"] == step["check"]
+    assert config["steps"]["biome"]["depends"] == ["api-types"]
+
+
 def test_hook_snippet_keeps_a_step_out_of_the_check_hook(
     project: Path, snippets: list[str]
 ) -> None:
