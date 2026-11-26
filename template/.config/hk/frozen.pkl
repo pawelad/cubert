@@ -1,0 +1,6 @@
+// Template-owned: edit in cubert, not in a project. `base.pkl` and project `hk.pkl` files
+// import it. A module that amends hk's Config cannot add a property, so the list lives here.
+
+// Archived changes keep their text as written, the schema fork keeps upstream text, and
+// the rest is text that another program wrote or that must match an external system.
+paths: List<String> = List("**/openspec/changes/archive/**", "**/openspec/schemas/**", "**/fixtures/**", "**/testdata/**", "**/__snapshots__/**", "**/generated/**", "**/vendor/**")

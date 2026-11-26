@@ -20,13 +20,13 @@ it. Add to a merged file below the shared part, and the merge stays clean.
 Each project-owned file layers on its template-owned file, so a project change goes
 there:
 
-| Tool     | Template-owned                       | Project-owned | How the project file layers               |
-| -------- | ------------------------------------ | ------------- | ----------------------------------------- |
-| mise     | `.config/mise/config.toml`, `tasks/` | `mise.toml`   | mise loads both; `mise.toml` wins         |
-| hk       | `.config/hk/cubert.pkl`, `base.pkl`  | `hk.pkl`      | `hk.pkl` amends `cubert.pkl`              |
-| dprint   | `.config/dprint.json`                | `dprint.json` | `dprint.json` extends it; excludes add up |
-| Biome    | `.config/biome.json`                 | `biome.json`  | `biome.json` extends it (`typescript`)    |
-| yamllint | `.config/yamllint.yaml`              | `.yamllint`   | `.yamllint` extends it; `ignore` replaces |
+| Tool     | Template-owned                                    | Project-owned | How the project file layers               |
+| -------- | ------------------------------------------------- | ------------- | ----------------------------------------- |
+| mise     | `.config/mise/config.toml`, `tasks/`              | `mise.toml`   | mise loads both; `mise.toml` wins         |
+| hk       | `.config/hk/cubert.pkl`, `base.pkl`, `frozen.pkl` | `hk.pkl`      | `hk.pkl` amends `cubert.pkl`              |
+| dprint   | `.config/dprint.json`                             | `dprint.json` | `dprint.json` extends it; excludes add up |
+| Biome    | `.config/biome.json`                              | `biome.json`  | `biome.json` extends it (`typescript`)    |
+| yamllint | `.config/yamllint.yaml`                           | `.yamllint`   | `.yamllint` extends it; `ignore` replaces |
 
 What an update does to a missing or removed file:
 
@@ -529,22 +529,26 @@ an external API or hold a fixture, so the rules leave it alone. Data files, such
 JSON, are skipped. Paths named `fixtures`, `testdata`, `__snapshots__`, `generated` and
 `vendor` are skipped too. Skip another path in one step with
 `steps { ["typos"] { exclude = super.exclude + List("docs/legacy/**") } }`. `super`
-keeps the shared paths. To skip paths in every step that skips those, loop over the
-shared steps in the `steps` block of `hk.pkl`:
+keeps the shared paths. `.config/hk/frozen.pkl` lists them. To skip paths in every step
+that skips those, loop over the shared steps in the `steps` block of `hk.pkl`:
 
 ```pkl
 import ".config/hk/cubert.pkl" as shared
+import ".config/hk/frozen.pkl"
 
-local frozen = List("docs/legacy/**", "tests/recorded/**")
+local frozenPaths = List("docs/legacy/**", "tests/recorded/**")
 
 steps {
   for (name, step in shared.steps) {
-    when (step.exclude is List && (step.exclude as List).contains("**/vendor/**")) {
-      [name] { exclude = super.exclude + frozen }
+    when (step.exclude is List && frozen.paths.every((p) -> (step.exclude as List).contains(p))) {
+      [name] { exclude = super.exclude + frozenPaths }
     }
   }
 }
 ```
+
+Loop over `shared.steps`, not `super.steps`. hk's evaluator skips a loop over
+`super.steps` with no error.
 
 Some strings in code and config files reach users, such as notification text in YAML or
 dashboard labels in Jinja templates. To check whole files of a type, add its glob to
@@ -563,11 +567,11 @@ steps {
 ```
 
 Pkl rejects a second entry for one step in a `steps` block. With the loop above, define
-`userText` next to `frozen` and set both inside the loop:
+`userText` next to `frozenPaths` and set both inside the loop:
 
 ```pkl
 [name] {
-  exclude = super.exclude + frozen + (
+  exclude = super.exclude + frozenPaths + (
     if (name == "no-em-dashes-comments" || name == "no-british-english-comments")
       userText
     else List()
