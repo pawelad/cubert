@@ -4,6 +4,39 @@ All notable changes to this project are documented here.
 [git-cliff](https://git-cliff.org) generates them from the Conventional Commits history.
 Do not edit past entries by hand.
 
+## [0.3.0] - 2026-11-26
+
+### Breaking Changes
+
+#### Ansible
+
+- Install exactly the pinned collections, and skip Galaxy when they already match
+  ([98d0c67](https://github.com/pawelad/cubert/commit/98d0c6795f1187e21eccaa52e58e56c6303307e8))
+
+### Features
+
+#### Checks
+
+- Skip a line that ends in spellchecker:disable-line in the British English and em dash
+  rules
+  ([297fa5a](https://github.com/pawelad/cubert/commit/297fa5a0fc02627bbcc6a443dda877e73b09d6c5))
+
+### Bug Fixes
+
+#### Checks
+
+- Allow unpinned apk packages in Dockerfiles, as hadolint already allows apt ones
+  ([de3ae8e](https://github.com/pawelad/cubert/commit/de3ae8e24a23a3fc495fe7c782342040e396359c))
+- Show super.exclude in the hk.pkl example for changing a shared step
+  ([2a723a5](https://github.com/pawelad/cubert/commit/2a723a5aea1bc34179b9ce7f78533a9b10860306))
+
+#### Ansible
+
+- Gitignore ansible-lint's .ansible cache, which hk otherwise checked as project code
+  ([7cc78a9](https://github.com/pawelad/cubert/commit/7cc78a97fec2465e04b814b3b242a8c2f776b92e))
+- Run ansible-lint offline, so a lint no longer downloads the collections from Galaxy
+  ([91a49dd](https://github.com/pawelad/cubert/commit/91a49dd7f474e1ddbb25557416d3708c73c9cbee))
+
 ## [0.2.2] - 2026-11-26
 
 ### Features
