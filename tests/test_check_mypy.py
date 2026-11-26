@@ -119,6 +119,85 @@ class TestPlainPython:
         assert check_mypy.plain_python(Path("run.py")) is None
 
 
+class TestModuleName:
+    def test_plain_file_is_named_after_its_stem(self, tmp_path: Path) -> None:
+        assert check_mypy.module_name(write(tmp_path / "lib/mod.py", "")) == "mod"
+
+    def test_package_file_is_named_after_its_packages(self, tmp_path: Path) -> None:
+        write(tmp_path / "src/pkg/__init__.pyi", "")
+        init = write(tmp_path / "src/pkg/sub/__init__.py", "")
+        path = write(tmp_path / "src/pkg/sub/mod.py", "")
+
+        assert check_mypy.module_name(path) == "pkg.sub.mod"
+        assert check_mypy.module_name(init) == "pkg.sub"
+
+    def test_package_climb_stops_at_a_folder_that_is_not_an_identifier(
+        self, tmp_path: Path
+    ) -> None:
+        write(tmp_path / "my-app/__init__.py", "")
+        write(tmp_path / "my-app/pkg/__init__.py", "")
+        path = write(tmp_path / "my-app/pkg/mod.py", "")
+
+        assert check_mypy.module_name(path) == "pkg.mod"
+
+    def test_stub_only_package_drops_its_stubs_suffix(self, tmp_path: Path) -> None:
+        write(tmp_path / "pkg-stubs/__init__.pyi", "")
+
+        assert check_mypy.module_name(tmp_path / "pkg-stubs/mod.pyi") == "pkg.mod"
+
+    def test_symlinked_file_is_named_from_its_own_folder(self, tmp_path: Path) -> None:
+        write(tmp_path / "pkg/__init__.py", "")
+        target = write(tmp_path / "pkg/mod.py", "")
+        (tmp_path / "lib").mkdir()
+        link = tmp_path / "lib/mod.py"
+        link.symlink_to(target)
+
+        assert check_mypy.module_name(link) == "mod"
+
+
+class TestWithoutClashes:
+    @pytest.fixture(autouse=True)
+    def project(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        check_mypy.ruff_targets.cache_clear()
+        monkeypatch.chdir(tmp_path)
+
+    def test_group_without_a_clash_runs_one_call(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        calls: list[tuple[str, ...]] = []
+
+        def mypy(*args: str) -> int:
+            calls.append(args)
+            return 0
+
+        monkeypatch.setattr(check_mypy, "mypy", mypy)
+        files = ["a/one.py", "b/two.py", "c/three.py"]
+        for path in files:
+            write(Path(path), "")
+
+        assert check_mypy.main(files) == 0
+        assert calls == [tuple(files)]
+
+    def test_same_named_files_go_to_separate_calls(self) -> None:
+        files = ["lib/mod.py", "a/mod.py", "lib/other.py", "b/mod.py", "a/other.py"]
+        for path in files:
+            write(Path(path), "")
+
+        assert check_mypy.without_clashes(files) == [
+            ["lib/mod.py", "lib/other.py"],
+            ["a/mod.py", "a/other.py"],
+            ["b/mod.py"],
+        ]
+
+    def test_same_named_modules_in_different_packages_do_not_clash(self) -> None:
+        for path in ("p/__init__.py", "q/__init__.py", "p/mod.py", "q/mod.py"):
+            write(Path(path), "")
+
+        assert check_mypy.without_clashes(["p/mod.py", "q/mod.py"]) == [
+            ["p/mod.py", "q/mod.py"]
+        ]
+
+
 @pytest.mark.skipif(shutil.which("uv") is None, reason="needs uv on PATH")
 class TestMain:
     # The demo project has no uv.lock, so an exported UV_LOCKED would fail each uv call.
@@ -195,3 +274,16 @@ class TestMain:
 
         assert check_mypy.main(["app.py"]) == 0
         assert check_mypy.main(["app.py", "hosts/zapp/run.py"]) == 1
+
+    # Two copies of one module, as a shared lib/ file and a copy next to its script.
+    def test_same_named_plain_files_in_different_folders_pass(self) -> None:
+        write(Path("lib/shared.py"), '"""Demo."""\n\nX: int = 1\n')
+        write(Path("tool/shared.py"), '"""Demo."""\n\nX: int = 1\n')
+
+        assert check_mypy.main(["lib/shared.py", "tool/shared.py"]) == 0
+
+    def test_error_in_a_split_off_copy_fails(self) -> None:
+        write(Path("lib/shared.py"), '"""Demo."""\n\nX: int = 1\n')
+        write(Path("tool/shared.py"), '"""Demo."""\n\nX: int = "a"\n')
+
+        assert check_mypy.main(["lib/shared.py", "tool/shared.py"]) == 1

@@ -6,7 +6,8 @@
 
 A script's env holds only its inline dependencies, so an import that the inline block
 misses fails here, and not for the people who run the script. A plain file that matches
-ruff's `per-file-target-version` is checked for that Python, as ruff formats it.
+ruff's `per-file-target-version` is checked for that Python, as ruff formats it. Plain
+files that share a module name go to separate mypy calls.
 """
 
 from __future__ import annotations
@@ -178,6 +179,38 @@ def script_python(path: Path) -> str | None:
     return found.stdout.strip()
 
 
+def module_name(path: Path) -> str:
+    """Return the module name that mypy gives a file, such as "pkg.mod" or "mod"."""
+    # As mypy's `find_sources`: no symlink resolution, and no climb past a folder that
+    # is not an identifier, after a stub-only `-stubs` suffix.
+    parts = [] if path.stem == "__init__" else [path.stem]
+    folder = Path(os.path.abspath(path)).parent  # noqa: PTH100
+    while any((folder / f"__init__{suffix}").is_file() for suffix in (".py", ".pyi")):
+        name = folder.name.removesuffix("-stubs")
+        if not name.isidentifier():
+            break
+        parts.insert(0, name)
+        folder = folder.parent
+    return ".".join(parts)
+
+
+def without_clashes(paths: list[str]) -> list[list[str]]:
+    """Split paths into the fewest calls in which no two files share a module name."""
+    # One mypy call rejects two files with one module name: "Duplicate module named".
+    calls: list[list[str]] = []
+    names: list[set[str]] = []
+    for path in paths:
+        name = module_name(Path(path))
+        index = next((i for i, seen in enumerate(names) if name not in seen), None)
+        if index is None:
+            calls.append([])
+            names.append(set())
+            index = -1
+        calls[index].append(path)
+        names[index].add(name)
+    return calls
+
+
 def mypy(*args: str) -> int:
     """Run the project's mypy, so every file shares its `[tool.mypy]` settings."""
     command = ["uv", "run", "mypy", *args]
@@ -195,8 +228,9 @@ def main(argv: list[str]) -> int:
     failed = False
     for version, paths in plain.items():
         target = ["--python-version", version] if version else []
-        if mypy(*target, *paths) != 0:
-            failed = True
+        for call in without_clashes(paths):
+            if mypy(*target, *call) != 0:
+                failed = True
     for path, metadata in scripts.items():
         if metadata is None:
             continue

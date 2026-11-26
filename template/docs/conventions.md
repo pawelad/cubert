@@ -425,6 +425,8 @@ still apply.
 - A plain file that matches `per-file-target-version` is checked for that Python. Use it
   for a file that a host runs on an older system Python. A script's `requires-python`
   still decides its own check.
+- mypy checks the plain files for one Python in one call. Files that share a module
+  name, such as `lib/shared.py` and a copy in a script's folder, go to separate calls.
 
 `scripts/` holds only code that is not a task: check scripts that hk calls with
 `{{files}}`, modules with tests, and git hook shims.
