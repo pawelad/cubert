@@ -621,6 +621,11 @@ Three hk steps cover what the formatters and linters miss:
   project excludes paths or URLs in a root `lychee.toml`, which layers on
   `.config/lychee.toml`.
 
+Docker option: the `hadolint` step ignores DL3008 and DL3018, because the base image tag
+pins the distro packages. A project adds rules to a root `.hadolint.yaml`, under
+`ignored`, and hadolint adds them to the shared ones. Do not copy the step's `check`
+command into `hk.pkl`: the copy misses each later change to the shared ignores.
+
 `check:repo` fails when a local `core.hooksPath` is set. Git then ignores the global
 config-based hooks that `hk install --global` writes, with no error. Fix it with
 `git config --local --unset core.hooksPath`.
