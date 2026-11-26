@@ -71,7 +71,7 @@ usage = 'arg "[tools]..." help="Tools to upgrade"'
 # mise passes usage args only as usage_* variables, and the list must split into words.
 run = '''
 # shellcheck disable=SC2086
-mise upgrade --bump ${usage_tools:-}
+mise upgrade --bump --no-global ${usage_tools:-}
 dprint config update --config template/.config/dprint.json --yes
 dprint config update --yes \
   --config "template/.config/[% if docker %]dprint-docker.json[% endif %]"

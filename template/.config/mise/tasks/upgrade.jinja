@@ -10,10 +10,10 @@ read -r -d '' -a keep <<<"${UPGRADE_EXCLUDE:-}" || true
 exclude=()
 if [ -z "${usage_tools:-}" ] && [ "${#keep[@]}" -gt 0 ]; then
   # A narrow COLUMNS wraps the table, which splits long tool names across lines.
-  tools="$(COLUMNS=10000 mise ls --current --no-header | awk '{ print $1 }')"
+  tools="$(COLUMNS=10000 mise ls --current --no-global --no-header | awk '{ print $1 }')"
   for tool in "${keep[@]}"; do
     if ! grep -qxF -- "$tool" <<<"$tools"; then
-      echo "upgrade: UPGRADE_EXCLUDE names $tool, which no mise config requests" >&2
+      echo "upgrade: UPGRADE_EXCLUDE names $tool, which no project mise config requests" >&2
       exit 2
     fi
     exclude+=(--exclude "$tool")
@@ -21,10 +21,11 @@ if [ -z "${usage_tools:-}" ] && [ "${#keep[@]}" -gt 0 ]; then
   echo "upgrade: keeping ${keep[*]}"
 fi
 
+# --no-global: a project task must not rewrite ~/.config/mise/config.toml.
 # mise passes usage args only as usage_* variables, and the list must split into words.
 # Bash 3.2 fails on an empty array under `set -u`, so the `+` form expands it.
 # shellcheck disable=SC2086
-mise upgrade --bump ${exclude[@]+"${exclude[@]}"} ${usage_tools:-}
+mise upgrade --bump --no-global ${exclude[@]+"${exclude[@]}"} ${usage_tools:-}
 # Dependabot cannot bump a FROM tag that reads an ARG, so the tool bump carries it.
 # Quoted, the answer keeps this file valid shell for shellcheck and shfmt.
 docker="[[ docker | lower ]]"

@@ -47,21 +47,21 @@ def test_upgrades_every_tool_without_upgrade_exclude(tmp_path: Path) -> None:
     result, calls = run_task(tmp_path)
 
     assert result.returncode == 0, result.stderr
-    assert calls == ["upgrade --bump"]
+    assert calls == ["upgrade --bump --no-global"]
 
 
 def test_excludes_each_tool_in_upgrade_exclude(tmp_path: Path) -> None:
     result, calls = run_task(tmp_path, UPGRADE_EXCLUDE="node uv")
 
     assert result.returncode == 0, result.stderr
-    assert calls == ["upgrade --bump --exclude node --exclude uv"]
+    assert calls == ["upgrade --bump --no-global --exclude node --exclude uv"]
 
 
 def test_named_tools_override_upgrade_exclude(tmp_path: Path) -> None:
     result, calls = run_task(tmp_path, UPGRADE_EXCLUDE="node", usage_tools="node")
 
     assert result.returncode == 0, result.stderr
-    assert calls == ["upgrade --bump node"]
+    assert calls == ["upgrade --bump --no-global node"]
 
 
 def test_fails_on_an_excluded_tool_that_no_config_requests(tmp_path: Path) -> None:
@@ -86,4 +86,4 @@ def test_treats_a_blank_upgrade_exclude_as_empty(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert "keeping" not in result.stdout
-    assert calls == ["upgrade --bump"]
+    assert calls == ["upgrade --bump --no-global"]
