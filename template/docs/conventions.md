@@ -750,6 +750,10 @@ Notes:
 
 - `mise run upgrade` bumps the tools in `mise.toml` (`mise upgrade --bump`), then, with
   the Docker option, the Dockerfile `ARG <TOOL>_VERSION` defaults that copy them.
+- To keep a tool at its version, list it in `UPGRADE_EXCLUDE` under `[env]` in
+  `mise.toml`, such as `UPGRADE_EXCLUDE = "node"` when Node sets an image runtime.
+  Separate names with spaces. A name that no mise config requests fails the task.
+  `mise run upgrade node` still bumps a listed tool.
 - Dependabot bumps GitHub Actions and the package ecosystems monthly. It has no
   ecosystem for `mise.toml`.
 - `dependabot.yml` is merged. Put a project key, such as an `ignore` rule, in the shared

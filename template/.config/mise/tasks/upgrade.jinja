@@ -1,11 +1,30 @@
 #!/usr/bin/env bash
-#MISE description="Upgrade the tools in mise.toml (all, or the named ones)[% if docker %], and the Dockerfile ARG pins[% endif %]"
+#MISE description="Upgrade the tools in mise.toml (all, or the named ones)[% if docker %], and the Dockerfile ARG pins[% endif %]. UPGRADE_EXCLUDE lists tools to keep"
 #USAGE arg "[tools]..." help="Tools to upgrade"
 set -euo pipefail
 
+# Named tools override UPGRADE_EXCLUDE. mise ignores an unknown --exclude, so a typo
+# would upgrade the tool that it meant to keep.
+keep=()
+read -r -d '' -a keep <<<"${UPGRADE_EXCLUDE:-}" || true
+exclude=()
+if [ -z "${usage_tools:-}" ] && [ "${#keep[@]}" -gt 0 ]; then
+  # A narrow COLUMNS wraps the table, which splits long tool names across lines.
+  tools="$(COLUMNS=10000 mise ls --current --no-header | awk '{ print $1 }')"
+  for tool in "${keep[@]}"; do
+    if ! grep -qxF -- "$tool" <<<"$tools"; then
+      echo "upgrade: UPGRADE_EXCLUDE names $tool, which no mise config requests" >&2
+      exit 2
+    fi
+    exclude+=(--exclude "$tool")
+  done
+  echo "upgrade: keeping ${keep[*]}"
+fi
+
 # mise passes usage args only as usage_* variables, and the list must split into words.
+# Bash 3.2 fails on an empty array under `set -u`, so the `+` form expands it.
 # shellcheck disable=SC2086
-mise upgrade --bump ${usage_tools:-}
+mise upgrade --bump ${exclude[@]+"${exclude[@]}"} ${usage_tools:-}
 # Dependabot cannot bump a FROM tag that reads an ARG, so the tool bump carries it.
 # Quoted, the answer keeps this file valid shell for shellcheck and shfmt.
 docker="[[ docker | lower ]]"
