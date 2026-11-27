@@ -550,6 +550,10 @@ steps {
 Loop over `shared.steps`, not `super.steps`. hk's evaluator skips a loop over
 `super.steps` with no error.
 
+`mise run audit` runs lychee on the whole tree, so it does not read these globs. Add
+each path to `exclude_path` in a root `lychee.toml` as `/<dir>/`, such as
+`"/docs/legacy/"`. lychee adds this list to the shared one.
+
 Some strings in code and config files reach users, such as notification text in YAML or
 dashboard labels in Jinja templates. To check whole files of a type, add its glob to
 `no-em-dashes` and `no-british-english`:
