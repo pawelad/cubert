@@ -1,10 +1,11 @@
-"""Check the prose rules: the `spellchecker:disable-line` marker and the step order."""
+"""Check the prose rules: the skip marker, the step order and the frozen paths."""
 
 from __future__ import annotations
 
 import json
 import shutil
 import subprocess
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -101,3 +102,13 @@ def test_comment_twin_runs_after_its_full_file_step(
     steps: dict[str, dict[str, Any]], twin: str, full: str
 ) -> None:
     assert steps[twin]["depends"] == [full]
+
+
+def test_lychee_skips_the_frozen_paths() -> None:
+    # lychee takes regexes, so its config repeats the hk globs by hand.
+    frozen = ROOT / "template/.config/hk/frozen.pkl"
+    globs = json.loads(run(["pkl", "eval", "--format", "json", str(frozen)], ROOT))
+    lychee = tomllib.loads((ROOT / "template/.config/lychee.toml").read_text())
+
+    expected = {g.removeprefix("**/").removesuffix("**") for g in globs["paths"]}
+    assert {p.lstrip("/") for p in lychee["exclude_path"]} == expected
