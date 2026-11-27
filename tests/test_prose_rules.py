@@ -110,5 +110,6 @@ def test_lychee_skips_the_frozen_paths() -> None:
     globs = json.loads(run(["pkl", "eval", "--format", "json", str(frozen)], ROOT))
     lychee = tomllib.loads((ROOT / "template/.config/lychee.toml").read_text())
 
-    expected = {g.removeprefix("**/").removesuffix("**") for g in globs["paths"]}
-    assert {p.lstrip("/") for p in lychee["exclude_path"]} == expected
+    # lychee sees `./<path>`, so `/<dir>/` matches the dir at any depth, as `**/` does.
+    expected = {"/" + g.removeprefix("**/").removesuffix("**") for g in globs["paths"]}
+    assert set(lychee["exclude_path"]) == expected

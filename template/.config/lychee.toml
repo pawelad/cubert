@@ -7,8 +7,8 @@ retry_wait_time = 5
 timeout = 20
 # The paths in `.config/hk/frozen.pkl`: text that another program wrote.
 exclude_path = [
-  "openspec/changes/archive/",
-  "openspec/schemas/",
+  "/openspec/changes/archive/",
+  "/openspec/schemas/",
   "/fixtures/",
   "/testdata/",
   "/__snapshots__/",
