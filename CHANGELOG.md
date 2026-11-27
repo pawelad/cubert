@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 [git-cliff](https://git-cliff.org) generates them from the Conventional Commits history.
 Do not edit past entries by hand.
 
+## [0.4.1] - 2026-11-27
+
+### Bug Fixes
+
+#### Checks
+
+- Match the frozen-path loop by the shared list, so a renamed path no longer drops a
+  project's excludes
+  ([e1b5fbe](https://github.com/pawelad/cubert/commit/e1b5fbeae23ef9fe51d6139cbdbb7bf1611bd4bb))
+- Print each comment error once when a project widens a prose glob
+  ([6011402](https://github.com/pawelad/cubert/commit/6011402323b912334de08f48dd26f5d615702eda))
+
 ## [0.4.0] - 2026-11-26
 
 ### Breaking Changes
